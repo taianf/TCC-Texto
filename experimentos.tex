@@ -1,0 +1,47 @@
+\xchapter{Experimentos}{Opcional}
+
+Valores encontrados nas medições.
+
+\section{Como avaliei}
+
+\subsection{Divisão por tipo de kernel}
+
+\begin{itemize}
+\item Normal
+\item Preempt-RT
+\end{itemize}
+
+\subsection{Divisão por irqs}
+
+\begin{itemize}
+\item Softirq
+\item Tasklet
+\item Workqueue
+\end{itemize}
+
+\subsection{Divisão por carga na cpu}
+
+\begin{itemize}
+\item Ociosa
+\item Um processo
+\item Sobrecarga (256 processos)
+\end{itemize}
+
+\section{Resultados esperados}
+
+Preempt-RT mais lento na médio, melhor pior caso, menos variação.
+
+Na figura \ref{tableau} temos uma figura.
+
+\section{Resultados obtidos}
+
+A primeira letra representa o kernel testado: (r)aspberry padrão ou (p)reempt-RT.
+A segunda letra é o tipo de interrupção testado: (s)oftirq, (t)asklet, (w)orkqueue.
+O terceiro caracter é a carga na cpu: 0 thread, 1 thread, (m)any threads (256).
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics{graficos/tableau.png}
+    \caption{Medições de latência}
+    \label{tableau}
+\end{figure}

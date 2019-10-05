@@ -83,7 +83,8 @@
 %% PACKAGES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \RequirePackage{amsmath,amsfonts,amssymb,amsthm}
-\RequirePackage{babel}
+\RequirePackage[brazilian]{babel}
+\RequirePackage[utf8]{inputenc}
 \RequirePackage{calc}
 \RequirePackage{ifthen}
 \RequirePackage{textcase}
@@ -399,8 +400,7 @@ grau de \@degree\ em \@majorfield.}
     \vspace{2em}
     \begin{flushright}
       \begin{minipage}{0.5\textwidth}
-        Esta \@texttype\ foi julgada adequada \`{a} obten\c{c}\~{a}o do t\'{i}tulo de \@degree\  em Ci\^{e}ncia da Computa\c{c}\~{a}o e aprovada em sua
-        forma final pelo Programa de P\'{o}s-Gradua\c{c}\~{a}o em Ci\^{e}ncia da Computa\c{c}\~{a}o da Universidade Federal da Bahia.
+        Este \@texttype\ foi julgado adequado à obtenção do título de \@degree\  em Engenharia de Computação e aprovada em sua forma final pelo Departamento de Engenharia Elétrica e de Computação da Universidade Federal da Bahia.
       \end{minipage}
     \end{flushright}
 
@@ -485,7 +485,7 @@ grau de \@degree\ em \@majorfield.}
       \vskip\baselineskip
       \@author
       \vskip 45mm
-      \textbf{Programa de P\'{o}s-Gradua\c{c}\~{a}o em Ci\^{e}ncia da Computa\c{c}\~{a}o}
+      \textbf{Departamento de Engenharia Elétrica e de Computação}
       \\
       \vskip\baselineskip
       \@address\\
