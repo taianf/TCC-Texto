@@ -4,11 +4,14 @@ Valores encontrados nas medições.
 
 \section{Como avaliei}
 
+Foi medido o tempo de resposta do linux comum para servir de referência e depois foi medido com o patch de tempo real. Foram realizadas medições com vários mecanismos de interrupção. Testes com cargas diferentes na CPU.
+
 \subsection{Divisão por tipo de kernel}
 
 \begin{itemize}
 \item Normal
 \item Preempt-RT
+\item Xenomai
 \end{itemize}
 
 \subsection{Divisão por irqs}
@@ -27,7 +30,7 @@ Valores encontrados nas medições.
 \item Sobrecarga (256 processos)
 \end{itemize}
 
-\section{Resultados esperados}
+\section{Resultados}
 
 Preempt-RT mais lento na médio, melhor pior caso, menos variação.
 
