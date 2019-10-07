@@ -1,4 +1,0 @@
-#!/bin/bash
-latex $1.tex
-dvips -E -o $1.eps $1.dvi
-epstopdf $1.eps

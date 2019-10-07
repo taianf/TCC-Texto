@@ -1,5 +1,0 @@
-#!/bin/sh
-for i in "*~" "*.aux" "*.toc" "*.bbl" "*.blg" "*.dvi" "*.ps" "*.log" "*.ilg" "*.lof" "*.idx" "*.ind"; 
-do
-	find . -depth -mindepth 1 -name "$i" -execdir rm -f {} \;
-done
