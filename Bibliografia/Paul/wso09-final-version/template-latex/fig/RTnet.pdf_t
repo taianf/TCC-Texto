@@ -1,0 +1,43 @@
+\begin{picture}(0,0)%
+\includegraphics{fig/RTnet.pdf}%
+\end{picture}%
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(8424,3778)(589,-4277)
+\put(1051,-1111){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}melhor esfor\c{c}o}%
+}}}}
+\put(1126,-811){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Aplica\c{c}\~oes de}%
+}}}}
+\put(6751,-811){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Aplica\c{c}\~oes}%
+}}}}
+\put(6526,-1111){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}de tempo real}%
+}}}}
+\put(1651,-1986){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Linux}%
+}}}}
+\put(1276,-1661){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Pilha de rede}%
+}}}}
+\put(4051,-2161){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}UDP/IP, ICMP, ARP, IP, RTcfg}%
+}}}}
+\put(2101,-3669){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}N\'ucleo RTnet (\emph{stack manager, rtskb}), RTcap}%
+}}}}
+\put(1051,-4186){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Controladores de dispositivos, Loopback, HAL, NIC \& Hardware}%
+}}}}
+\put(3751,-1636){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}CONFIG}%
+}}}}
+\put(6601,-1636){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}RTDM}%
+}}}}
+\put(5251,-2686){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}RTMAC}%
+}}}}
+\put(4351,-3061){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}TDMA, NoMAC, $\;$ \textbf{DoRiS}}%
+}}}}
+\put(3826,-961){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Gerenciamento}%
+}}}}
+\put(1276,-2536){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{17}{20.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Virtual NIC}%
+}}}}
+\end{picture}%

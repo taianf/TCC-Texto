@@ -1,0 +1,87 @@
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(6699,1749)(1039,-3448)
+\put(4051,-3211){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}A cycle}%
+}}}}
+\thinlines
+{\color[rgb]{0,0,0}\put(4276,-2386){\line( 1, 0){300}}
+}%
+{\color[rgb]{0,0,0}\put(5326,-2386){\line( 1, 0){300}}
+}%
+\put(3676,-2236){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$W_{be}$}%
+}}}}
+\put(6301,-2236){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$W_{be}$}%
+}}}}
+\put(2401,-2236){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$W_{be}$}%
+}}}}
+\put(5626,-2236){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$W_{hrt}^{N_{hrt}}$}%
+}}}}
+\put(1801,-2236){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$W_{hrt}^1$}%
+}}}}
+\put(3076,-2236){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$W_{hrt}^2$}%
+}}}}
+{\color[rgb]{0,0,0}\multiput(4651,-2536)(92.30769,0.00000){7}{\line( 1, 0){ 46.154}}
+}%
+{\color[rgb]{0,0,0}\put(4576,-2536){\vector(-1, 0){300}}
+}%
+{\color[rgb]{0,0,0}\put(5326,-2536){\vector( 1, 0){300}}
+}%
+{\color[rgb]{0,0,0}\put(3001,-2536){\vector(-1, 0){  0}}
+\put(3001,-2536){\vector( 1, 0){1275}}
+}%
+{\color[rgb]{0,0,0}\put(5626,-2536){\vector(-1, 0){  0}}
+\put(5626,-2536){\vector( 1, 0){1275}}
+}%
+{\color[rgb]{0,0,0}\put(1726,-2536){\vector(-1, 0){  0}}
+\put(1726,-2536){\vector( 1, 0){1275}}
+}%
+\put(3526,-2761){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\Delta_{ste}^2$}%
+}}}}
+\put(6151,-2761){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\Delta_{ste}^{N_{hrt}}$}%
+}}}}
+\put(2251,-2761){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}$\Delta_{ste}^1$}%
+}}}}
+{\color[rgb]{0,0,0}\multiput(1276,-2386)(81.81818,0.00000){6}{\line( 1, 0){ 40.909}}
+}%
+{\color[rgb]{0,0,0}\multiput(6976,-2386)(116.66667,0.00000){5}{\line( 1, 0){ 58.333}}
+\put(7501,-2386){\vector( 1, 0){0}}
+}%
+{\color[rgb]{0,0,0}\put(3001,-2011){\line( 0,-1){375}}
+}%
+{\color[rgb]{0,0,0}\put(2251,-2011){\line( 0,-1){375}}
+}%
+{\color[rgb]{0,0,0}\put(3526,-2011){\line( 0,-1){375}}
+}%
+{\color[rgb]{0,0,0}\put(6151,-2011){\line( 0,-1){375}}
+}%
+{\color[rgb]{0,0,0}\multiput(1726,-2011)(-150.00000,0.00000){2}{\line(-1, 0){ 75.000}}
+}%
+{\color[rgb]{0,0,0}\multiput(4651,-2011)(92.30769,0.00000){7}{\line( 1, 0){ 46.154}}
+}%
+{\color[rgb]{0,0,0}\put(4276,-2011){\line( 1, 0){300}}
+}%
+{\color[rgb]{0,0,0}\put(5326,-2011){\line( 1, 0){300}}
+}%
+{\color[rgb]{0,0,0}\put(1726,-2386){\framebox(2550,375){}}
+}%
+{\color[rgb]{0,0,0}\put(5626,-2386){\framebox(1275,375){}}
+}%
+{\color[rgb]{0,0,0}\multiput(7126,-2011)(-150.00000,0.00000){2}{\line(-1, 0){ 75.000}}
+}%
+{\color[rgb]{0,0,0}\put(5326,-2986){\vector( 1, 0){1575}}
+}%
+{\color[rgb]{0,0,0}\multiput(4651,-2986)(92.30769,0.00000){7}{\line( 1, 0){ 46.154}}
+}%
+{\color[rgb]{0,0,0}\put(4726,-2986){\vector(-1, 0){2925}}
+}%
+{\color[rgb]{0,0,0}\put(1051,-3436){\framebox(6675,1725){}}
+}%
+{\color[rgb]{0,0,0}\multiput(4651,-2386)(92.30769,0.00000){7}{\line( 1, 0){ 46.154}}
+}%
+\end{picture}%

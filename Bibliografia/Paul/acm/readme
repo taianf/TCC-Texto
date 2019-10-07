@@ -1,0 +1,10 @@
+The only package required is "color"
+To create pdf, execute the command
+
+> ./lat sigops
+
+It may be necessary to edit the shell-script "lat"
+and modify the names of the utilities 
+epstopdf  
+evince...
+

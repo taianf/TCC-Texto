@@ -1,0 +1,92 @@
+\select@language {brazil}
+\contentsline {chapter}{Cap\'{\i }tulo~1---Introdu\c c\~ao}{1}
+\contentsline {chapter}{Cap\'{\i }tulo~2---Ethernet e Tempo Real}{5}
+\contentsline {section}{\numberline {2.1}Ethernet}{5}
+\contentsline {subsection}{\numberline {2.1.1}Caracter\IeC {\'\i }sticas f\IeC {\'\i }sicas}{5}
+\contentsline {subsection}{\numberline {2.1.2}Controle de acesso ao meio}{7}
+\contentsline {subsection}{\numberline {2.1.3}Probabilidade de colis\~ao}{9}
+\contentsline {section}{\numberline {2.2}Ethernet: o desafio do determinismo}{11}
+\contentsline {subsection}{\numberline {2.2.1}Solu\c c\~oes baseadas em modifica\c c\~oes do hardware padr\~ao}{11}
+\contentsline {subsection}{\numberline {2.2.2}Solu\c c\~oes baseadas em software}{13}
+\contentsline {subsection}{\numberline {2.2.3}Ethernet comutada}{14}
+\contentsline {section}{\numberline {2.3}Os protocolos TEMPRA e VTPE}{15}
+\contentsline {subsection}{\numberline {2.3.1}Modelo \emph {publish-subscribe}}{16}
+\contentsline {subsection}{\numberline {2.3.2}O protocolo TEMPRA}{17}
+\contentsline {subsection}{\numberline {2.3.3}O protocolo VTPE}{19}
+\contentsline {section}{\numberline {2.4}Conclus\~ao}{20}
+\contentsline {chapter}{Cap\'{\i }tulo~3---DORIS: Especifica\c c\~ao e verifica\c c\~ao}{23}
+\contentsline {section}{\numberline {3.1}Introdu\c c\~ao}{23}
+\contentsline {section}{\numberline {3.2}A escolha da linguagem formal}{24}
+\contentsline {section}{\numberline {3.3}\emph {DoRiS}: o protocolo}{25}
+\contentsline {subsection}{\numberline {3.3.1}Sistema, modelo e terminologia}{26}
+\contentsline {subsection}{\numberline {3.3.2}O esquema de controle de acesso ao meio}{27}
+\contentsline {subsection}{\numberline {3.3.3}O mecanismo de reserva}{30}
+\contentsline {section}{\numberline {3.4}A especifica\c c\~ao formal de DORIS}{30}
+\contentsline {subsection}{\numberline {3.4.1}Hip\'oteses de modelagem}{31}
+\contentsline {subsection}{\numberline {3.4.2}Conceitos de TLA+}{32}
+\contentsline {subsection}{\numberline {3.4.3}Elementos da linguagem TLA+}{33}
+\contentsline {subsection}{\numberline {3.4.4}Constantes e vari\'aveis}{35}
+\contentsline {subsection}{\numberline {3.4.5}A f\'ormula principal de \emph {DoRiS}}{36}
+\contentsline {subsection}{\numberline {3.4.6}A\c c\~oes principais}{40}
+\contentsline {subsection}{\numberline {3.4.7}O anel cr\IeC {\'\i }tico}{42}
+\contentsline {subsection}{\numberline {3.4.8}O anel n\~ao-cr\IeC {\'\i }tico}{48}
+\contentsline {subsection}{\numberline {3.4.9}A representa\c c\~ao temporal}{51}
+\contentsline {section}{\numberline {3.5}Verifica\c c\~ao autom\'atica}{56}
+\contentsline {section}{\numberline {3.6}Conclus\~ao}{60}
+\contentsline {chapter}{Cap\'{\i }tulo~4---Plataforma Operacional}{62}
+\contentsline {section}{\numberline {4.1}Introdu\c c\~ao}{62}
+\contentsline {section}{\numberline {4.2}Linux: um Sistema Operacional de Prop\'osito Geral}{63}
+\contentsline {subsection}{\numberline {4.2.1}Motiva\c c\~ao para o uso de Linux}{63}
+\contentsline {subsection}{\numberline {4.2.2}Interrup\c c\~oes }{65}
+\contentsline {subsection}{\numberline {4.2.3}Tempo compartilhado}{66}
+\contentsline {subsection}{\numberline {4.2.4}Preemp\c c\~ao}{68}
+\contentsline {subsubsection}{\numberline {4.2.4.1}Concorr\^encia e sincroniza\c c\~ao}{69}
+\contentsline {subsubsection}{\numberline {4.2.4.2}Sem\'aforos}{70}
+\contentsline {subsubsection}{\numberline {4.2.4.3}Spin-lock}{71}
+\contentsline {section}{\numberline {4.3}Caracteriza\c c\~ao do comportamento temporal do Linux}{72}
+\contentsline {subsection}{\numberline {4.3.1}Precis\~ao temporal de escalonamento}{72}
+\contentsline {subsection}{\numberline {4.3.2}Lat\^encia de interrup\c c\~ao}{74}
+\contentsline {subsection}{\numberline {4.3.3}Lat\^encia de ativa\c c\~ao}{75}
+\contentsline {subsection}{\numberline {4.3.4}Lat\^encia causada pela invers\~ao de prioridade}{76}
+\contentsline {section}{\numberline {4.4}Solu\c c\~oes de SOTR baseadas em Linux}{77}
+\contentsline {subsection}{\numberline {4.4.1}O \emph {patch} {PREEMPT-RT}}{78}
+\contentsline {subsection}{\numberline {4.4.2}Uma caixa de areia em espa\c co usu\'ario}{80}
+\contentsline {subsection}{\numberline {4.4.3}\emph {Nanokernel}}{81}
+\contentsline {subsubsection}{\numberline {4.4.3.1}RT-Linux}{82}
+\contentsline {subsubsection}{\numberline {4.4.3.2}Adeos, RTAI e Xenomai}{82}
+\contentsline {section}{\numberline {4.5}Metodologia experimental}{85}
+\contentsline {subsection}{\numberline {4.5.1}Configura\c c\~ao do experimento}{85}
+\contentsline {subsection}{\numberline {4.5.2}Cargas de I/O, processamento e interrup\c c\~ao}{89}
+\contentsline {section}{\numberline {4.6}Avalia\c c\~ao de Linux$^{\@mathbf {Prt}}$, Linux$^{\@mathbf {Rtai}}$ e Linux$^{\@mathbf {Xen}}$}{90}
+\contentsline {subsection}{\numberline {4.6.1}Configura\c c\~ao}{90}
+\contentsline {subsection}{\numberline {4.6.2}Resultados experimentais}{91}
+\contentsline {subsubsection}{\numberline {4.6.2.1}Lat\^encia de interrup\c c\~ao}{91}
+\contentsline {subsubsection}{\numberline {4.6.2.2}Lat\^encia de ativa\c c\~ao}{93}
+\contentsline {section}{\numberline {4.7}Conclus\~ao}{93}
+\contentsline {chapter}{Cap\'{\i }tulo~5---Ambiente de implementa\c c\~ao e configura\c c\~ao de \emph {DoRiS}}{97}
+\contentsline {section}{\numberline {5.1}Introdu\c c\~ao}{97}
+\contentsline {section}{\numberline {5.2}As camadas de rede e enlace do Linux}{98}
+\contentsline {section}{\numberline {5.3}A camada de rede do Xenomai: RTnet}{101}
+\contentsline {subsection}{\numberline {5.3.1}RTDM}{101}
+\contentsline {subsection}{\numberline {5.3.2}A arquitetura do RTnet}{103}
+\contentsline {subsection}{\numberline {5.3.3}RTnet: principais componentes}{105}
+\contentsline {subsubsection}{\numberline {5.3.3.1}Gerenciamento de mem\'oria}{105}
+\contentsline {subsubsection}{\numberline {5.3.3.2}Emiss\~ao e Recep\c c\~ao de pacotes}{106}
+\contentsline {subsubsection}{\numberline {5.3.3.3}A camada de rede}{107}
+\contentsline {subsubsection}{\numberline {5.3.3.4}Os pacotes RTnet}{108}
+\contentsline {subsection}{\numberline {5.3.4}RTnet: As disciplinas TDMA e NoMAC}{109}
+\contentsline {section}{\numberline {5.4}DoRiS: uma nova disciplina do RTnet}{110}
+\contentsline {subsection}{\numberline {5.4.1}Comunica\c c\~ao um-para-todos}{112}
+\contentsline {subsection}{\numberline {5.4.2}Configura\c c\~ao e sincroniza\c c\~ao do anel cr\IeC {\'\i }tico}{113}
+\contentsline {subsection}{\numberline {5.4.3}Medidas de \ensuremath {\Delta _E\tmspace +\thinmuskip {.1667em}}}{114}
+\contentsline {subsection}{\numberline {5.4.4}Configura\c c\~ao do anel n\~ao-cr\IeC {\'\i }tico}{116}
+\contentsline {subsection}{\numberline {5.4.5}A implementa\c c\~ao da disciplina \emph {DoRiS}}{119}
+\contentsline {subsubsection}{\numberline {5.4.5.1}Recep\c c\~ao}{119}
+\contentsline {subsubsection}{\numberline {5.4.5.2}Emiss\~ao de mensagens cr\IeC {\'\i }ticas}{120}
+\contentsline {subsubsection}{\numberline {5.4.5.3}Emiss\~ao de mensagens n\~ao-cr\IeC {\'\i }ticas}{121}
+\contentsline {subsection}{\numberline {5.4.6}Resultados experimentais}{122}
+\contentsline {section}{\numberline {5.5}Conclus\~ao}{124}
+\contentsline {chapter}{Cap\'{\i }tulo~6---Conclus\~ao}{125}
+\contentsline {chapter}{Ap\^endice~A---Especifica\c c\~ao formal de DoRiS em TLA+}{128}
+\contentsline {chapter}{Ap\^endice~B---Exemplos de traces produzidos por TLC}{137}
+\contentsline {chapter}{Ap\^endice~C---Especifica\c c\~ao de DoRiS com configura\c c\~ao din\^amica}{141}

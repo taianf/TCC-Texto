@@ -1,0 +1,813 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{sbc-template}
+\usepackage{wso}
+
+\usepackage{graphicx,url}
+
+% \usepackage[brazil]{babel} \usepackage[latin1]{inputenc}
+
+     
+\sloppy
+
+\title{Avaliação do determinismo temporal no tratamento de interrupções em
+  plataformas de tempo real Linux \thanks{Este trabalho recebeu o apoio da FAPESB e do CNPq}}
+
+\author{Paul Regnier \inst{1} \hspace{0.2cm} George Lima \inst{1} \hspace{0.2cm}
+  Luciano Barreto \inst{1} \email{\{pregnier, gmlima, lportoba\}@ufba.br} }
+
+\address{
+  Distributed Systems Laboratory (LaSiD) - Computer Science Department (DCC)\\
+  Pos-Graduation Program on Mechatronics -
+  Federal University of Bahia\\
+  Campus de Ondina, 40170-110, Salvador-BA, Brazil }
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  Several real-time Linux extensions can be found nowadays. Two of them have
+  received special attention recently, the patches Preempt-RT and Xenomai. This
+  paper evaluates to what extent they provide deterministic guarantees when reacting
+  to external events, an essential characteristic when it comes to real-time
+  systems. To do that we define a simple but effective experimental
+  approach. Obtained results indicate that Preempt-RT is more prone to temporal
+    variations than Xenomai when the system is subject to overload scenarios.
+\end{abstract}
+     
+\begin{resumo}
+  Várias extensões Linux para tempo real podem ser encontradas hoje em dia.
+  Duas delas têm recebido atenção especial recentemente: os \ing{patches} Preempt-RT
+  e Xenomai. Este artigo avalia em que medida elas fornecem garantias
+  determinísticas quando reagem a eventos externos, uma característica essencial
+  quando se trata de sistemas de tempo real. Para tanto, definimos uma abordagem
+  experimental simples e eficaz. Os resultados obtidos indicam que Preempt-RT
+    é mais propenso a variações temporais que Xenomai quando o sistema está sujeito a
+    cenários de sobrecarga.
+\end{resumo}
+
+
+\section{Introdução}
+
+Os sistemas de tempo real englobam diversas aplicações ligadas às áreas de
+telecomunicações, multimídia, indústria, transporte, medicina, etc.  Para tais
+sistemas, a escolha adequada de Sistemas Operacionais de Tempo Real (SOTR) constitui
+aspecto fundamental de projeto. Apesar da importância da evolução tecnológica do
+hardware, certas inovações podem introduzir empecilhos para a construção de
+SOTR. Por exemplo, os adventos de memória \ing{cache}, acesso direto à memória
+(DMA), co-processamento, predição de instruções, unidades \ing{multicore},
+\ing{pipelines} e execução fora de ordem constituem fontes não-desprezíveis de
+indeterminismo \cite{Liu00, Pratt04}.  Assim, a construção de um sistema operacional
+de uso genérico com foco em previsibilidade temporal permanece um desafio de
+pesquisa atual.
+
+Apesar de sua difusão e popularidade, o \kernell padrão do Linux \cite{Bovet05}
+falha na oferta de garantias temporais típicas dos sistemas de tempo real críticos
+\cite{Marchesotti06, Abeni02}. Para contornar esse problema, várias abordagens foram
+desenvolvidas com o intuito de aumentar o grau de previsibilidade temporal do Linux
+\cite{PreemptRT, Xenomai, Dozio03, rtLinux, Fry07, Calandrino06}. A evolução rápida
+e a diversidade das soluções disponíveis apela para estudos comparativos que
+permitam avaliar o determinismo oferecido por cada plataforma de forma a auxiliar o
+projetista de sistemas de tempo real na escolha apropriada da distribuição a ser
+utilizada.
+
+Este trabalho tem por objetivo apresentar e comparar os \ing{patches} do \kernell
+Linux \preemptt (Linux$^{\mathbf{Prt}}$) \cite{PreemptRT} e Xenomai
+(Linux$^{\mathbf{Xen}}$) \cite{Xenomai} , desenvolvidos para aumentar a
+previsibilidade do Linux.  As principais contribuições deste trabalho são: (i) a
+proposta de uma metodologia de avaliação simples baseada em software e 
+  hardware de prateleira, que utiliza uma sobrecarga do processador através de
+carga de processamento, de entrada e saída, e de interrupção; (ii) a obtenção de
+resultados que confirmam a capacidade de Linux$^{\mathbf{Xen}}$ em oferecer
+garantias temporais críticas, e (iii) a confirmação que, em situação de carga
+intensa, Linux$^{\mathbf{Prt}}$ não consegue oferecer garantias temporais de maneira
+tão determinística quanto Linux$^{\mathbf{Xen}}$.
+
+A Seção \ref{sec:compTemp} descreve alguns fatores de imprevisibilidade do Linux e
+define as métricas adotadas para a comparação de Linux$^{\mathbf{Prt}}$ e
+Linux$^{\mathbf{Xen}}$. Estas duas plataformas são descritas nas Seções
+\ref{sec:preemptRT} e \ref{sec:xenomai}.  Em seguida, a descrição da metodologia de
+experimentação na Seção \ref{sec:metod} precede a apresentação dos resultados
+experimentais na Seção \ref{cap:platEstud}. Finalmente, a Seção \ref{sec:trabRel}
+apresenta brevemente os trabalhos relacionados e a Seção \ref{sec:conc} conclui este
+trabalho.
+
+
+
+% \cite{McKenney05, Dozio03}.
+
+% As principais motivações para a escolha deste SOPG foram: (i) ser de código
+% aberto; (ii) oferecer uma interface de utilização conforme o padrão POSIX
+% \ing{Portable Operating System Interface} \cite{POSIX04}; e (iii) ser bastante
+% difundido nos ambientes de pesquisa acadêmica. A primeira abordagem, descrita na
+% Seção \ref{sec:preemptRT}, consiste em tornar o \kernell Linux inteiramente
+% preemptível. Desta forma, é possível limitar as latências máximas do sistema.  A
+% segunda abordagem, baseada em \nanokernel \cite{}, será descrita na Seção
+% \ref{sec:xenomai}. Esta proposta utiliza uma camada intermediária entre o \kernell
+% e o \ing{hardware}, o \nanokernel, que oferece serviços de tempo real para as
+% aplicações.  Apesar de existir outras propostas de SOTR baseadas no Linux (ex:
+% \cite{Barabanov97, Calandrino06, Fry07}), estas duas abordagens são
+% representativas das soluções mais recentes desenvolvidas para aumentar a
+% previsibilidade de um SOPG tal como Linux.
+
+
+% Vale observar que a variabilidade de escalonamento associada ao mecanismo de
+% compartilhamento do tempo do Linux \cite{Piccioni01} não será abordada aqui, pois
+% as plataformas de tempo real estudadas utilizam um escalonador próprio, baseados
+% em temporizadores de alta precisão.
+
+% Finalmente, a Seção \ref{sec:experimentos} será dedicada a discussão dos
+% experimentos e resultados obtidos, e a Seção \ref{sec:conclusao} apresentará as
+% conclusões deste trabalho.
+
+ 
+
+
+% 1) A necessidade de se ter SO com garantias temporais que deem suporte a sistemas
+% legados (as aplicacoes que nao sao tempo real ajh existente) 2) A abrangencia de
+% Linux 3) As varias iniciativas recentes em transformar Linux em tempo real
+
+
+% Num SOPG tal que Linux, a organização da comunicação entre os dispositivos, o
+% \kernell e as aplicações é baseada em interrupção do processador. Tais
+% interrupções são gerenciadas por um dispositivo de \ing{hardware} específico, o
+% PIC ou o APIC (\ing{Advanced Programmable Interrupt Controller}) que é diretamente
+% conectado ao processador.  Na ocorrência de um evento de comunicação, ou seja,
+% quando um dispositivo requer a atenção do processador, ele informa o APIC via uma
+% linha de interrupção (\ing{IRQ lines}).  Por sua vez, o APIC informa o processador
+% que uma interrupção precisa ser tratada.
+
+% Quando o processador percebe uma interrupção, ele desvia sua execução e passa a
+% executar o tratador de interrupção associado à linha de interrupção que solicitou
+% o APIC inicialmente.  Esta execução não é associada a processo algum, mas sim à
+% ocorrência de um evento e, portanto, não tem contexto de execução próprio.
+% % O tratador simplesmente executa no contexto do último processo que
+% % estava executando no processador.
+% Para minimizar o impacto das interrupções sobre a execução dos processos
+% regulares, um tratador de interrupção é geralmente subdividido em três partes. A
+% primeira parte executa operações críticas que não podem ser atrasadas e que
+% modificam estruturas de dados compartilhadas pelo dispositivo e o \kernel.  Tais
+% operações são executadas imediatamente e com as interrupções desabilitadas.
+% Também executado imediatamente pelo tratador, mas com as interrupções habilitadas,
+% são as operações rápidas que modificam apenas as estruturas de dados do \kernel,
+% pois estas são protegidas por mecanismos de \ing{locks}. Estes dois conjuntos de
+% operações constituem a parte crítica do tratador, durante a qual a execução não
+% pode ser suspensa.  Finalmente, as operações não-críticas e não-urgentes são
+% possivelmente adiadas e executadas com as interrupções habilitadas.  Estas
+% execuções são chamadas de \cod{softirqs} ou \cod{tasklets}.
+
+% No \kernell padrão, o principal mecanismo de trava é chamada de
+% \ing{spin-lock}. Tal trava é uma variável booleana, utilizada de forma atômica por
+% apenas um processo num dado instante. Quando um processo tenta adquirir um
+% \ing{spin-lock} que já está em posse de um outro processo, ele não é suspenso mas
+% sim executa uma espera ocupada (\ing{spin}), tentando periodicamente adquirir o
+% \ing{lock}.  Desta foram, trocas de contextos custosas em tempo são evitadas. As
+% regiões críticas protegidas por \ing{spin-locks} devem ser curtas, pois tanto
+% interrupções com preempções são desabilitadas enquanto o \ing{spin-locks} não é
+% devolvido. Apesar de resolver o problema fundamental da exclusão mútua
+% \cite{Dijkstra65, Lamport74, Raynal86}, os \ing{spin-locks} podem aumentar
+% significativamente o tempo de resposta do sistema na ocorrência de uma
+% interrupção.
+
+% Do tratamento eficiente das interrupções depende a capacidade do sistema para
+% reagir a eventos externos. O \kernell padrão garante esta eficiência, proibindo
+% que a execução da parte crítica do tratador de interrupção seja suspensa, mas
+% permitindo que a parte não-crítica, e geralmente mais demorada, seja suspensa para
+% a execução da parte crítica de uma outra interrupção.
+
+% \subsubsection{Concorrência e sincronização}
+% \label{sec:locks}
+
+% O principal objetivo de tornar o SO preemptivo \cite{Bovet05} é diminuir o tempo
+% de latência que o processo de mais alta prioridade pode sofrer antes de ganhar o
+% processador. Ver-se-á que este objetivo é de suma importância para que um SOPG tal
+% como Linux possa oferecer as garantias temporais encontradas em STR.
+
+ 
+\section{Métricas de comparação}
+\label{sec:compTemp}
+
+O método convencional utilizado para minimizar o impacto das interrupções sobre a
+execução dos processos consiste em dividir a execução do tratador de interrupção em
+duas partes. A primeira parte executa operações críticas de forma imediata e com as
+interrupções desabilitadas, o que constitui a \textbf{seção crítica} do tratador.
+Eventualmente, pode-se reabilitar as interrupções de modo a permitir preempção,
+tomando-se o cuidado de garantir o acesso controlado aos dados compartilhados
+através de \ing{locks}.  Na segunda parte, as operações não-críticas são
+possivelmente adiadas e executadas com as interrupções habilitadas.  No Linux, estas
+execuções postergadas são chamadas de \textbf{\emph{softirqs}}.
+
+\subsection{Latência de interrupção}
+\label{sec:latIRQ}
+
+%PAUL
+Uma requisição de interrupção, ou simplesmente \textbf{interrupção}, do processador
+por um dispositivo de \ing{hardware} é assíncrona e pode acontecer em qualquer
+momento do ciclo de execução do processador. Em particular, tal requisição pode
+ocorrer enquanto a seção crítica do tratador de outra interrupção estiver
+executando, com as interrupções desabilitadas. Tal cenário pode provocar uma
+latência não determinística para a detecção da requisição de interrupção pelo
+processador.
+% Além disso, a execução da parte crítica de um tratador de interrupção requer
+% eventualmente a desabilitação das interrupções para impedir o acesso concorrente a
+% dados protegidos por \ing{locks} dentro de tratadores de interrupção. Vários
+% cenários de latência para a detecção e o tratamento de uma interrupção pelo
+% processador são possíveis. Se as interrupções forem habilitadas, ela é detectada
+% no final do ciclo das instruções em execução. Senão, a interrupção pode acontecer
+% enquanto as interrupções estão desabilitadas pela execução da parte crítica de um
+% tratador de interrupção. Após o fim da execução deste tratador, as interrupções
+% voltam a ser habilitadas novamente.  Em seguida à detecção da interrupção, o
+% processador começa por salvar o contador de programa e alguns registradores da
+% memória para poder retomar a execução do processo interrompido, depois do
+% tratamento da interrupção. Depois de executar mais algumas operações, o
+% processador finalmente começa a executar o tratador da interrupção que aconteceu.
+O tempo decorrido entre o instante no qual uma requisição de interrupção acontece e
+o início da execução do tratador associado é chamado de \textbf{latência de
+  interrupção}.  Esta grandeza foi contemplada como métrica para efeito de
+comparação das plataformas estudadas, pois caracteriza a capacidade do sistema para
+reagir a eventos externos.
+
+
+\subsection{Latência de ativação}
+\label{sec:latAtiv}
+
+No \kernell Linux, logo após o término da seção crítica do tratador de interrupção,
+o \ing{softirq} correspondente está apto a executar. No entanto, entre o instante no
+qual a seção crítica termina e o instante no qual o \ing{softirq} começa a executar,
+outras interrupções podem acontecer, provocando um possível atraso na execução dos
+ \ing{softirqs}.
+
+ Nas plataformas de tempo real, eventos de temporizadores ou de \ing{hardware} são
+ utilizados para disparar tarefas, num modelo similar aos \ing{softirqs}. Tal
+ tarefa, muitas vezes periódica, fica suspensa a espera de um evento.  Quando o
+ evento ocorre, a requisição de interrupção associada aciona o tratador
+ correspondente que, por sua vez, acorda a tarefa. O intervalo de tempo entre os
+ instantes de ocorrência do evento e o início da execução da tarefa associada é
+ chamada de \textbf{latência de ativação}. Assim como no caso dos \ing{softirqs}, a
+ latência de ativação pode ser aumentada pela ocorrência de interrupções. Além
+ disso, a execução de outros \ing{softirqs} pode ser escalonada de acordo com alguma
+ política (ex: FIFO, prioridade fixa), o que pode também gerar interferências na
+ latência de ativação.  Assim como a latência de interrupção, a latência de ativação
+ caracteriza a capacidade de um sistema para reagir a eventos externos.
+
+
+\section{Linux$^{\mathbf{Prt}}$}
+\label{sec:preemptRT}
+
+Para prover precisão temporal, Linux$^{\mathbf{Prt}}$ \cite{McKenney05, Rostedt07}
+utiliza uma nova implementação dos temporizadores de alta resolução desenvolvida por
+Thomas Gleixner \cite{Kernel}.  Baseado no valor no registrador \ing{Time Stamp
+  Counter} (TSC) da arquitetura Intel ou em relógios de alta resolução, esta
+implementação oferece uma API que permite obter valores temporais com resolução
+de micro-segundos.  De acordo com resultados apresentados \cite{Rostedt07,Siro07},
+os tempos de latência de ativação obtidos usando esta API são da ordem de algumas
+dezenas de $\mu s$ nos computadores atuais.
+
+Linux$^{\mathbf{Prt}}$ comporta várias modificações que tornam o \kernell totalmente
+preemptível. Dessa forma, assim que um processo de mais alta prioridade é
+desbloqueado, este consegue adquirir o processador com latência mínima, sem
+necessidade de espera pelo fim da execução de um processo de menor prioridade, mesmo
+que este esteja executando em modo \kernel. Para limitar os efeitos de
+imprevisibilidade causados por recursos compartilhados, Linux$^{\mathbf{Prt}}$
+modifica as primitivas de sincronização de maneira a permitir a implementação de um
+protocolo baseado em herança de prioridade \cite{Sha90}.
+
+%PAUL
+Em relação à latência de interrupção, Linux$^{\mathbf{Prt}}$ utiliza \ing{threads}
+de interrupções. Quando uma linha de interrupção é iniciada, um \ing{thread} é
+criado para gerenciar as requisições de interrupção associadas a esta linha.  Na
+ocorrência de uma requisição, o tratador associado mascara a requisição, acorda o
+\ing{thread} da interrupção e volta para o código interrompido. Desta forma, a parte
+crítica do tratador de interrupção é reduzida ao seu mínimo e a latência causada
+pela sua execução, além de ser breve, é determinística. Em algum momento futuro, o
+\ing{thread} de interrupção acordado é escalonado, de acordo com a sua
+prioridade, % relativa aos demais processos,
+dando espaço para indeterminismo, o que será objeto do presente estudo.
+ 
+Usando programas corretamente escritos, respeitando as regras de programação de
+Linux$^{\mathbf{Prt}}$ e alocando os recursos de acordo com os requisitos temporais,
+a solução Linux$^{\mathbf{Prt}}$ tem a vantagem de oferecer o ambiente de
+programação do sistema Linux, dando acesso às bibliotecas C e ao conjunto de
+software disponível para este sistema.
+
+
+\section{Linux$^{\mathbf{Xen}}$}
+\label{sec:xenomai}
+
+% As soluções de implementação para SOTRs tal como RT-Linux \cite{Barabanov97}, RTAI
+% \cite{Dozio03} ou Xenomai \cite{Gerum05}, utilizam o mecanismo de virtualização
+% das interrupções introduzido na técnica de ``proteção otimista das interrupções''
+% \cite{Stodolsky93}.  Também chamada de indireção de interrupção ou \nanokernel,
+% esta técnica pode ser resumida da seguinte maneira.
+
+Diferentemente de Linux$^{\mathbf{Prt}}$, a plataforma Linux$^{\mathbf{Xen}}$
+utiliza uma abordagem baseada no mecanismo de indireção das interrupções introduzido
+na técnica de ``proteção otimista das interrupções'' \cite{Stodolsky93}.  Quando uma
+requisição de interrupção acontece, a camada de indireção, também chamada de
+\nanokernel, identifica se esta é relativa a uma tarefa de tempo real ou se é
+destinada a um processo do Linux. No primeiro caso, o tratador da interrupção é
+executado imediatamente. Caso contrário, a requisição é enfileirada e, em algum
+momento futuro, entregue para o Linux quando inexistirem tarefas de tempo
+real. Quando o Linux precisa desabilitar as interrupções, o \nanokernell apenas
+deixa o Linux acreditar que as interrupções estão desabilitadas. No entanto, o
+\nanokernell continua a interceptar qualquer interrupção de \ing{hardware}.  Nesta
+ocorrência, a interrupção é tratada imediatamente se for destinada a uma tarefa de
+tempo real. Caso contrário, a interrupção é enfileirada, até que o \kernell Linux
+reabilite suas interrupções.
+
+% A plataforma Xenomai, escolhida como representante das soluções de SOTRs baseadas
+% em \nanokernel, pois é um projeto recente e de código aberto, compatível com a
+% plataforma RTAI, e que tem por prioridade a implementação de uma interface de
+% programação de tempo real em modo usuário.  Xenomai, assim como RTAI, utiliza uma
+% camada de abstração do hardware (HAL) chamada Adeos (\ing{Adaptative Domain
+%   Environment for Operating Systems}) \cite{Yaghmour01}.
+
+Para a implementação do \nanokernel, Linux$^{\mathbf{Xen}}$ utiliza uma camada de
+virtualização dos recursos chamada Adeos (\ing{Adaptative Domain Environment for
+  Operating Systems}) \cite{Yaghmour01}.  O \ing{patch} Adeos facilita o
+compartilhamento e o uso dos recursos de \ing{hardware} e oferece uma interface de
+programação simples e independente da arquitetura.
+% Adeos utiliza Linux como hospedeiro para iniciar o \ing{hardware}. Logo no início,
+% a camada Adeos é inserida abaixo do \kernell Linux para tomar o controle do
+% hardware. Após isto, os serviços de Adeos podem ser utilizados por outros sistemas
+% operacionais e/ou aplicações executando conjuntamente ao \kernell Linux.
+Resumidamente, Adeos é baseado nos conceitos de domínio e de canal
+hierárquico de interrupção. Um domínio caracteriza um ambiente de execução isolado,
+no qual pode-se executar programas ou até mesmo sistemas operacionais completos.
+  O canal hierárquico de interrupção, chamado
+\ing{ipipe}, serve para priorizar a entrega da interrupções entre os domínios.
+Quando um domínio se registra no Adeos, ele é colocado numa posição no \ing{ipipe}
+de acordo com os seus requisitos temporais.  Adeos utiliza então o mecanismo de
+indireção das interrupções para organizar a entrega hierárquica das interrupções,
+seguindo a ordem de prioridade dos domínios.
+
+% Funções apropriadas (\ing{stall/unstall}) permitem bloquear ou desbloquear a
+% transmissão das interrupções através de cada domínio.
+
+Os serviços de tempo real de Linux$^{\mathbf{Xen}}$ correspondem ao domínio mais
+prioritário do \ing{ipipe}, chamado ``domínio primário''.  Este domínio corresponde,
+portanto, ao núcleo de tempo real no qual as tarefas são executadas em modo
+protegido.
+% Como as interrupções são entregues começando pelo domínio primário, o núcleo de
+% tempo real pode escolher atrasar, ou não, a entrega das interrupções para os
+% demais domínios registrados no \ing{ipipe}, garantindo, desta forma, a execução
+% das suas próprias tarefas. Módulos podem ser utilizados para carregar as tarefas,
+% de forma semelhante ao RT-Linux.
+O ``domínio secundário'', por sua vez, corresponde ao \kernell Linux, no qual o conjunto de
+bibliotecas e software usual do Linux está disponível.  Em contrapartida, as
+garantias temporais são mais fracas, dado que o código pode utilizar as chamadas de
+sistemas bloqueantes do Linux.
+
+% A implementação dos serviços de tempo real em modo usuário se baseia no mecanismo
+% de herança de prioridade e num domínio intermediário, chamado ``escudo de
+% interrupção'' que garante as seguintes propriedades: (i) a política de prioridade
+% utilizada para as tarefas de tempo real, e para o escalonador associado, é comum
+% aos dois domínios; e (ii) as interrupções de \ing{hardware} não podem impedir a
+% execução de uma tarefa prioritária enquanto ela estiver no domínio secundário.
+
+\section{Metodologia experimental}
+\label{sec:metod}
+
+Em geral, realizar medições precisas de tempo no nível dos tratadores de interrupção
+pode não ser tão simples.  De fato, o instante exato no qual uma requisição de
+interrupção acontece é de difícil medição, pois tal evento é assíncrono e pode ser
+causado por qualquer dispositivo de \ing{hardware}. Para obter medidas das latências
+de interrupção e ativação confiáveis com alto grau de precisão, aparelhos externos,
+tais como osciloscópios ou outros computadores, são necessários. Visto que o
+objetivo do presente trabalho foi caracterizar e comparar o grau de determinismo das
+plataformas operacionais estudadas, adotou-se uma metodologia experimental simples e
+efetiva, que pode ser reproduzida facilmente em outros contextos.
+
+\subsection{Configuração do experimento}
+
+O dispositivo experimental utilizou três estações: (1) a estação de medição $E_M$,
+na qual os dados foram coletados e onde temos uma tarefa de tempo real $\tau$ à
+espera de eventos externos; (2) a estação de disparo $E_D$, que foi utilizada para
+enviar pacotes Ethernet com uma freqüência fixa à estação $E_M$; e (3) a estação de
+carga $E_C$, utilizada para criar uma carga de interrupção na estação $E_M$. As
+estações de disparo e carga foram conectadas a estação de medição por duas redes
+Ethernet distintas, utilizando duas placas de redes ($eth_0$ e $eth_1$), conforme
+ilustrado no diagrama da Figura \ref{fig:config}.
+
+\begin{figure}[t]
+  \centering {\scalebox{1}{\input{fig/config.pstex_t}}}
+  \caption{Configuração do experimento.} \label{fig:config}
+\end{figure}
+
+As chegadas dos pacotes enviados por $E_D$ em $E_M$ servem para disparar uma cascata
+de eventos na estação $E_M$, permitindo a simulação de eventos externos via sua
+porta paralela (PP). Mais explicitamente, cada chegada de um pacote Ethernet em
+$eth_0$ foi utilizada para disparar uma requisição de interrupção na PP, escrevendo
+no pino de interrupção desta porta (ver Figura \ref{fig:dispExp}). Esta escrita foi
+realizada pelo próprio tratador $T_{eth_0}$ de interrupção da placa $eth_0$.  O
+instante $t_1$ de escrita no pino de interrupção da PP pelo tratador $T_{eth_0}$
+constitui então o início da seqüência de eventos utilizados para medir as latências
+de interrupção ($Lat_{irq}$) e de ativação ($Lat_{ativ}$). Vale observar que não
+existe relação entre a chegada de pacotes na placa $eth_0$ de $E_M$ e a atividade
+sendo executada nesta estação.
+
+\begin{figure}[b]
+  \centering {\scalebox{1}{\input{fig/dispExp.pstex_t}}}
+  \caption{Cálculo das latências de interrupção e ativação na estação
+    $E_M$.} \label{fig:dispExp}
+\end{figure}
+
+As medidas seguiram o seguinte roteiro, ilustrado pela Figura \ref{fig:dispExp}:
+
+\begin{itemize}
+\item A estação $E_D$ envia pacotes Ethernet para a placa $eth_0$ da estação $E_M$,
+  provocando interrupções assíncronas em relação às aplicações executando em $E_M$.
+\item A interrupção associada à chegada de um pacote provoca a preempção da
+  aplicação em execução no processador pelo tratador de interrupção $T_{eth_0}$.
+\item O tratador $T_{eth_0}$ foi restrito ao seu mínimo: ele apenas escreve no
+    pino de interrupção da PP e armazena o instante $t_1$ na memória. Este instante
+    corresponde, portanto, ao valor lido no relógio local, no instante na escrita da PP,
+  logo após a chegada de uma pacote Ethernet.
+\item A requisição de interrupção associada à escrita no pino de interrupção da PP
+  provoca a preempção da aplicação em execução no processador pelo tratador de
+  interrupção $T_{PP}$.
+\item $T_{PP}$ grava o instante $t_2$ e acorda a tarefa $\tau$. Este valor $t_2$
+  corresponde ao valor do relógio local, logo após o início de $T_{PP}$.
+\item No momento que a tarefa $\tau$ acorda, ela grava o instante $t_3$ e volta a
+  ficar suspensa até a próxima interrupção na PP.  Portanto, $t_3$ corresponde
+  ao tempo no qual a tarefa $\tau$ começa a executar, no final da cascata de eventos
+  provocada pela chegada de um pacote na placa de rede.
+\end{itemize}
+
+Como representado na Figura \ref{fig:dispExp}, $Lat_{irq}$ corresponde à
+diferença $t_2 - t_1$ e $Lat_{ativ}$ a diferença $t_3 - t_2$.
+No decorrer do experimento, a transferência das medições da memória para o sistema
+de arquivos foi realizada por um canal FIFO lido por um processo usuário de forma a
+impedir qualquer interferência entre a aquisição dos dados e seu armazenamento no
+sistema de arquivos. Além da prioridade deste processo ser menor que as demais 
+tarefas e tratadores de interrupções executados em modo \ing{kernel}, os eventos
+de transferências de dados eram suficientemente raros (20 por segundo) para não
+interferir nas medidas realizadas.
+
+\subsection{Cargas de I/O, processamento e interrupção}
+\label{sec:carga}
+
+Num primeiro momento, realizou-se experimentos com uma carga mínima no processador
+da estação $E_M$ (modo \ing{single}). Desta forma, observou-se o comportamento
+temporal das três plataformas em situação favorável.  Em seguida, dois tipos de
+cargas foram utilizados simultaneamente para sobrecarregar $E_M$.
+Tais sobrecargas tiveram por objetivo avaliar a capacidade de cada plataforma em
+garantir uma latência determinística no tratamento das interrupções e na ativação de
+tarefas de tempo real, apesar da existência de outras atividades não-críticas.  As
+cargas de I/O e processamento foram realizadas executando as instruções seguintes na
+estação $E_M$:
+
+\vspace{ 4pt }
+% \setstretch{0.94}
+\begin{center}
+  \framebox[0.8\textwidth]{%
+    \begin{minipage}{0.74\linewidth}
+      \vspace{ 4pt } \footnotesize{%
+        \texttt{while "true"; do\\
+          \rule{1cm}{0pt} dd if=/dev/hda2 of=/dev/null bs=1M count=1000\\
+          \rule{1cm}{0pt} find / -name ''*.c'' | xargs egrep include\\
+          \rule{1cm}{0pt} tar -cjf /tmp/root.tbz2 /usr/src/linux-xenomai\\
+          \rule{1cm}{0pt}  cd /usr/src/linux-preempt; make clean; make\\
+          done \vspace{ 1pt } %\nolinebreak %\raisebox{10mm}{\rule{0cm}{0.01cm}}
+        }}
+    \end{minipage}
+  }
+\end{center}
+\vspace{ 4pt }
+% \setstretch{1}
+
+Um outro estresse de interrupção foi criado utilizando uma comunicação UDP entre a
+estação $E_M$ configurada como servidor e a estação $E_C$ configurada como
+cliente. Para isolar esta comunicação da comunicação entre $E_M$ e $E_D$,
+utilizou-se a segunda placa de rede $eth_1$ de $E_M$, assim com ilustrado pelo
+diagrama da Figura \ref{fig:dispExp}.  Durante o experimento, o processo cliente
+hospedado pela estação $E_C$ transmitiu pequenos pacotes de 64 \ing{bytes} na
+freqüência máxima permitida pela rede, ou seja, com uma freqüência superior a $200
+kHz$ (um pacote a cada $10 \mu s$).  Desta forma, mais de 100.000 interrupções por
+segundo foram geradas pela placa $eth_1$ de $E_M$. A placa $eth1$ foi registrada na
+linha de interrupção 18 de $E_M$, cuja prioridade é menor que a prioridade da porta
+paralela. % Para minimizar as  interferências, 
+% Portanto, as interrupções geradas nesta placa de
+% rede não deveriam, a princípio, interferir nas latências de interrupção mensuradas.
+Nos experimentos com cargas, os dois tipos de estresses foram aplicados
+simultaneamente e as medições só foram iniciadas alguns segundos depois.
+
+% É interessante observar que a interrupção na porta paralela sempre acontece logo
+% após a execução de $T_{eth}$. Portanto, a medida da latência de interrupção foi
+% estimada como sendo $t_2 - t_1$.  Esta estimativa deve ser considerada apenas como
+% indicativa, mas suficiente para ilustrar o determinismo das plataformas em estudo;
+
+% Como foi visto na Seção \ref{sec:latAtiv}, a latência de ativação ($t_3- t_2$)
+% caracteriza o tempo necessário para ativar uma tarefa após a ocorrência do seu
+% evento de disparo.  O dispositivo apresentado aqui permitiu obter medidas
+% quantitativamente corretas desta latência.  Além disso, o efeito do aumento da
+% atividade na estação de medição pôde ser investigado, pois o instante de disparo
+% da interrupção na porta paralela era totalmente independente da atividade dos
+% processos na estação de medição.
+
+
+\section{Avaliação de Linux$^{\mathbf{Prt}}$ e Linux$^{\mathbf{Xen}}$}
+\label{cap:platEstud}
+
+\subsection{Configuração}
+
+Os experimentos foram realizados em computadores Pentium 4 com processadores de 2.6
+GHz e 512 Mb de memória, com o objetivo de ilustrar o comportamento temporal das
+três plataformas seguintes:
+
+\begin{description}
+\item[$\bullet \;$ Linux$^{\mathbf{Std}}$:] Linux padrão - \kernell versão 2.6.23.9
+  (opção \ing{low-latency});
+\item[$\bullet \;$ Linux$^{\mathbf{Prt}}$:] Linux com o \ing{patch}
+  \preemptt (rt12) - \kernell versão 2.6.23.9;
+\item[$\bullet \;$ Linux$^{\mathbf{Xen}}$:] Linux com o \ing{patch} Xenomai - versão
+  2.4-rc5 - \kernell versão 2.6.19.7.
+\end{description}
+
+Utilizou-se a configuração Linux$^{\mathbf{Std}}$ para realizar experimentos de
+referência para efeito de comparação com as duas plataformas de tempo real
+Linux$^{\mathbf{Prt}}$ e Linux$^{\mathbf{Xen}}$.  A versão estável do \kernell
+2.6.23.9, disponibilizada em dezembro de 2007 foi escolhida para o estudo de
+Linux$^{\mathbf{Prt}}$, pois este \ing{patch} tem evoluído rapidamente desde sua
+primeira versão publicada há dois anos.  No entanto, utilizou-se a versão do
+\kernell 2.6.19.7 para o estudo da versão 2.4-rc5 de Xenomai. De fato, considerou-se
+desnecessário atualizar a versão do \kernel, pois Xenomai é baseado no Adeos (ver
+Seção \ref{sec:xenomai}) e, portanto, as garantias temporais oferecidas para as
+aplicações executando no primeiro domínio dependem apenas da versão do Xenomai e do
+\ing{patch} Adeos associado, e não, da versão do \kernell Linux. 
+
+As medidas das latências de interrupção e de ativação foram realizadas pela consulta
+do \ing{Time Stamp Counter} (TSC), permitindo uma precisão abaixo de $30 ns$ (88
+ciclos), verificada experimentalmente.  Utilizou-se uma freqüência de disparo dos
+eventos pela estação $E_D$ de 20Hz.  Para cada plataforma, dois experimentos de 10
+minutos foram realizados. O primeiro sem carga nenhuma do sistema e o segundo
+aplicando os estresses apresentados na Seção \ref{sec:carga}.
+%  \col{Para a plataforma Linux$^{\mathbf{Xen}}$, apesar do experimento com
+% estresses ter sido repetido por uma duração de 12 horas, os resultados confirmaram
+% os resultados obtidos com duração de 10 minutos}.
+
+
+% Para as duas plataformas RTAI e Xenomai, os diferentes testes de latências
+% fornecidos foram utilizados, dando resultados menores que $10 \mu s$ no pior caso
+% para a latência de interrupção, conforme os padrões da arquitetura Intel Pentium
+% 4. Em ambas plataformas, desabilitou-se as interrupções de gerenciamento do
+% sistema (\ing{SMI}), conforme as recomendações dos desenvolvedores \cite{RTAI,
+%   Xenomai}. Isto cancelou uma latência periódica (a cada 32 segundos) de
+% aproximadamente $2.5ms$ que aparecia nos testes.  No caso das plataforma Lx19
+% Linux$^{\mathbf{Std}}$ e Linux$^{\mathbf{Prt}}$, estas interrupções foram também
+% desabilitadas, porém, não foi constatado nenhuma alteração das medidas realizadas.
+% as interrupções de gerenciamento do sistema não foram desabilitadas.  No entanto,
+% pelo fato das interrupções \ing{SMI} ter um período de 32 segundos, este fato não
+% alterou os resultados experimentais de forma significativa.  No entanto, não se
+% observou nenhuma latência da ordem de $2.5ms$ nos experimentos relativos a estas
+% duas plataformas. Provavelmente, porque a interrupção periódica de SMI aconteceu
+% num intervalo de tempo sem medida.
+
+
+% Observar que RT-Linux, RTAI e Xenomai adotam soluções tecnológicas parecidas,
+% baseadas em \ing{nanokernel}. Portanto, o estudo comparativo foi realizado apenas
+% com a plataforma Xenomai.
+
+
+\subsection{Resultados experimentais}
+\label{sec:resExp}
+
+Os resultados experimentais são apresentados nas Figuras \ref{fig:latIrq} e
+\ref{fig:latAtiv}, onde o eixo horizontal representa o instante de observação
+variando de 0 a 60 segundos e o eixo vertical representa as latências medidas em
+$\mu s$ (tais valores podem ser multiplicados por $2.6 10^3$ para obter o número
+de ciclos do TSC).  Apesar de cada experimento ter durado no mínimo uma hora,
+escolheu-se apresentar apenas resultados para um intervalo de $60s$, pois este
+intervalo é suficiente para observar o padrão de comportamento de cada plataforma.
+Neste intervalo, o total de eventos por experimentos é 1200, pois a freqüência de
+chegada de pacotes utilizada foi de $20 Hz$.
+
+%%% George
+% Todos os experimentos foram realizados pelo menos três vezes e selecionou-se os
+% cenários com as latências maiores no pior caso.
+
+% Aqui acredito que vc precisa enfatizar que cada experimento tem x medidas e eles
+% foram realizados z vezes, portanto, cada grafico das Figuras 2 e 3 contem p
+% observacoes; enfatizar que o experimento com estresse de rede nao provocou
+% interferencia de comunicacao, pois outra placa de rede foi usada. A interferencia
+% sofrida por E_M se refere apenas as (com crase) interrupcoes provenientes da placa
+% de rede.
+
+Abaixo de cada Figura, os seguintes valores são indicados: Valor Médio (VM), desvio
+padrão (DP), valor mínimo (Min) e valor máximo (Max). Estes valores foram obtidos
+considerando a duração de uma hora de cada experimento. Na medida do possível,
+utilizou-se a mesma escala vertical para todos os gráficos.  Conseqüentemente,
+alguns valores altos podem ter ficado fora das Figuras. Tal ocorrência foi
+representada por um triângulo próximo do valor máximo do eixo vertical.
+
+
+\subsubsection{Latência de interrupção}
+\label{sec:latIrq}
+
+\begin{figure}%
+  \centering
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Sem carga} \newline
+  \vskip 1mm VM:     8.9, DP:     0.3,  Min:     8.7, Max:    18.4 ]{%
+    \label{fig:ker23Sem}%
+    {\scalebox{0.58}{\input{fig/ker23Sem}}}} \hspace{4pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Com carga} \newline
+  \vskip 1mm VM:    10.4, DP:     1.9,  Min:     8.8, Max:    67.7]{%
+    \label{fig:ker23Tot}%
+    {\scalebox{0.58}{\input{fig/ker23Tot}}}} \hspace{4pt}%
+
+  \vspace{7pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+  \vskip 1mm VM: 21.5, DP: 1.7, Min: 20.3, Max: 45.1]{%
+    \label{fig:preSem}%
+    {\scalebox{0.58}{\input{fig/preSem}}}} \hspace{4pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+  \vskip 1mm VM: 58.5, DP: 26.4, Min: 17.2, Max: 245.9]{%
+    \label{fig:preTot}%
+    {\scalebox{0.58}{\input{fig/preTot}}}} \hspace{4pt}%
+
+  \vspace{7pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Sem carga} \newline
+  \vskip 1mm VM: 9.0, DP: 0.1, Min: 8.8, Max: 11.1]{%
+    \label{fig:xenSem}%
+    {\scalebox{0.58}{\input{fig/xenSem}}}} \hspace{4pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Com carga} \newline
+  \vskip 1mm VM: 10.2, DP: 0.1, Min: 8.8, Max: 20.8]{%
+    \label{fig:xenTot}%
+    {\scalebox{0.58}{\input{fig/xenTot}}}} \hspace{4pt}%
+
+  \caption[Latências de interrupção]{Latência de interrupção com
+    freqüência de escrita na PP de $20 Hz$.}
+  \label{fig:latIrq}%
+\end{figure}
+
+A Figura \ref{fig:latIrq} apresenta as latências de interrupção
+medidas, com e sem estresse do sistema.  Como pode ser observado,
+sem carga, o Linux$^{\mathbf{Std}}$ e o Linux$^{\mathbf{Xen}}$ tem comportamentos
+parecidos. Com carga, observa-se uma variação significativa do
+Linux$^{\mathbf{Std}}$, como esperado.
+
+Com relação ao Linux$^{\mathbf{Prt}}$, dois resultados chamam atenção.  Primeiro, o
+comportamento do sistema sem carga exibe latências da ordem de 20 $\mu s$. Isto é
+causado pela implementação dos \ing{threads} de interrupção vista na Seção
+\ref{sec:preemptRT}.  Segundo, contradizendo as expectativas, a aplicação do
+estresses teve um impacto significativo, provocando uma alta variabilidade das
+latências. De fato, entre o instante no qual o tratador $T_{PP}$ requer a interrupção do
+processador %acorda o \ing{thread} de interrupção
+e o instante no qual este \ing{thread} acorda
+efetivamente, uma ou várias interrupções podem ocorrer.  Neste caso, a execução dos
+tratadores associados pode provocar o atraso da execução de $T_{PP}$.
+
+Para cancelar esta variabilidade indesejável, é possível usar o
+Linux$^{\mathbf{Prt}}$ sem utilizar a implementação de \ing{threads} de interrupção.
+Para tanto, usa-se a opção \cod{IRQF\_NODELAY} na requisição inicial da linha de
+interrupção. Utilizando esta opção na definição da linha de interrupção da porta
+paralela, o comportamento do Linux$^{\mathbf{Prt}}$ passa a ser semelhante ao
+Linux$^{\mathbf{Std}}$.
+
+
+\subsubsection{Latência de ativação}
+
+A Figura \ref{fig:latAtiv} apresenta os resultados para as latências de ativação sem
+estresse e com estresse do processador.  Como pode ser observado, o comportamento de
+Linux$^{\mathbf{Std}}$ é inadequado para atender os requisitos de tempo real.
+Linux$^{\mathbf{Prt}}$ e Linux$^{\mathbf{Xen}}$, por outro lado, apresentam valores
+de latências dentro dos padrões esperados.  Vale a pena notar o comportamento destes
+sistemas com carga.  Apesar do valor médio encontrado para Linux$^{\mathbf{Xen}}$
+($8,7 \mu s$) ser superior ao do Linux$^{\mathbf{Prt}}$ ($3,8 \mu s$), o desvio
+padrão é significativamente menor em favor de Linux$^{\mathbf{Xen}}$, característica
+desejável nos sistemas de tempo real críticos. De fato, para tais sistemas, deseja-se
+que o pior caso seja próximo do caso médio.
+
+\begin{figure}%
+  \centering
+
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Sem carga} \newline
+  \vskip 1mm VM:     4.6, DP:     0.4,  Min:     4.4, Max:    16.2]{%
+    \label{fig:ker23SemSched}%
+    {\scalebox{0.58}{\input{fig/ker23SemSched}}}}
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Com carga}\newline
+  \vskip 1mm VM:    37.3, DP:    48.2,  Min:     4.6, Max:   617.5]{%
+    \label{fig:ker23TotSched}%
+    {\scalebox{0.58}{\input{fig/ker23TotSched}}}}
+
+  \vspace{7pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+  \vskip 1mm VM: 2.1, DP: 0.2, Min: 1.2, Max: 9.4]{%
+    \label{fig:preSemSched}%
+    {\scalebox{0.58}{\input{fig/preSemSched}}}}
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+  \vskip 1mm VM: 3.8, DP: 2.8, Min: 1.1, Max: 27.4]{%
+    \label{fig:preTotSched}%
+    {\scalebox{0.58}{\input{fig/preTotSched}}}}
+
+  \vspace{7pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Sem carga} \newline
+  \vskip 1mm VM: 2.1, DP: 0.5, Min: 1.8, Max: 8.4]{%
+    \label{fig:xenSemSched}%
+    {\scalebox{0.58}{\input{fig/xenSemSched}}}}
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Com carga} \newline
+  \vskip 1mm VM: 8.7, DP: 0.3, Min: 1.8, Max: 18.7]{%
+    \label{fig:xenTotSched}%
+    {\scalebox{0.58}{\input{fig/xenTotSched}}}}
+
+  \caption[]{Latência de ativação com freqüência de escrita
+    na PP de $20 Hz$.}
+  \label{fig:latAtiv}%
+\end{figure}
+
+É interessante ainda comparar o comportamento de Linux$^{\mathbf{Prt}}$ sem utilizar
+o contexto de \ing{threads} de interrupção, isto é, com a opção \cod{IRQF\_NODELAY},
+comentada anteriormente. Como pode ser observado na Figura \ref{fig:latAtivND},
+apesar das latências de ativação sem estresse apresentar bons resultados em
+comparação ao Linux$^{\mathbf{Prt}}$, seus valores com estresse indicam um
+comportamento menos previsível que o Linux$^{\mathbf{Xen}}$.
+
+\begin{figure}%
+  \centering
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+  \vskip 1mm VM:     5.3, DP:     0.3,  Min:     5.0, Max:    13.1]{%
+    \label{fig:preSemSchedND}%
+    {\scalebox{0.58}{\input{fig/preSemSchedND}}}}
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+  \vskip 1mm VM:     8.0, DP:     2.0,  Min:     5.2, Max:    31.0]{%
+    \label{fig:preTotSchedND}%
+    {\scalebox{0.58}{\input{fig/preTotSchedND}}}}
+
+  \caption[]{Latência de ativação do Linux$^{\mathbf{Prt}}$
+    desabilitando o \ing{thread} associado as interrupções da
+    PP (opção \cod{IRQF\_NODELAY}).}
+  \label{fig:latAtivND}%
+\end{figure}
+
+% \begin{figure}%
+%   \centering
+%   \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+%   \vskip 1mm VM:     8.9, DP:     0.2,  Min:     8.8, Max:    16.7]{%
+%     \label{fig:preSemSchedND}%
+%     {\scalebox{0.58}{\input{fig/preSemND}}}}
+%   \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+%   \vskip 1mm VM:     10.6, DP:     1.6,  Min:     8.9, Max:    35.8]{%
+%     \label{fig:preTotSchedND}%
+%     {\scalebox{0.58}{\input{fig/preTotND}}}}
+
+%   \caption[]{Latência de interrupção do Linux$^{\mathbf{Prt}}$
+%     desabilitando o \ing{thread} associado as interrupções da
+%     PP (opção \cod{IRQF\_NODELAY}).}
+%   \label{fig:latAtivND}%
+% \end{figure}
+
+\section{Trabalhos relacionados}
+\label{sec:trabRel}
+
+Alguns resultados experimentais comparando Linux$^{\mathbf{Prt}}$ com
+Linux$^{\mathbf{Std}}$ são apresentados por \cite{Rostedt07}. Duas métricas são
+usadas, latências de interrupção e de escalonamento, relacionadas ao escalonamento
+de uma tarefa periódica.  No entanto, os experimentos foram realizados sem
+sobrecarga do processador e a metodologia usada não foi precisamente descrita.
+\cite{Siro07} realizam um estudo comparativo do Linux$^{\mathbf{Prt}}$, de RT-Linux
+\cite{rtLinux} e de Linux$^{\mathbf{RTAI}}$ \cite{RTAI} no qual eles utilizam
+conjuntamente o \ing{benchmark} lmbench \cite{McVoy96} e medidas de desvios na
+execução de uma tarefa periódica. Nestes experimentos, os autores aplicaram uma
+sobrecarga ``média'' do processador, sem considerar carga de interrupção. Num outro
+trabalho, divulgado apenas na Internet \cite{Benoit05}, os desenvolvedores do
+projeto Adeos apresentam resultados comparativos relativos ao Linux com os
+\ing{patches} \preemptt e Adeos. Esta avaliação, bastante abrangente, utiliza o
+\ing{benchmark} lmbench \cite{McVoy96} para caracterizar o desempenho das duas
+plataformas e apresenta resultados de medidas de latências de interrupção realizadas
+com a porta paralela.
+
+O presente trabalho apresenta resultados de latência de interrupção que confirma os
+resultados obtidos em \cite{Benoit05} para a plataforma Linux$^{\mathbf{Xen}}$. Já
+os resultados encontrados aqui para Linux$^{\mathbf{Prt}}$, sem a opção
+\cod{IRQF\_NODELAY}, diferiram dos apresentados por \cite{Benoit05}, pois uma
+degradação das garantias temporais por esta plataforma foi observada, tal como visto
+na Seção \ref{sec:latIrq}. Em relação às latências de ativação, não temos
+conhecimento de nenhum outro trabalho comparativo.  Experimentos idênticos aos
+relatados aqui foram conduzidos para a plataforma Linux$^{\mathbf{RTAI}}$
+\cite{Regnier08b} e os resultados encontrados são semelhantes aos apresentados para
+Linux$^{\mathbf{Xen}}$, dado que ambas plataformas utilizam o mesmo \nanokernel.
+
+\section{Conclusão}
+\label{sec:conc}
+
+Neste trabalho, a avaliação de duas soluções de SOTR baseadas em Linux foi
+realizada. A metodologia experimental permitiu medir as latências de interrupção e
+de ativação, em situações de carga variável, tanto do processador quanto de eventos
+externos tratados por interrupção.  Enquanto o Linux padrão apresentou latências no
+pior caso acima de $100 \mu s$, as plataformas Linux$^{\mathbf{Prt}}$ e
+Linux$^{\mathbf{Xen}}$ conseguiram prover garantias temporais com uma precisão
+abaixo de $20 \mu s$. No entanto, para se conseguir este comportamento em relação ao
+Linux$^{\mathbf{Prt}}$, foi necessário desabilitar \ing{threads} de interrupção,
+tornando o sistema menos flexível. Com tais \ing{threads}, o comportamento de
+Linux$^{\mathbf{Prt}}$ sofre considerável degradação da sua previsibilidade
+temporal.  A plataforma Linux$^{\mathbf{Xen}}$ se mostrou mais adequada, pois tanto
+oferece um ambiente de programação em modo usuário, quanto consegue previsibilidade
+temporal característica de sistema de tempo real.
+
+
+% \small
+\bibliographystyle{sbc}
+\bibliography{bib}
+
+\end{document}

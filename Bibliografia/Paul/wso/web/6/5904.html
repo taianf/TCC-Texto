@@ -1,0 +1,614 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html class="js" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><title>Real Time and Linux, Part 3: Sub-Kernels and Benchmarks</title>
+
+
+
+
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="shortcut icon" href="http://www.linuxjournal.com/sites/linuxjournal.com/themes/linuxjournal/favicon.ico" type="image/x-icon">
+  <style type="text/css" media="all">@import "/modules/aggregator/aggregator.css";</style>
+<style type="text/css" media="all">@import "/modules/book/book.css";</style>
+<style type="text/css" media="all">@import "/modules/node/node.css";</style>
+<style type="text/css" media="all">@import "/modules/poll/poll.css";</style>
+<style type="text/css" media="all">@import "/modules/system/defaults.css";</style>
+<style type="text/css" media="all">@import "/modules/system/system.css";</style>
+<style type="text/css" media="all">@import "/modules/user/user.css";</style>
+<style type="text/css" media="all">@import "/sites/linuxjournal.com/modules/cck/content.css";</style>
+<style type="text/css" media="all">@import "/sites/linuxjournal.com/modules/cck/fieldgroup.css";</style>
+<style type="text/css" media="all">@import "/sites/linuxjournal.com/modules/diggthis/diggthis.css";</style>
+<style type="text/css" media="all">@import "/modules/comment/comment.css";</style>
+<style type="text/css" media="all">@import "/sites/linuxjournal.com/themes/linuxjournal/style.css";</style>
+  <link rel="stylesheet" type="text/css" href="5904_files/pygments.css">
+  <link rel="stylesheet" type="text/css" href="5904_files/magazine.css">
+  <link rel="stylesheet" type="text/css" href="5904_files/forum.css"><!--[if IE 6]>
+    <link rel="stylesheet" type="text/css" href="/sites/linuxjournal.com/themes/linuxjournal/css/ie6.css" />
+  <![endif]--><!--[if IE 7]>
+    <link rel="stylesheet" type="text/css" href="/sites/linuxjournal.com/themes/linuxjournal/css/ie7.css" />
+  <![endif]-->
+
+  
+   
+
+  <script type="text/javascript" src="5904_files/jquery.js"></script>
+<script type="text/javascript" src="5904_files/drupal.js"></script>
+  <script src="5904_files/ljcustom.js" type="text/javascript" charset="utf-8"></script>
+  <script src="5904_files/openads.js" type="text/javascript" charset="utf-8"></script></head><body class="not-logged-in ntype-xmlnode">
+  <script src="5904_files/urchin.js" type="text/javascript"></script>
+  <script type="text/javascript">_uacct = "UA-1117794-1"; urchinTracker();</script>
+
+<!-- Start Quantcast tag -->
+<script type="text/javascript" src="5904_files/quant.js"></script>
+<script type="text/javascript">_qacct="p-a3K3N6enFe9wA";quantserve();</script>
+<noscript>
+<a href="http://www.quantcast.com/p-a3K3N6enFe9wA"
+target="_blank"><img
+src="http://pixel.quantserve.com/pixel/p-a3K3N6enFe9wA.gif"
+style="display: none;" border="0" height="1" width="1"
+alt="Quantcast"/></a>
+</noscript>
+<!-- End Quantcast tag -->
+
+
+  <div id="container">
+    <div id="innercontainer">
+
+      <!-- HEADER START ================================================== -->
+      <div id="header">
+        <h1><a href="http://www.linuxjournal.com/" title="Home"></a></h1>
+      
+        <div id="leaderboard-adblock" class="adblock leaderboard-adblock">
+<script language="JavaScript" type="text/javascript">
+<!--
+phpads_show_ad("http://ads.linuxjournal.com", "8");
+//-->
+</script><script type="text/javascript" src="5904_files/adjs_003.js"></script><a href="http://ads.linuxjournal.com/www/delivery/ck.php?oaparams=2__bannerid=856__zoneid=8__cb=3ff31ba849__maxdest=http://www.ztsystems.com/datacenter" target="_blank"><img src="5904_files/ai.jpg" alt="ZT Systems" title="ZT Systems" border="0" height="90" width="728"></a><div id="beacon_856" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><img src="5904_files/lg_002.gif" alt="" style="width: 0px; height: 0px;" height="0" width="0"></div><script type="text/javascript">document.context='YTowOnt9'; </script>
+
+</div>
+      
+        <div id="header_menubar">
+          
+<ul class="menu">
+<li class="leaf"><a href="http://www.linuxjournal.com/">Home</a></li>
+<li class="expanded"><a href="http://www.linuxjournal.com/topics">Topics</a>
+<ul class="menu">
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/28">Audio/Video</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/18">Community</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/25">Education</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/27">Embedded</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/23">Hardware</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/19">HOWTOs</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/30">International</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/20">Reviews</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/31">Security</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/17">Software</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/21">SysAdmin</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/taxonomy/term/24">Webmaster</a></li>
+
+</ul>
+</li>
+<li class="leaf"><a href="http://www.linuxjournal.com/enewsletters">Newsletter</a></li>
+<li class="expanded"><a href="http://www.linuxjournal.com/xstatic/community">Community Resources</a>
+<ul class="menu">
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/community/whatislinux">What Is Linux?</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/getlinux">How to Get Linux</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/supportedhardware">Supported Hardware</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/software">Software</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/gettinghelp">Getting Help</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/community/events">Industry Events</a></li>
+
+</ul>
+</li>
+<li class="leaf"><a href="http://www.linuxjournal.com/forum">Forums</a></li>
+<li class="leaf"><a href="http://www.linuxjournalshop.com/">Shop</a></li>
+<li class="expanded"><a href="http://www.linuxjournal.com/magazine">Magazine</a>
+<ul class="menu">
+<li class="leaf"><a href="http://www.linuxjournal.com/magazine">Read</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/subscriptions">Subscribe</a></li>
+<li class="leaf"><a href="https://secure.linuxjournal.com/allsubs/plj.php?action=login">Renew</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/subs/customer_service.html">Customer Service</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/archivecd">Archive CD</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/dlissue">Free Issue</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/aboutus/FAQ">FAQ</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/staff">Masthead</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/author/index">Write for Us</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/advertising/">Advertise</a></li>
+
+</ul>
+</li>
+
+</ul>
+                      <a class="button" href="http://www.linuxjournal.com/user/login">Login</a>
+                    <!-- Google CSE Search Box Begins  -->
+<form action="http://www.linuxjournal.com/googlesearch" id="searchbox_014164207538395607518:w82fvojcgcu">
+  <input name="cx" value="014164207538395607518:w82fvojcgcu" type="hidden">
+  <input name="cof" value="FORID:11" type="hidden">
+  <input name="as_q" size="25" type="text">
+  <input name="sa" value="Search" type="submit">
+</form>
+<script type="text/javascript" src="5904_files/brand.html"></script>
+<!-- Google CSE Search Box Ends -->
+
+
+        </div>
+    
+                  <div id="header_breadcrumb"><a href="http://www.linuxjournal.com/">Home</a></div>
+              </div>
+      <!-- HEADER END ==================================================== -->
+
+
+
+      <!-- CONTENT START ================================================= -->
+      <div id="content">
+      
+        <!-- CONTENT LEFT -->
+        <div id="content_left">
+          
+          <!-- CONTENT HEADER -->
+                    <!-- END CONTENT HEADER -->
+      
+          <!-- CONTENT BODY -->
+          <div id="content_body">
+                      
+                    
+                    
+                                    <div class="node ntype-xmlnode" id="node-5904">
+  <div class="head">
+
+      <h3>Real Time and Linux, Part 3: Sub-Kernels and Benchmarks</h3>
+  
+        <h4>May 1st, 2002 by <a href="http://www.linuxjournal.com/user/800751" title="View user profile.">Kevin Dankwardt</a><span class="taxonomy"> in<ul class="links inline"><li class="first last taxonomy_term_27"><a href="http://www.linuxjournal.com/taxonomy/term/27" rel="tag" title="" class="taxonomy_term_27">Embedded</a></li>
+</ul></span>    </h4>
+      </div>
+  
+  <div class="content">
+        RTLinux and RTAI both offer a real-time sub-kernel. How does their performance measure up?    <div class="diggthis_button"><script type="text/javascript">
+digg_url = 'http://www.linuxjournal.com/article/5904';
+digg_title = "Real Time and Linux, Part 3: Sub-Kernels and Benchmarks";
+digg_bodytext = "";
+
+digg_skin = 'standard';
+</script>
+<script src="5904_files/diggthis_002.html" type="text/javascript"></script><iframe src="5904_files/diggthis.html" frameborder="0" height="80" scrolling="no" width="52"></iframe></div><div class="article" lang="en"><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb44cd0"></a></div><p>In the first two articles of this series
+[see ``Real Time and Linux'' in the January/February 2002 issue and
+``Real Time and Linux, Part 2: the Preemptible Kernel'' in the
+March/April 2002 issue of <span class="emphasis"><em>ELJ</em></span>], we examined
+the fundamental concepts of real time and efforts to make the Linux
+kernel more responsive. In this article we examine two approaches
+to real time that involve the introduction of a separate, small,
+real-time kernel between the hardware and Linux. We also return to
+benchmarking and compare a desktop/server Linux kernel to modified
+kernels.
+</p><p>We note and discuss no further that LynuxWorks and OnCore
+Systems provide proprietary kernels that provide some Linux
+compatibility. LynuxWorks provides a real-time kernel that
+implements a Linux compatible API. OnCore Systems provides a
+real-time microkernel that provides Linux functionality in a
+variety of ways. These allow one to run a Linux kernel, with
+real-time performance of its processes, on top of their
+microkernel.</p><p>In this article we concern ourselves primarily with
+single-CPU real time. When more than one CPU is used, new solutions
+to real time are possible. For example, one may avoid system calls
+on a CPU on which a real-time process is waiting. This avoids the
+kernel-preemption problem altogether. One may be able to direct
+interrupts to a particular CPU and away from another particular
+CPU, thus avoiding interrupt latency issues. All of the Linux
+real-time solutions, incidentally, are usable on multi-CPU systems.
+In addition, RTAI for example, has additional functionality for
+multiple CPUs. We are focused, however, on the needs of embedded
+Linux developers, and most embedded Linux devices have a single
+general-purpose CPU.</p></div><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb44ee0"></a>What Is a Real-Time Sub-Kernel?</div><p>A typical real-time system has a few tasks that must be
+executed in a deterministic, real-time manner. In addition, it is
+frequently the case that response to hardware interrupts must be
+deterministic. A clever idea is to create a small operating system
+kernel that provides these mechanisms and provides for running a
+Linux kernel as well, to supply the complete complement of Linux
+functionality.</p><p>Thus, these real-time sub-kernels deliver an API for tasking,
+interrupt handling and communication with Linux processes. Linux is
+suspended while the sub-kernel's tasks run or while the sub-kernel
+is dealing with an interrupt. As a consequence, for example, Linux
+is not allowed to disable interrupts. Also, these sub-kernels are
+not complete operating systems. They do not have a full complement
+of device drivers. They don't provide extensive libraries. They are
+an addition to Linux, not a standalone operating system.</p><p>There is a natural tendency, however, for these sub-kernels
+to grow in complexity, from software release to software release,
+as more and more functionality is incorporated. A major aspect of
+their virtue, though, is that one may still take advantage of all
+the benefits of Linux in one's application. It is just that the
+real-time portion of the application is handled separately by the
+sub-kernel.</p><p>Some view this situation as Linux being treated as the lowest
+priority, or idle, task of the sub-kernel OS. Figure 1 depicts the
+relationship of the sub-kernel and Linux.</p><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f1.png"><img src="5904_files/5904f1.png"></a><div class="caption"><p>
+Figure 1. Relationship of the Sub-Kernel and Linux
+</p></div></div><p>The sub-kernels are created with Linux by doing three things:
+1) patching a Linux kernel to provide a few hooks for things like
+added functionality, 2) modifying the interrupt handling and 3)
+creating loadable modules to provide the bulk of the API and
+functionality.</p><p>Sub-kernels provide an API for use by the real-time tasks.
+The APIs they provide resemble POSIX threads, other POSIX functions
+and additional unique functions. Using the sub-kernels means that
+the real-time tasks are using APIs that may be familiar to Linux
+programmers, but they are separate implementations and sometimes
+differ.</p><p>Interrupt handling is modified by patching the kernel source
+tree. The patches change the functions, for example, that are
+ordinarily used to disable interrupts. Thus, when the kernel and
+drivers in the Linux sub-tree are recompiled, they will not
+actually be able to disable interrupts. It is important to note
+this change because it means, for example, that a driver compiled
+separately from these modified headers may actually disable
+interrupts and thwart the real-time technique. Additionally,
+nonstandard code that, say, simply inlines an interrupt-disabling
+assembly language instruction will likewise thwart it. Fortunately,
+in practice, these are not likely situations and certainly can be
+avoided. They are examples to reinforce the idea that no real-time
+solution is completely free from caveats.</p></div><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb453b0"></a>RTLinux and RTAI</div><p>The two most commonly used sub-kernels are RTLinux and RTAI.
+Both RTLinux and RTAI are designed for hard real time. They are
+much more (and a little less) than just a preemptible kernel. In
+practical terms, a real-time operating system provides convenience
+to developers. RTLinux and RTAI provide a wealth of additional,
+real-time, related functions. RTAI, for example, provides
+rate-monotonic scheduling and early-deadline-first scheduling, in
+addition to conventional priority scheduling.</p><p>The sub-kernels provide both POSIX and proprietary functions,
+as well as functions to create tasks, disable/enable interrupts and
+provide synchronization and communication. When using RTLinux or
+RTAI, a developer uses a new API in addition to their POSIX
+functions.</p><p>Both RTLinux and RTAI furnish some support for working with
+user-space processes. This is important because a real-time
+application for Linux naturally will want to make use of the
+functionality of Linux. RTLinux provides support for invoking a
+signal handler in a user-space process, in addition to FIFOs and
+shared memory that can be read and written in both kernel and user
+space. RTAI provides FIFOs, shared memory and a complete, hard
+real-time mechanism, called LXRT, that can be used in user
+space.</p><p>These mechanisms, though, don't make the Linux kernel real
+time. A user-space process still must avoid system calls because
+they may block in the kernel. Also, it seems neither RTLinux nor
+RTAI have been enhanced to work with a preemptible kernel. Since
+the two approaches are both beneficial, and mostly orthogonal,
+perhaps they will be combined in the near future. This may be
+likely since the Love patches are now part of the standard 2.5
+kernel tree and perhaps will be a part of the stable, 2.6 kernel
+whenever it is released.</p></div><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb455c0"></a>Some Thoughts on the Choices</div><p>For a developer requiring real-time enhancements, choosing
+among RTLinux, RTAI, the Love preemptible kernel and the TimeSys
+preemptible kernel, there are a myriad of issues. Let's highlight a
+few that many developers value.</p><div class="itemizedlist"><ul type="disc"><li><p>Which are maintained in an open-source manner where
+independent outsiders have contributed? RTAI and Love.</p></li><li><p>Which have a software patent for their underlying
+technique? RTLinux.</p></li><li><p>Which are part of the 2.5 Linux kernel tree?
+Love.</p></li><li><p>Which have additional real-time capabilities
+besides preemptibility? TimeSys, RTAI and RTLinux.</p></li><li><p>Which are positioned such that one can reasonably
+assume that the solution will continue to be freely available for
+free download? RTAI and Love (in my humble opinion).</p></li><li><p>Which give control over interrupts and are likely
+to provide near-machine-level resolution responsiveness? RTLinux
+and RTAI.</p></li></ul></div></div><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb45b40"></a>Kernel Availability for Different
+Processors</div><p>None of these real-time approaches are available for every
+CPU on which Linux runs; extra effort is required to adapt the
+solution to a new processor. But, as the four solutions we examine
+here have quite active development, it is safe to assume that
+support for additional CPUs is at least contemplated.</p><p>As a snapshot, the Love preemptible kernel is currently only
+available for x86, but with MontaVista's support it is likely to be
+ported to most, if not all, of the CPUs that MontaVista supports.
+That includes PowerPC, ARM, MIPS, SuperH, etc. The TimeSys kernel
+is currently available for PowerPC, ARM, SuperH and Pentium.
+RTLinux is available for x86 and PowerPC. RTAI is available for x86
+and PowerPC.</p></div><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb45ca0"></a>Benchmarks</div><p>You may download the benchmark programs from the Web (see the
+Resources Sidebar under K Computing Benchmarks). All of our
+benchmarks were run on a 465MHz Celeron. Other x86 CPUs, however,
+have produced similar results. We have not benchmarked on other
+kinds of CPUs.</p><p>We benchmarked the Red Hat 7.2 kernel, which is based on
+Linux kernel 2.4.7; the TimeSys Linux 3.0 kernel, which is based on
+Linux 2.4.7; and a kernel patched with Robert Love and MontaVista's
+preemption patch for Linux kernel 2.4.18. We will refer to these
+kernels as Red Hat, TimeSys and Love, respectively. We separately
+benchmarked the RTAI and RTLinux kernels.</p><p>The benchmark consisted of timing the precision of a call to
+nanosleep(). Sleeping for a precise amount of time closely relates
+to the kernel's ability to serve user-space, real-time processes
+reliably. The Linux nanosleep() function allows one to request
+sleeps in nanosecond units. Our benchmark requests a 50 millisecond
+sleep. Interestingly, a request to nanosleep() to sleep
+<span class="emphasis"><em>N</em></span> milliseconds reliably sleeps 10 +
+<span class="emphasis"><em>N</em></span> milliseconds. Thus, we measure jitter with
+respect to how close the sleep was to 60 milliseconds. Also, one
+should note that nanosleep() is a busy wait in the kernel when the
+request to sleep is for an amount of two milliseconds or less.
+Therefore, a busy wait would not simulate interrupt response time
+as well as a true sleep.</p><p>The benchmark program takes 1,000 samples. The last 998 are
+used in the graph. The first two are discarded to avoid cache
+slowdowns as a result of a cold cache. The benchmark program was
+locked into memory via mlockall() and given the highest FIFO
+priority via sched_set_scheduler() and
+sched_get_priority_max().</p><p>The heart of our benchmark is:</p><pre class="programlisting">t1 = get_cycles();
+nanosleep(fifty_ms, NULL);
+t2 = get_cycles();
+jitter[i] = t2 - t1;
+</pre><p>The get_cycles() function is a machine-independent way to
+read the CPU's cycle counter. On x86 machines it reads the
+timestamp counter (TSC). The TSC increments at the rate of the CPU.
+Thus, on a 500MHz CPU, the TSC increments 500,000,000 times per
+second. The frequency of the CPU is determined by examining the CPU
+speed value listed in /proc/cpuinfo. The read of the TSC takes on
+the order of about ten instruction times and is extremely precise
+in comparison to the interval we are timing.
+</p><p>The difference, in milliseconds, from our expected sleep time
+of 50 + 10 milliseconds for a given value of jitter, is calculated
+as</p><pre class="programlisting">diff = (jitter/KHz) - 10 - 50;
+</pre><p>The five benchmarks used the stress tests of Benno Senoner,
+which are part of his latency test benchmark. These tests stress
+the system by copying a disk file, reading a disk file, writing a
+disk file, reading the /proc filesystem and performing the X11perf
+test. The graphs of the three kernels for these loads are shown in
+Figures 2-6.
+</p><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f2.png"><img src="5904_files/5904f2.png"></a><div class="caption"><p>
+Figure 2. Copying a Disk File
+</p></div></div>
+
+<div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f3.png"><img src="5904_files/5904f3.png"></a><div class="caption"><p>
+Figure 3. Reading a Disk File
+</p></div></div>
+
+
+<div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f4.png"><img src="5904_files/5904f4.png"></a><div class="caption"><p>
+Figure 4. Writing a Disk File
+</p></div></div>
+
+
+<div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f5.png"><img src="5904_files/5904f5.png"></a><div class="caption"><p>
+Figure 5. Reading the /proc Filesystem
+</p></div></div>
+
+
+<div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f6.png"><img src="5904_files/5904f6.png"></a><div class="caption"><p>
+Figure 6. Performing the X11perf Test
+</p></div></div>
+
+
+<p>Since the Red Hat kernel is clearly much less responsive than
+the Love or TimeSys kernels, we separately graph just the Love and
+TimeSys kernel results. These are depicted in Figures 7-11.</p><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f7.png"><img src="5904_files/5904f7.png"></a><div class="caption"><p>
+Figure 7. Love and TimeSys Kernels: Copying a Disk File
+</p></div></div><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f8.png"><img src="5904_files/5904f8.png"></a><div class="caption"><p>
+Figure 8. Love and TimeSys Kernels: Reading a Disk File
+</p></div></div><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f9.png"><img src="5904_files/5904f9.png"></a><div class="caption"><p>
+Figure 9. Love and TimeSys Kernels: Writing a Disk File
+</p></div></div><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f10.png"><img src="5904_files/5904f10.png"></a><div class="caption"><p>
+Figure 10. Love and TimeSys Kernels: Reading the /proc Filesystem
+</p></div></div><div class="mediaobject"><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904f11.png"><img src="5904_files/5904f11.png"></a><div class="caption"><p>
+Figure 11. Love and TimeSys Kernels: Performing the X11perf Test
+</p></div></div><p>It is apparent from the graphs that the preemptible kernels
+provide significant improvement in responsiveness. Because they
+represent much improved performance, without a change in the API
+required to be used by an application, they are clearly attractive
+choices for embedded Linux developers.</p></div><div class="simplesect" lang="en"><div class="titlepage"><a name="N0xa50890.0xb3dca0"></a>RTLinux and RTAI Benchmarks</div><p>One justifiably expects that RTAI and RTLinux will provide
+rock-solid performance even under great loads. They meet these
+expectations, evidenced through our benchmarks. One must remember,
+though, that there are still a few caveats. Some issues to keep in
+mind that can thwart real-time performance: perform no blocking
+operations such as memory allocation; don't use any drivers that
+haven't been patched to avoid truly disabling interrupts, and avoid
+costly priority inversions.</p><p>To benchmark RTAI and RTLinux we created a periodic task and
+measured its timing performance against the requested periodic
+rate. The worst-case performance for both RTLinux and RTAI is on
+the order of 30 microseconds or less. Our benchmark programs are
+available for free download (see the Resources Sidebar under K
+Computing Benchmarks).</p><p><a href="http://www.linuxjournal.com/files/linuxjournal.com/linuxjournal/articles/059/5904/5904s1.html">Resources</a></p><p>
+</p><div class="mediaobject"><img src="5904_files/5904aa.png"></div>
+<div class="blockquote"><blockquote class="blockquote"><p><span class="bold"><b>Kevin Dankwardt</b></span>
+is founder and CEO of K Computing, a training and consulting firm
+in Silicon Valley. In particular, his organization develops and
+delivers embedded and real-time Linux training worldwide.</p></blockquote></div></div></div>
+<div class="authorblurb"><p>
+       email: <a href="mailto:k@kcomputing.com">k@kcomputing.com</a>
+       </p></div>
+
+
+__________________________
+<br>  </div>
+  
+    <div class="links"><ul class="links inline"><li class="first comment_add"><a href="http://www.linuxjournal.com/comment/reply/5904#comment-form" title="Share your thoughts and opinions related to this posting." class="comment_add">Add new comment</a></li>
+<li class="print"><a href="http://www.linuxjournal.com/print/5904" title="Display a printer-friendly version of this page." class="print-page print">Printer-friendly version</a></li>
+<li class="service_links_delicious"><a href="http://del.icio.us/post?url=http%3A%2F%2Fwww.linuxjournal.com%2Farticle%2F5904&amp;title=Real+Time+and+Linux%2C+Part+3%3A+Sub-Kernels+and+Benchmarks" title="Bookmark this post on del.icio.us." rel="nofollow" class="service_links_delicious"><img src="5904_files/delicious.png" alt="Delicious"> Delicious</a></li>
+<li class="service_links_digg"><a href="http://digg.com/submit?phase=2&amp;url=http%3A%2F%2Fwww.linuxjournal.com%2Farticle%2F5904&amp;title=Real+Time+and+Linux%2C+Part+3%3A+Sub-Kernels+and+Benchmarks" title="Digg this post on digg.com." rel="nofollow" class="service_links_digg"><img src="5904_files/digg.png" alt="Digg"> Digg</a></li>
+<li class="service_links_reddit"><a href="http://reddit.com/submit?url=http%3A%2F%2Fwww.linuxjournal.com%2Farticle%2F5904&amp;title=Real+Time+and+Linux%2C+Part+3%3A+Sub-Kernels+and+Benchmarks" title="Submit this post on reddit.com." rel="nofollow" class="service_links_reddit"><img src="5904_files/reddit.png" alt="Reddit"> Reddit</a></li>
+<li class="service_links_newsvine"><a href="http://www.newsvine.com/_tools/seed&amp;save?u=http%3A%2F%2Fwww.linuxjournal.com%2Farticle%2F5904&amp;h=Real+Time+and+Linux%2C+Part+3%3A+Sub-Kernels+and+Benchmarks" title="Submit this post on newsvine.com." rel="nofollow" class="service_links_newsvine"><img src="5904_files/newsvine.png" alt="Newsvine"> Newsvine</a></li>
+<li class="last service_links_technorati"><a href="http://technorati.com/cosmos/search.html?url=http%3A%2F%2Fwww.linuxjournal.com%2Farticle%2F5904" title="Search Technorati for links to this post." rel="nofollow" class="service_links_technorati"><img src="5904_files/technorati.png" alt="Technorati"> Technorati</a></li>
+</ul></div>
+    </div>
+    <div class="contentad">
+    <script language="JavaScript" type="text/javascript">
+    <!--
+    phpads_show_ad("http://ads.linuxjournal.com", "32");
+    //-->
+  </script><script type="text/javascript" src="5904_files/adjs_005.js"></script><span><script type="text/javascript"><!--// <![CDATA[
+/* openads=http://ads.linuxjournal.com/www/delivery bannerid=737 zoneid=32 source= */
+// ]]> --></script><script type="text/javascript"><!--
+google_ad_client = "pub-3600556074671070";
+//300x250, created 11/6/07
+google_ad_slot = "7476507371";
+google_ad_width = 300;
+google_ad_height = 250;
+//--></script>
+<script type="text/javascript" src="5904_files/show_ads.js">
+</script><iframe name="google_ads_frame" src="5904_files/ads.html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" frameborder="0" height="250" scrolling="no" width="300"></iframe>
+<script type="text/javascript" src="5904_files/ag.php"></script></span><div id="beacon_737" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><img src="5904_files/lg_003.gif" alt="" style="width: 0px; height: 0px;" height="0" width="0"></div><script type="text/javascript">document.context='YTowOnt9'; </script>
+
+  </div>
+  <div id="comments"></div>                      </div>
+      
+          <div class="clear"></div>
+          <!-- END CONTENT BODY -->
+          
+        </div>
+        <!-- END CONTENT LEFT -->
+        
+        <!-- CONTENT RIGHT -->
+        <div id="content_right">
+          <div id="subscribe">
+            <h3>Subscribe now!</h3>
+            
+<ul class="menu">
+<li class="leaf"><a href="http://www.linuxjournal.com/subscriptions" title="Subscribe">Subscribe</a></li>
+<li class="leaf"><a href="https://secure.linuxjournal.com/allsubs/plj.php?action=login" title="Renew your subscription">Renew</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/dlissue">Free Issue</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/subs/customer_service.html">Customer service</a></li>
+
+</ul>
+          </div>
+          
+          <div id="block-block-44" class="block block-block"> 
+    <div class="content">
+    <div id="bigbox-adblock" class="adblock bigbox-adblock">
+<script language="JavaScript" type="text/javascript">
+<!--
+phpads_show_ad("http://ads.linuxjournal.com", "24");
+//-->
+</script><script type="text/javascript" src="5904_files/adjs_004.js"></script><a href="http://ads.linuxjournal.com/www/delivery/ck.php?oaparams=2__bannerid=842__zoneid=24__cb=f7703b78db__maxdest=http://www.linuxjournal.com/archive_cd" target="_blank"><img src="5904_files/ai.png" alt="Archive CD" title="Archive CD" border="0" height="280" width="336"></a><div id="beacon_842" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><img src="5904_files/lg_004.gif" alt="" style="width: 0px; height: 0px;" height="0" width="0"></div><script type="text/javascript">document.context='YTowOnt9'; </script>
+
+</div>  </div>  
+</div>
+<div id="block-views-breaking_news" class="block block-views"> 
+      <h3>Breaking News</h3>
+    <div class="content">
+    <div class="view view-breaking-news"><div class="view-content view-content-breaking-news"><table>
+ <thead><tr><th class="view-cell-header view-field-node-title"></th><th class="view-cell-header view-field-node-created"></th> </tr></thead>
+<tbody>
+ <tr class="odd"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/bad-day-microsoft-good-everyone-else">Bad Day for Microsoft, Good for Everyone Else</a></td><td class="view-field view-field-node-created"><em>1 day 15 hours</em> ago</td> </tr>
+ <tr class="even"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/aol-gets-b-verizon-cozies-p2p-and-something-youve-just-got-see">AOL Gets a B, Verizon Cozies Up to P2P, and Something You've Just Got To See</a></td><td class="view-field view-field-node-created"><em>2 days 19 hours</em> ago</td> </tr>
+ <tr class="odd"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/ipods-are-smokin-aol-has-woken-and-pacemakers-are-broken">iPods are Smokin', AOL's Awoken, and Hearts are Broken</a></td><td class="view-field view-field-node-created"><em>6 days 18 hours</em> ago</td> </tr>
+ <tr class="even"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/walmart-pulls-linux-plug-google-shakes-ads">Walmart Pulls the Linux Plug, Google Shakes Up Ads</a></td><td class="view-field view-field-node-created"><em>1 week 1 day</em> ago</td> </tr>
+</tbody></table>
+</div><div class="more-link"><a href="http://www.linuxjournal.com/breaking_news">more</a></div></div>
+  </div>  
+</div>
+<div id="block-views-tech_tip" class="block block-views"> 
+      <h3>Featured Video</h3>
+    <div class="content">
+    <div class="view view-tech-tip"><div class="view-content view-content-tech-tip"><div class="node sticky ntype-video" id="node-1006382">
+  <div class="head">
+
+      <h3><a href="http://www.linuxjournal.com/video/shawn-powers-leo-laporte">Shawn Powers With Leo Laporte</a></h3>
+  
+      </div>
+  
+  <div class="content">
+            <div class="field field-type-text field-field-small-format-video"><div class="field-items"><div class="field-item"><p></p><center><a href="http://www.linuxjournal.com/video/shawn-powers-leo-laporte"><img src="5904_files/leolaporte.png"></a></center>
+</div></div></div><p><cite>Linux Journal</cite>'s Gadget Guy, Shawn Powers, seeks some sound production advice from Leo Laporte on <a href="http://www.labwithleo.com/">The Lab With Leo Laporte</a>, which airs in Canada on G4 TechTV and in Australia on the How To Channel.</p>
+  </div>
+  
+    <div class="links"><ul class="links inline"><li class="first comment_comments"><a href="http://www.linuxjournal.com/video/shawn-powers-leo-laporte#comments" title="Jump to the first comment of this posting." class="comment_comments">2 comments</a></li>
+<li class="last node_read_more"><a href="http://www.linuxjournal.com/video/shawn-powers-leo-laporte" title="Read the rest of this posting." class="node_read_more">Read more</a></li>
+</ul></div>
+    </div>
+  </div><div class="more-link"><a href="http://www.linuxjournal.com/video">more</a></div></div>
+  </div>  
+</div>
+<div id="block-views-microblog" class="block block-views"> 
+      <h3>Live From the Field</h3>
+    <div class="content">
+    <div class="view view-microblog"><div class="view-header view-header-microblog"><p>The latest posts from the <cite>Linux Journal</cite> team</p>
+</div>
+<div class="view-content view-content-microblog"><table>
+ <thead><tr><th class="view-cell-header view-field-node-title"></th><th class="view-cell-header view-field-users-name"></th> </tr></thead>
+<tbody>
+ <tr class="odd"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/odf-and-microsoft-office">ODF and Microsoft Office</a></td><td class="view-field view-field-users-name"><a href="http://www.linuxjournal.com/user/800012" title="View user profile.">Phil Hughes</a></td> </tr>
+ <tr class="even"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/cool-projects-call-articles">Cool Projects--Call for Articles</a></td><td class="view-field view-field-users-name"><a href="http://www.linuxjournal.com/users/jill-franklin" title="View user profile.">Jill Franklin</a></td> </tr>
+ <tr class="odd"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/skype-linux-reprise">Skype for Linux, Reprise</a></td><td class="view-field view-field-users-name"><a href="http://www.linuxjournal.com/user/801200" title="View user profile.">James Gray</a></td> </tr>
+ <tr class="even"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/skype-linux">Skype for Linux</a></td><td class="view-field view-field-users-name"><a href="http://www.linuxjournal.com/user/800391" title="View user profile.">Carlie Fairchild</a></td> </tr>
+ <tr class="odd"><td class="view-field view-field-node-title"><a href="http://www.linuxjournal.com/content/microsoft-acts-government">Microsoft Acts Like the Government</a></td><td class="view-field view-field-users-name"><a href="http://www.linuxjournal.com/user/801200" title="View user profile.">James Gray</a></td> </tr>
+</tbody></table>
+</div><div class="more-link"><a href="http://www.linuxjournal.com/microblog">more</a></div></div>
+  </div>  
+</div>
+<div id="block-block-45" class="block block-block"> 
+    <div class="content">
+    <div id="smallbox-adblock" class="adblock smallbox-adblock">
+<script language="JavaScript" type="text/javascript">
+<!--
+phpads_show_ad("http://ads.linuxjournal.com", "31");
+//-->
+</script><script type="text/javascript" src="5904_files/adjs_002.js"></script><a href="http://ads.linuxjournal.com/www/delivery/ck.php?oaparams=2__bannerid=847__zoneid=31__cb=825ba37315__maxdest=http://java.sun.com/javaone" target="_blank"><img src="5904_files/ai.gif" alt="JavaOne" title="JavaOne" border="0" height="90" width="336"></a><div id="beacon_847" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><img src="5904_files/lg_005.gif" alt="" style="width: 0px; height: 0px;" height="0" width="0"></div><script type="text/javascript">document.context='YTowOnt9'; </script>
+
+</div>
+
+
+  </div>  
+</div>
+<div id="block-block-50" class="block block-block"> 
+    <div class="content">
+    <p><a href="http://www.tuxparty.com/" target="_blank"><img src="5904_files/tux4pres.gif"></a></p>
+  </div>  
+</div>
+<div id="block-block-49" class="block block-block"> 
+    <div class="content">
+    <p><img src="5904_files/flickr.png"><a href="http://www.flickr.com/groups/linuxjournal/pool/" target="_blank">Contribute to the <cite>Linux Journal</cite> Flickr Pool</a><br>
+<img src="5904_files/twitter.png"><a href="http://twitter.com/linuxjournal" target="_blank">Follow Linux Journal on Twitter</a><br>
+<img src="5904_files/feed.png"><a href="http://www.linuxjournal.com/rss_feeds" target="_blank">Add Linux Journal to your RSS reader</a><br>
+<img src="5904_files/facebook.png"><a href="http://www.facebook.com/pages/Houston-TX/Linux-Journal/10098036614?ref=s" target="_blank">Meet other readers on Facebook</a></p>
+  </div>  
+</div>
+<div id="block-block-41" class="block block-block"> 
+    <div class="content">
+    <div class="first">
+
+  <div class="textad">
+    <script language="JavaScript" type="text/javascript">
+    <!--
+    openads_show_ad("http://ads.linuxjournal.com", "22");
+    //-->
+    </script><script type="text/javascript" src="5904_files/adjs.js"></script><a href="http://ads.linuxjournal.com/www/delivery/ck.php?oaparams=2__bannerid=815__zoneid=22__cb=51ee57f826__maxdest=http://www.linuxjournal.com/weeklynewsnotes" target="_blank"><h6>Free eNewsletter</h6>
+<h4>Find out what's hot
+in the world of Linux.</h4>
+<h5>linuxjournal.com/weeklynewsnotes</h5>
+</a><div id="beacon_815" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><img src="5904_files/lg.gif" alt="" style="width: 0px; height: 0px;" height="0" width="0"></div><script type="text/javascript">document.context='YTowOnt9'; </script>
+
+  </div>
+
+  <br>
+
+    
+</div>
+
+
+<div class="second">
+ 
+<div class="textad">
+    <a target="_blank" href="http://www.stronghealthmag.com/">
+      <h6>Strong Health Magazine</h6>
+      <h4>Your health comes before your computer</h4>
+      <h5>www.stronghealthmag.com</h5>
+    </a>
+  </div>
+
+
+</div>
+  </div>  
+</div>
+        </div>
+        <!-- END CONTENT RIGHT -->
+      
+       <div class="clear"></div>
+      </div>
+      <!-- CONTENT END =================================================== -->
+
+
+
+      <!-- FOOTER START ================================================== -->
+      <div id="footer">
+        
+<ul class="menu">
+<li class="leaf"><a href="http://www.linuxjournal.com/subscriptions" title="Subscribe">Subscribe</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/advertising" title="Advertise with us!">Advertise</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/xstatic/aboutus" title="Contact us">Contact us</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/content/privacy-statement">Privacy statement</a></li>
+<li class="leaf"><a href="mailto:webmaster@linuxjournal.com">Report problems</a></li>
+<li class="leaf"><a href="http://www.linuxjournal.com/rss_feeds">RSS Feeds</a></li>
+
+</ul>
+        <p class="copyright">Copyright © 1994 - 2008 <a href="http://www.linuxjournal.com/"><cite>Linux Journal</cite></a>. All rights reserved.</p>
+                <p class="message">
+</p>
+        
+              </div>
+      <!-- FOOTER END ==================================================== -->
+
+          </div>
+  </div>
+</body></html>

@@ -1,0 +1,587 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+
+\usepackage{graphicx,url}
+\usepackage{color}
+\usepackage{epsfig}
+
+\usepackage[latin1]{inputenc}
+%\usepackage{amsmath}
+\usepackage{amssymb, bm}
+\usepackage{verbatim}
+
+%\usepackage{savesym}
+%\usepackage{tlatex}
+%\savesymbol{implies}
+\usepackage{amsmath}
+%\restoresymbol{TXF}{implies}
+
+\newcommand{\defeq}{\; \triangleq}
+
+\newcommand{\doris}{\emph{DoRiS}}
+\newcommand{\RTS}{R^H}
+\newcommand{\SOS}{R^S}
+
+\newcommand{\HW}{\mathcal{W}^H}
+\newcommand{\ES}{\mathcal{S}^E}
+\newcommand{\RS}{\mathcal{S}^R}
+\newcommand{\SW}{\mathcal{W}^S}
+\newcommand{\DDP}{\Delta}
+\newcommand{\DHW}{\Delta^H}
+\newcommand{\DSW}{\Delta^S}
+\newcommand{\DES}{\Delta^E}
+\newcommand{\DRS}{\Delta^R}
+
+%\sloppy
+
+\title{Deterministic Integration of Hard and Soft Real-Time Communication
+       over Shared-Ethernet}
+
+\author{Paul Regnier \inst{1}
+  \hspace{0.2cm} George Lima \inst{1}
+  \email{\{pregnier, gmlima\}@ufba.br}
+  %\thanks{IARA - Computer Science and Mechanical Engineering Departments}
+}
+
+\address{
+  Distributed Systems Laboratory (LaSiD) - Computer Science Department (DCC)\\
+  Pos-Graduation Program on Mechatronics - 
+  Federal University of Bahia\\
+  Campus de Ondina,
+  40170-110, Salvador-BA, Brazil
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This paper presents a protocol proposal that makes Ethernet
+    suitable for supporting modern real-time systems. Applications
+    that could benefit from the proposed protocol are mainly
+    those composed of heterogeneous distributed components, which
+    are specified in terms of both hard and soft timing constraints.
+    Indeed, using the proposed protocol, hard and soft real-time
+    tasks can efficiently and predictably share an Ethernet bus.
+    The bus utilization can be optimized by an appropriate
+    allocation of the available bandwidth into hard and soft
+    communication. Moreover, the protocol, compatible with standard
+    Ethernet hardware, can implement a decentralized medium
+    access control, increasing communication flexibility and
+    reliability.
+\end{abstract}
+
+\section{Introduction}
+
+Research on real-time systems have been facing several challenges
+in the last few decades. From the application domain perspective,
+such systems, once seen as composed of simple, strict and short
+hard periodic tasks, typically used for control
+loops, nowadays include applications such as telecommunication,
+industry, military, aerospace, assets monitoring, automobile etc.
+While parts of these systems may contain the usual hard periodic
+tasks, requiring known bounded response time and controlled
+jitter, other parts may be made of much more complex soft (or
+non-hard) tasks to deal with sporadic or aperiodic events
+\cite{Liu00}, leading to a considerable task diversity.
+Further, from the point of view of their structure,
+real-time systems have been moving from centralized to distributed.
+This requires a suitable communication network capable of dealing
+with the new demands task diversity requires. Indeed, network
+protocols must deal with different traffic patterns and must provide
+not only controlled jitter and bounded message transmission time,
+as required by the usual hard tasks, but also high throughput,
+as demanded by soft and other non-periodic tasks. As a result,
+industrial communication networks, known by being reliable and
+predictable, may not suffice anymore due to their usual low bandwidth.
+
+Ethernet has been considered a promising alternative for
+designing distributed real-time systems. It provides high
+bandwidth, it is cheap, efficient and widely used. However, one
+cannot consider its direct use in the real-time systems domain.
+This is due to its {\em probabilistic} bus arbitration scheme,
+used by the Carrier Sense Multiple Access with Collision Detection
+protocol (CSMA/CD) ~\cite{CSMA/CD01, Dolejs04}. Several solutions
+to this lack of determinism, either based on hardware or software
+modification, have been proposed along the last three decades. A
+brief description on related work is given in section
+\ref{sec:relatedWork}, although interested readers can refer to
+\cite{Hanssen03, Decotignie05} for details. To the best of
+our knowledge, none of those former approaches succeed to offer
+hard real-time guarantees, high throughput and fault tolerance
+mechanism using a decentralized medium access control
+without hardware modification.
+
+This paper describes a broadcast-oriented software-based 
+shared-Ethernet protocol built on top of the Ethernet layer.
+The protocol, presented in section
+\ref{sec:doris}, provides deterministic communication guarantees
+without jeopardizing flexibility neither increasing hardware costs.
+Also, it preserves the Ethernet broadcast communication capacity,
+facility required by many real-time systems. The protocol is
+reliable, predictable, efficient, optimizes the bus utilization,
+and is capable of dealing with different communication patterns
+(eg periodic and aperiodic). By providing an innovative dynamic
+reservation mechanism, the protocol also offers an adaptable
+bandwidth allocation to hard real-time traffic.
+
+
+\section{Software-based Ethernet Approaches to Real-Time Ethernet
+         \label{sec:relatedWork}}
+
+Perhaps the simplest deterministic software-based solution is to
+divide time into a sequence of slots, each of which is assigned to
+a specific system node. Nodes can transmit their message only in
+their respective time slot. This scheme, known as Time Division
+Multiple Access (TDMA) \cite{Kurose05}, gives a great deal of
+communication predictability. This characteristic suits well
+industrial applications, composed mainly of hard periodic tasks.
+However, TDMA lacks flexibility since even if a station
+has nothing to transmit, its time slot will be wasted.
+
+Token-based protocols are usually more flexible than TDMA. They
+use a token to give permission to a node to transmit messages. The
+nodes are organized in a logical ring and the token
+rotates on the ring. Only the token holder node has the right to
+transmit on the bus. The token can be explicit or implicit.
+Explicit token uses a token message to allow nodes to transmit.
+Whenever a node terminates a transmission, it sends the token to
+the next node according to the schedule. RETHER
+\cite{Venkatrami94} and RTnet \cite{Hanssen05} are examples of
+explicit-token Ethernet-based protocols. Although these
+protocols deal with different traffic patterns, they introduce
+extra overhead in case of token loss.
+Implicit-token protocols based on Timed Packet Release mechanism
+(TPR) offer a better alternative \cite{Pritty95, Carreiro03,
+ControlNet97}. In brief, a token is implicitly passed on to the
+next node independently of whether or not the previous node on
+the ring transmits its message. The absence of
+message means that a node is giving up its right to use the bus.
+Thus, the bus can be utilized more efficiently.
+
+Other protocols, like FTT \cite{Pedreiras02}, use a master-slave
+model to control bus access. Here a special node plays the role of
+an arbiter (the master), polling other nodes (the slaves). Slaves
+are allowed to transmit their messages only if they get permission
+to do so. This model can handle hard and soft traffics
+but exhibits single point of failure, which can be dealt with
+by master replication. In any case, there is an asymmetric load
+distribution on the net, which may imply problems of scalability
+and performance.
+
+Another way to avoid collisions is
+switch-based solutions \cite{Kopetz05}. However, the use 
+of switches introduces routing, forwarding and
+buffering delays. Also, broadcast communication implementation
+is not as easy as in shared-Ethernet and require special
+care to manage traffic congestion in the switch buffers
+\cite{Wang02, LoBello01}. 
+
+In this paper we mix two approaches together, TDMA and implicit
+token, to get the best out of each one. TDMA is used to create
+two windows to predictably deal with hard and soft
+messages, respectively. Inspired by the Virtual Token Protocol
+(VTPE) \cite{Carreiro03}, the bus access in each window is
+controlled by organizing the nodes in two logical rings, one for each
+window, and by using implicit token so that bus utilization can be
+optimized. The proposed protocol, called \doris{}, which stands
+for {\em Double Ring Service for Real-Time Ethernet}, is flexible
+and efficient.
+
+
+\section{DoRiS}
+\label{sec:doris}
+
+\doris{} is a collision-free protocol built on top of Ethernet
+hardware. Located between the IP and the physical layers of the
+Internet stack, the protocol works as a logical layer, extending
+the CSMA/CD MAC layer.
+\doris{} was designed to support hybrid systems where industrials
+sensors, actuators and controllers share the communication network
+with other soft applications. It is
+important to notice that the processing speed and the
+communication characteristics of these two types of application
+may differ to a great extent. Indeed, most industrial
+appliances available on the shelf have low processing capacity
+compared to the Ethernet bandwidth. For example, Carreiro et al.
+[2003] consider typical 8051 microcontrollers that spend up to
+$111 \, \mu s$ to process an incoming 64B message. As the
+transmission time on a 100Mbps Ethernet link of such
+message is $5.12\,\mu s$, such an appliance allows only about
+$4.6\%$ of bus utilization for hard real-time communication.
+On the other hand, multimedia application requires higher
+transmission rates and faster processing nodes. Considering these
+observations, \doris{} provides both temporal
+guarantees for hard real-time tasks and high bandwidth access
+to soft and best effort ones.
+
+After the computation model, the \doris{} scheme will
+be presented in details in the next sections. We will
+focus the protocol description on the functions that guarantee
+the shared medium access without collision. As they are 
+based on the Ethernet standard, the functions to receive
+messages will not be described. Important mechanisms such as
+node synchronization, group membership and fault tolerance will
+be adressed in future work.
+
+
+\subsection{Computation Model
+            \label{sec:model}}
+
+We consider a set of nodes connected through a shared-Ethernet bus.
+Each node is uniquely identified in the system and may run  
+hard real-time or soft tasks. For the sake of notation, we refer to
+the former simply as {\em tasks} while to the latter as {\em
+processes}. Let $N_H$ ($N_S$) be the numbers of hard tasks
+(soft processes). We define the two following ordered sets
+$\RTS = \{T_1,T_2,\ldots,T_{N_H}\}$ and
+$\SOS =\{P_1,P_2,\ldots,P_{N_S}\}$.
+These sets are the two logical rings of \doris,
+where a single token rotates.
+
+Received messages are processed by the tasks within a maximum
+processing time, denoted $\pi$. This time is usually associated to
+message processing by industrial appliances (micro-controllers,
+sensors etc). We assume that these appliances, called hereafter
+{\em slow nodes}, need temporal guarantees and that their messages
+are short, usually periodic, and have hard real-time constraints.
+Such messages, called \emph{hard messages}, are assumed to have a
+constant length of 64B and are transmitted through the network
+within a maximum transmission time $\delta \ll \pi$.
+The processing time for message transmission is
+assumed to be included in the task computation time and so 
+is ignored during the protocol description.
+
+Our protocol uses the pu\-blish-sub\-scribe com\-muni\-ca\-tion
+model accor\-ding to which when\-ever a task or
+process has a message to send, it transmits such a message using the
+Ethernet broadcast standard address (48 address bits set to 1)
+\cite{Dolejs04}.
+When various applications are located at the same node,
+they uniquely identify their messages using the
+type field of the Ethernet frame.
+Each task/process receives and processes every message.
+Based on the source address, they then decide whether they are
+interested in the message. In practical applications, tasks may
+not have to process all messages or may drop unused ones.
+However, for the sake of model simplification, we assume here that
+all hard real-time messages are fully processed by the tasks.
+
+As mentioned before, if only slow nodes are present in the
+\doris{} segment, the bus may be under-utilized. However, if there
+are fast nodes connected to the bus, \doris{} allows them to use
+this spare bandwidth. Assuming that nodes are equipped with
+receiving buffers, receiving and processing hard messages are
+independent actions that can happen simultaneously. This also
+implies that more than one message can be sent in a row.
+Therefore, the maximum bandwidth rate available for hard real-time
+traffic is $B_m = \delta / \pi$. It is important to notice that
+$B_m$ indicates the bound above which buffer overflows occur since
+the slowest node will receive more hard messages than it
+can process.
+
+\subsection{The Protocol Structure}
+
+The communication on the \doris{} bus is structured as a
+succession of time intervals, called \doris{} {\em segment}
+and denoted $DS_k$ for $k \in \mathbb{N}^*$.
+Each $DS_k$ is itself divided into two windows,
+$\HW_k$ and $\SW_k$, respectively associated to hard and
+soft real-time traffics. Tasks send messages in $\HW$ and
+processes use $\SW$ to transmit theirs. The size of  $\HW$ and $\SW$
+are denoted $\DHW$ and $\DSW$ and the
+\doris{} segment size is defined by $\DDP = \DHW + \DSW$.
+
+We define a \doris{} \emph{rotating sequence} $RS_k$ associated
+to $DS_k$ as the ordered list of $N_H$ consecutive \doris{} segment
+that begins by $DS_k$, ie $RS_k = (DS_k, \dotsc , DS_{k+N_H-1})$
+as illustrated in Figure \ref{fig:dorisStruct} focusing on $DS_i$.
+
+\begin{figure}[ht]
+  \index{fig!dorisStruct}
+   \centering
+  \input{fig/dorisStruct.pstex_t}
+  \caption{The $\mathbf{N_H}$ \doris{} \emph{segments} of
+           $\mathbf{RS_1}$ with a focus on $\mathbf{DS_i}$
+  \label{fig:dorisStruct}}
+\end{figure}
+
+We assume that tasks and processes are equipped with local timers,
+respectively denoted $t_{T_i}$ and $t_{P_i}$, instances of the node timer.
+For simplicity, if $T_i$ (or $P_i$) and $T_j$ (or $P_j$) are two tasks
+(processes) located at the same node, their local timers,
+instances of the node timer, are equal.
+To divide the bandwidth into \doris{} segments, these timers assume
+values from $0$ to $\DDP$ and are reset periodically at the end
+of each $DS_k$.
+Each task $T_i$ and process $P_i$ maintains also local counters,
+respectively denoted $K_{T_i}$ ($1 \leqslant K_{T_i} \leqslant N_H$)
+and $K_{P_i}$ ($1 \leqslant K_{P_i} \leqslant N_S$).
+Local timers and counters are used to organize the token 
+circulation between $\RTS$ and $\SOS$ as will be seen in
+the next two sections.
+
+To allow for some flexibility and scheduling policy, the hard
+real-time window $\HW_k$ is further divided into two slots, the
+elementary ($\ES_k$) and the reservation ($\RS_k$) slots, as
+shown in Figure \ref{fig:dorisStruct} as for $DS_i$.
+Messages sent in these two slots are hard messages, respectively
+called elementary and reservation messages. $\RS$
+is used to offer a reservation mechanism, which will be explained
+in section \ref{sec:reservation}.
+
+\subsection{The Hard Real-Time Ring}
+
+\subsubsection{The Elementary Slot}
+
+Tasks are logically organized as a ring where a unique implicit
+token rotates, granting medium access authorization according
+to temporal and logical rules.
+
+Consider a slot $\ES_k$. We define the mapping $Id$ from
+$\mathbb{N}^*$ to $\{1, \ldots , N_H\}$ as $Id(k) = (k-1)\, mod(N_H)+1$.
+Let $i = Id(k)$, $T_i$ is said to hold the token in $\ES_k$
+if its counter $K_{T_i}$ equals $i$ and if its timer is equal to zero
+(ie when $\ES_k$ just begins). For instance, considering $N_H = 4$,
+$T_3$ holds the token during $\ES_3$, $\ES_7$, $\ES_{11}$ and so on.
+The following predicate formalizes these conditions:
+
+\begin{tabular}{ l l }
+  $ElemHolder(i) \defeq$ & $\; (t_{T_i} = 0) \quad
+                             \wedge \quad (K_{T_i} = i)$
+\end{tabular}
+
+Whenever $ElemHolder(i)$ becomes true, $T_i$ broadcasts an
+elementary message by executing the $sendElemMsg(i)$ operation,
+which consists of transmitting its local counter $K_{T_i}$, its
+reservation list (see next section), and its optional data if
+there are any. Sending an elementary message in each $DS_k$ makes it
+easier to implement failure detectors and gives communication
+regularity, characteristics required by hard real-time tasks.
+Clearly, the logical condition $t_{T_i} = 0$ does not consider 
+processing delays and should be expressed by means of time
+interval for implementation.
+
+The protocol ensures the following invariant.
+In each $\ES_k$, for all $T_i$, the counter $K_{T_i}$
+equals $Id(k)$. This is achieved by means of (periodically)
+incrementing the local counters by 1 at the end of each $DS_k$.
+
+Observe that, as each $DS_k$ contains one elementary message, tasks
+can synchronize themselves by using the End-Of-Frame interrupt of
+the broadcast message. Also, if an elementary message suffers an
+omission fault, the progression of the local counters will not be
+blocked, as they rely on local timers. As a consequence, the
+maximum drift of local timers has to be bounded according to the
+synchronization protocol and the number of consecutive omissions
+assumed to be tolerated. We are currently dealing with these aspects
+of the protocol and will not adress them in this paper.
+
+\subsubsection{The Reservation Slot}
+\label{sec:reservation}
+
+The reservation scheme is used to implement some {\em classes}
+of message by means of the reservation slots, which make
+some extra bandwidth available for the tasks.
+To implement this scheme each task $T_i$ sends its
+reservation list upon the execution of $sendElemMsg(i)$ 
+(cf. previous section).
+This list is a possibly empty subset of the ordered set
+$\{i+1,\ldots, N_H, 1,\ldots, i-1\}$ that indicates the reservation
+slots in $RS_k$ where $T_i$ will transmit extra data.
+For example, with $N_H = 4$, reservation list $\{3,1\}$ sent
+by $T_2$ in $\ES_6$ means that $T_2$ requests $\RS_7$ and
+$\RS_9$ in $RS_6$. If $T_i$ sends an empty list,
+no reservation is requested.
+
+When a task $T_i$ receives a reservation list sent in $DS_k$,
+it updates a boolean vector of size $N_H$, denoted $\Gamma_i$.
+If the entry $\Gamma_i[j=Id(k')]$ is true, $\RS_{k'}$ is reserved.
+Otherwise, $\RS_{k'}$ is free. The value true for $\Gamma_i[j]$
+is only valid for all \doris{} segments in $RS_k$. This implies
+that $\Gamma_i[j]$ is reset after the end of $DS_{k+N_H-1}$. 
+It is important to note that {\em at least one reservation slot
+per $RS_k$ ($k = 1,2,\ldots$) is guaranteed per task}.
+Indeed, $T_i$ ($i =Id(k)$) is the first task which can
+request the reservation of $\RS_{k+N_H-1}$.
+
+For a task to transmit its message in a reservation slot,
+it has to be sure that the reservation procedure was successful
+and such a reservation slot is not reserved by any other task.
+For example, omission faults of elementary messages could let
+$\Gamma_i$ be inconsistent.
+The protocol deals with these requirements in an efficient way
+by establishing a reservation condition.
+Indeed, $T_i$ may only request a reservation in $\ES_k$ if its
+{\em state is consistent}, which is formalized by the following
+predicate for $k > N_H$:
+
+\begin{tabular}{ l p{9cm} }
+ $Consistency(i,k) \defeq$ & $T_i$ \emph{received all elementary
+       messages sent in} $RS_{k - N_H}$\\
+\end{tabular}
+
+For $k \leqslant N_H$, $T_i$ is consistent if it received all 
+elementary messages since $DS_1$.
+
+Let $\DES=\delta + IPG$ be the size of $\ES$, where IPG is the Inter
+Packet Gap \cite{CSMA/CD01}. A task $T_i$ holds the token
+in $\RS_k$ if it has a reservation for $\RS_k$ and its timer $t_{T_i}$
+equals $\DES$. Formally,
+
+\begin{tabular}{ l p{8cm} }
+  $ReservHolder(i, k) \defeq$ & $(t_{T_i} = \DES)$
+                $\;\; \wedge \quad (\Gamma_i[K_{T_i} = Id(k)] = true)$\\
+\end{tabular}
+
+\begin{comment}
+As can be noted, the reservation list size is up to $N_T-1$ and can
+be implemented as a bit vector. An efficient alternative
+for (implicitly) implementing this list
+is to send the number of windows requested.
+In this case, a request carrying $k > 0$ would mean that the next $k$
+free windows were to be reserved. This would imply that
+$\lceil \log_2 (N_T-1) \rceil$ message bits should be used to
+represent the implicit list instead of $N_T-1$ bits.
+Nevertheless, one can find out
+a trade-off between the list size and the maximum number of $\RS$ per
+task that could be reserved. We consider here the list size as an
+implementation detail and do not impose any restriction to it.
+\end{comment}
+
+Two interesting properties must be highlighted.
+First, the token rotation time is constant and equals $N_H \DDP$,
+which gives communication regularity for the tasks.
+Second, there are three implicit message
+classes: one that uses elementary slots only;
+the other is regarding the guaranteed reservation slot;
+and the third that makes use of the free (but not guaranteed)
+reservation slots. These message classes makes the protocol
+more flexible when compared to the TDMA approach.  
+
+\subsection{The Soft Ring $\SOS$}
+
+As in the hard ring, processes use their timers to control
+the soft ring. Elementary messages, as they are periodic and of
+constant size, are used as a temporal reference by all processes.
+In brief, the EOF of every elementary message is used as a \emph{pulse}
+which define the beginning instant of the next $DS_k$.
+Like the VTPE protocol \cite{Carreiro03}, this is actually a
+decentralized version of the Timed Packet Release (TPR) mechanism
+\cite{Pritty95} since no node/process plays a central role for sending
+the pulse.
+
+Unlike the hard ring, processes do not have to always send messages.
+We introduce $d_r$, a temporal parameter of the protocol.
+The token rotates based on the carrier sense mechanism provided by
+Ethernet, using the following TPR mechanism.
+From the beginning of each $\SW$, 
+for each period $d_r$ that it senses the medium idle, a process
+increments its local counter $K_{P_i}$.
+Otherwise, some other process is transmitting and the medium is busy.
+In this case, each process waits for the
+EOF interrupt associated to the current transmission and then
+increments its counter.
+The parameter $d_r$ is chosen to be $1 \, \mu s$ (considering a 100Mbps bus).
+This ensures unambiguous detection of the start of a packet
+transmitted by a previous node \cite{Pritty95}.
+Hence, a process $P_i$ is allowed to transmit when the following
+spredicate holds:
+
+\begin{tabular}{ l p{9.7cm} }
+  $SoftHolder(i) \defeq$ & ($\DHW \leqslant t_{P_i} < \DHW + \DSW) \;
+       \wedge \;$ Medium is idle $\; \wedge \;(K_{P_i} = i)$\\
+\end{tabular}
+
+While the token rotates, the remaining time
+in $\SW$ decreases. Thus, a process $P_i$ could receive the token
+without enough time to transmit its message in the current $\SW$.
+As this could happen an arbitrary number of times, a process might
+indefinitely be unable to transmit its message.
+To solve this problem, we define a ``STOP'' message as a special
+soft message (64B) that stops the token time passing in the current $\SW$.
+Hence, a STOP message is used to distinguish a process
+that has nothing to send from a process that has not enough time
+to transmit. If $P_i$ sends a STOP message, it will be the
+first to hold the token in the next $\SW$.
+As $\SW$ ends when the remaining time is equal to $\delta$,
+a process that receives the token always has enough time in the
+current $\SW$ to send a STOP message.
+
+Considering that a process $P_i$ may suffer a crash and then
+recovers, its local counter $K_{P_i}$ may be out of date when $P_i$
+recovers.
+There are two cases that have to be
+dealt with. First, when an empty $\SW$ happen, the process with
+the smaller identifier is assumed to hold
+the token first in the next $\SW$. This is done by
+resetting $K_{T_i}$ to 1 at all processes. Second,
+if $P_i$ observes a soft message transmission, it
+identifies the message sender from the source address 
+and type field of the message.
+Using the $DS_k$ beginning instant and the message Start-Of-Frame
+instant, $P_i$ localizes the token.
+As can be noted, the protocol is safe in both cases.
+
+In the worst case, if only one process wants to transmit, it can suffer the
+maximum delay of $N_H \, d$. If all processes wants to transmit,
+the last to receive the token may wait the worst token rotation time
+of $(N_H - 1) \DSW$.
+
+As for the bandwidth allocation, it is important to choose
+adequate values for the window sizes. As two hard messages may
+be sent in each $DP$, each slow node needs $2 \pi$ time units to
+process them. Thus, as there are buffers,
+$\DSW \geqslant 2 \pi - \DHW$ must hold.
+The bandwidth allocation for hard messages is maximized if
+one chooses $\DSW = 2 \pi - \DHW$. This gives
+$B_{h} = 2 \delta /
+\DDP$ of the bandwidth for the hard ring.
+As $\DDP = \DHW + \DSW$, $B_{h} = \delta / \pi$. Assuming $\pi = 111\mu s$,
+as in \cite{Carreiro03}, $B_{h} = 4.6\%$.
+The remaining bandwidth (95,4\%) is available for the soft ring.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper has described \doris{}, a protocol based on two logical rings
+that allows the co-existence of both hard and
+soft real-time traffics on the same Ethernet bus.
+Both types of traffic are isolated from each other in the time domain
+and the bus utilization can be optimized.
+By using the TDMA approach to implement the hard ring, \doris{}
+achieves predictability for hard real-time applications.
+The implicit token approach was used to control the soft ring.
+This configuration can allow for a better bandwidth
+allocation. Using typical parameters for slow nodes, it has been shown that
+\doris{} can allocate up to $95\%$ of the bandwidth for soft traffic.
+
+The described protocol is currently being formally specified and
+then will be implemented, possibly using some open source real-time
+operating system. Further protocol functionalities must be considered
+in future work. For example, appropriate priority policies can be
+used to take advantage of the reservation mechanism. Also, mechanisms
+such as membership control and dynamic reconfiguration can increase
+significantly the reliability and flexibility of
+\doris{}. They will be present in future steps of our research.
+
+\textbf{Acknowledgment}.
+We would like to thank Flávio Morais de Assis Silva,
+Francisco Borges Carreiro and the anonymous
+referees for their valuable advice and comments. We
+also acknowledge the Brazilian funding agencies CNPq (grant
+304084/2003-4) and FAPESB (grant 3381/2005) for their financial support.
+
+%\small
+\bibliographystyle{sbc}
+\bibliography{bib}
+
+\end{document}
+
+In order to allow any size of message inside the range of the
+Ethernet standard (from 64 to 1518 bytes), which corresponds to a
+temporal range from $\delta = 5.12$ to $\delta_m = 121.44 \, \mu
+s$, $2 \pi$ has to be greater than $\delta_m$.
+This restriction is satisfied by the values $\pi = 111 \; \mu s$
+assumed by \cite{Carreiro03}.

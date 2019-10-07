@@ -1,0 +1,38 @@
+body, td, th, .menu {font-size:70%; font-family: arial, sans-serif; }
+h1 {text-decoration:bold; font-size:170%;}
+h2 {font-size:140%;}
+a:link  {text-decoration:none; color:blue;}
+a:active {text-decoration:none; color:blue;}
+a:visited {text-decoration:none; color:blue;}
+a:hover {text-decoration:underline; color:orange;}
+.sf {font-family: verdana, arial, sans-serif;}
+input, select {font-size: 100%;  font-family: verdana, arial, sans-serif;}
+.icon {width: 40px;}
+.icontext {font-size: 100%; font-family: verdana, arial, sans-serif; }
+.bigmenu { text-decoration:bold; font-size:120%; font-family: verdana, arial, sans-serif; }
+a.bigmenu:link {text-decoration:none; color: white;}
+a.bigmenu:active {text-decoration:none; color: orange;}
+a.bigmenu:visited {text-decoration:none; color: white;}
+a.bigmenu:hover {text-decoration:none; color: orange;}
+.conferenceheading {font-size: 150%; font-family: sans-serif;}
+.dayheading {font-size: 130%; font-family: sans-serif;
+   background-color: #cccccc; color: white;}
+.sessiontitle {font: bold 100%; color: white; background-color: blue;}
+.papertitle { font-style: italic; }
+.authors { font-size: 90% }
+.abstract { margin-left: 3em; }
+.review {font-family: "Courier New", Courier, mono; }
+hr { border-top: 1px solid orange; border-bottom: 1px solid white; border-left: 1px solid white; border-right: 1px solid white;}
+table.loginTable {
+	border-collapse: collapse;
+}
+th.loginTable {
+	background-color: #b0cafa;
+	padding: 3px;
+}
+td.loginTable,tr.loginTable {
+	background-color: #e6e6e6;
+	padding: 3px;
+}
+.menuitem {display: block; background-color: #E0E0E0; color: #3D1F1F; width: 100%; text-decoration: none; font-family: verdana, arial, sans-serif; }
+.menuitem:hover {display: block; background-color: #CCCCCC; color: #3D1F1F; text-decoration: none; }

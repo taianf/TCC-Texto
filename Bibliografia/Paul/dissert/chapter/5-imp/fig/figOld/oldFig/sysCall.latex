@@ -1,0 +1,56 @@
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(7377,3184)(886,-3533)
+\put(2926,-3361){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Chamada Sistema}%
+}}}}
+\thinlines
+{\color[rgb]{0,0,0}\put(901,-2761){\vector( 1, 0){7350}}
+}%
+\thicklines
+{\color[rgb]{0,0,0}\put(3601,-811){\vector( 0,-1){900}}
+}%
+\thinlines
+{\color[rgb]{0,0,0}\put(3601,-2161){\framebox(2250,450){}}
+}%
+{\color[rgb]{0,0,0}\put(5851,-811){\framebox(1350,450){}}
+}%
+\thicklines
+{\color[rgb]{0,0,0}\put(5851,-1711){\vector( 0, 1){900}}
+}%
+{\color[rgb]{0,0,0}\multiput(3601,-3061)(0.00000,136.36364){17}{\line( 0, 1){ 68.182}}
+}%
+\thinlines
+{\color[rgb]{0,0,0}\put(2551,-811){\framebox(1050,450){}}
+}%
+\thicklines
+{\color[rgb]{0,0,0}\put(2806,-3406){\oval(210,210)[bl]}
+\put(2806,-3166){\oval(210,210)[tl]}
+\put(4546,-3406){\oval(210,210)[br]}
+\iut(4546,-3166){\oval(210,210)[tr]}
+\put(2806,-3511){\line( 1, 0){1740}}
+\put(2806,-3061){\line( 1, 0){1740}}
+\put(2701,-3406){\line( 0, 1){240}}
+\put(4651,-3406){\line( 0, 1){240}}
+}%
+\put(1051,-1861){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Modo kernel}%
+}}}}
+\put(901,-811){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Modo usu\'ario}%
+}}}}
+\put(7426,-3061){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tempo}%
+}}}}
+\put(3826,-2011){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tratador da Chamada}%
+}}}}
+\put(2701,-661){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Processo}%
+}}}}
+\put(6151,-661){\makebox(0,0)[lb]{\smash{{\SetFigFont{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Processo}%
+}}}}
+\thinlines
+{\color[rgb]{0,0,0}\multiput(1801,-1261)(8.99566,0.00000){693}{\makebox(1.6667,11.6667){\tiny{\rmdefault}{\mddefault}{\updefault}.}}
+}%
+\end{picture}%

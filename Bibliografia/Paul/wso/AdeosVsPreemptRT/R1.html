@@ -1,0 +1,78 @@
+<html><head>
+ <meta http-equiv="Content-Type" content="text/html "><title>'Re: PREEMPT_RT and I-PIPE: the numbers, part 4' - MARC</title></head><body bgcolor="#ffffff" link="#0000c0" text="#000000" vlink="#800080">
+<pre><b>[<a href="http://marc.info/?l=linux-kernel&amp;m=112089038828553&amp;w=2">prev in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112089391920436&amp;w=2">next in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112087220214929&amp;w=2">prev in thread</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112089989208586&amp;w=2">next in thread</a>] </b>
+<b><font size="+1">
+List:       <a href="http://marc.info/?l=linux-kernel&amp;r=1&amp;w=2">linux-kernel</a>
+Subject:    <a href="http://marc.info/?t=112086457900001&amp;r=1&amp;w=2">Re: PREEMPT_RT and I-PIPE: the numbers, part 4</a>
+From:       <a href="http://marc.info/?a=95737891800003&amp;r=1&amp;w=2">Ingo Molnar &lt;mingo () elte ! hu&gt;</a>
+Date:       <a href="http://marc.info/?l=linux-kernel&amp;r=1&amp;w=2&amp;b=200507">2005-07-09 7:19:11</a>
+Message-ID: <a href="http://marc.info/?i=20050709071911.GB31100%20%28%29%20elte%20%21%20hu">20050709071911.GB31100 () elte ! hu</a></font>
+[<a href="http://marc.info/?l=linux-kernel&amp;m=112089371927277&amp;q=raw">Download message RAW</a>]</b>
+
+
+* Kristian Benoit &lt;kbenoit@opersys.com&gt; wrote:
+
+&gt; The numbers for PREEMPT_RT, however, have dramatically improved. All 
+&gt; the 50%+ overhead we saw earlier has now gone away completely. The 
+&gt; improvement is in fact nothing short of amazing. We were actually so 
+&gt; surprised that we went around looking for any mistakes we may have 
+&gt; done in our testing. We haven't found any though. So unless someone 
+&gt; comes out with another set of numbers showing differently, we think 
+&gt; that a warm round of applause should go to the PREEMPT_RT folks. If 
+&gt; nothing else, it gives us satisfaction to know that these test rounds 
+&gt; have helped make things better.
+
+yeah, they definitely have helped, and thanks for this round of testing 
+too! I'll explain the recent changes to PREEMPT_RT that resulted in 
+these speedups in another mail.
+
+Looking at your numbers i realized that the area where PREEMPT_RT is 
+still somewhat behind (the flood ping +~10% overhead), you might be 
+using an invalid test methodology:
+
+&gt; ping           = on host: "sudo ping -f $TARGET_IP_ADDR"
+
+i've done a couple of ping -f flood tests between various testboxes 
+myself, and one thing i found was that it's close to impossible to 
+create a stable, comparable packets per second workload! The pps rate 
+heavily fluctuated even within the same testrun. Another phenomenon i 
+noticed is that the PREEMPT_RT kernel has a tendency to handle _more_ 
+ping packets per second, while the vanilla (and thus i suspect the 
+i-pipe) kernel throws away more packets.
+
+Thus lmbench under PREEMPT_RT may perform 'slower', but in fact it was 
+just an unbalanced and thus unfair test. Once i created a stable packet 
+rate, PREEMPT_RT's IRQ overhead became acceptable.
+
+(if your goal was to check how heavily external interrupts can influence 
+a PREEMPT_RT box, you should chrt the network IRQ thread to SCHED_OTHER 
+and renice it and softirq-net-rx and softirq-net-tx to nice +19.)
+
+this phenomenon could be a speciality of my network setup, but still, 
+could you please verify the comparability of the ping -f workloads on 
+the vanilla and the PREEMPT_RT kernels? In particular, the interrupt 
+rate should be constant and comparable - but it might be better to look 
+at both the received and transmitted packets per second. (Since things 
+like iptraf are quite expensive when flood pinging is going on, the best 
+way i found to measure the packet rate was to process netstat -s output 
+via a simple script.)
+
+	Ingo
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  <a href="http://vger.kernel.org/majordomo-info.html">http://vger.kernel.org/majordomo-info.html</a>
+Please read the FAQ at  <a href="http://www.tux.org/lkml/">http://www.tux.org/lkml/</a>
+<b>[<a href="http://marc.info/?l=linux-kernel&amp;m=112089038828553&amp;w=2">prev in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112089391920436&amp;w=2">next in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112087220214929&amp;w=2">prev in thread</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112089989208586&amp;w=2">next in thread</a>] </b>
+</pre>
+  <br><center>
+    <a href="http://marc.info/?q=configure">Configure</a> | 
+
+    <a href="http://marc.info/?q=about">About</a> |
+    <a href="http://marc.info/?q=news">News</a> |
+    <a href="http://marc.info/?q=about#Begware">Donate</a> |
+    <a href="mailto:webguy@theaimsgroup.com?subject=Add%20a%20list%20to%20MARC">Add&nbsp;a&nbsp;list</a> |
+    Sponsors:&nbsp;<a href="http://www.10east.com/">10East</a>,&nbsp;<a href="http://www.korelogic.com/">KoreLogic</a>,&nbsp;<a href="http://www.terra-intl.com/">Terra-International</a>
+</center>
+
+</body></html>

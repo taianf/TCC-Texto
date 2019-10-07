@@ -1,0 +1,70 @@
+\documentclass[msc]{mestrado}
+\batchmode %% Suppresses most terminal output.
+
+\usepackage{master}
+
+%% Inicio do documento
+\begin{document}
+\mainmatter
+
+\headsep=20pt
+\oddsidemargin=14pt
+
+\setstretch{1.4}
+\parskip=3pt
+
+%\chapter{Introdução}
+
+%\chapter{Ethernet e Tempo Real}
+\label{cap:motivacao} \label{sec:sisHibrid} \label{sec:TempraVTPE}   \label{fig:ethernetFrame} 
+
+%\chapter{O Protocolo \doris{}} % (10 pag)
+%\label{cap:doris}
+%\include{protocol}
+
+
+%\chapter{A disciplina \emph{DoRiS}} % (10 pag)
+\label{cap:specVerif}
+
+%\chapter{Plataforma Operacional}
+\label{cap:platOp}
+
+%\chapter{Implementação}
+\label{cap:implementacao}
+% \end{spacing}
+
+%%
+%% Parte pós-textual
+%%
+\backmatter
+\appendix
+
+\include{spec}
+
+\headsep=14pt
+\oddsidemargin=14pt
+% \begin{spacing}{1.4}
+\parskip=1pt
+
+\setlength{\textwidth}{470pt}
+\setlength{\textheight}{670pt}
+%\addtolength{\hoffset}{-50pt}
+
+\setstretch{1.}
+
+\include{traces}
+
+% Bibliografia
+% É aconselhável utilizar o BibTeX a partir de um arquivo, digamos "biblio.bib".
+% Para ajuda na criação do arquivo .bib e utilização do BibTeX, recorra ao
+% BibTeXpress em www.cin.ufpe.br/~paguso/bibtexpress
+\renewcommand{\bibname}{REFERÊNCIAS}
+%\nocite{*}
+%\bibliographystyle{authordate2}
+%\bibliographystyle{abnt-alf}
+
+\bibliography{../../bib}
+
+\label{app:especificacao}
+%% Fim do documento
+\end{document}

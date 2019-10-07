@@ -1,0 +1,168 @@
+%% Carrega a classe "mestrado"
+%% Opções: bsc - para monografias de graduação
+%%         msc - (padrão) para dissertações de mestrado
+%%         phd - para teses de doutorado
+\documentclass[msc]{mestrado}
+%% Preâmbulo:
+%% coloque aqui o seu preâmbulo LaTeX, i.e., declaração de pacotes,
+%% (re)definições de macros, medidas, etc.
+
+\usepackage{master}
+
+%% Identificação:
+
+% Universidade
+% e.g. \university{Universidade de Campinas}
+% Na UFPE, comente a linha a seguir
+\university{Universidade Federal da Bahia}
+
+% Endereço (cidade)
+% e.g. \address{Campinas}
+% Na UFPE, comente a linha a seguir
+\address{Salvador}
+
+% Instituto ou Centro Acadêmico
+% e.g. \institute{Centro de Ciências Exatas e da Natureza}
+% Comente se não se aplicar
+\institute{Instituto de Matemática}
+
+% Departamento acadêmico
+% e.g. \department{Departamento de Informática}
+% Comente se não se aplicar
+\department{Departamento de Ciências da Computação}
+
+% Programa de pós-graduação
+\program{Mestrado em Mecatrônica}
+%\program{Especialização Avançada em Sistemas Distribuídos}
+
+% Área de titulação
+\majorfield{Mecatrônica}
+%\majorfield{Computação}
+
+% Título da dissertação/tese
+% e.g. \title{Sobre a conjectura $P=NP$}
+\title{Especificação formal, Verificação e Implementação de um protocolo de
+  comunicação determinista, baseado em Ethernet}
+
+% Data da defesa
+\date{Maio de 2008}
+
+% Autor
+\author{Paul Regnier}
+
+% Orientador(a)
+% Opção: [f] - para orientador do sexo feminino
+% e.g. \adviser[f]{Profa. Dra. Maria Santos}
+\adviser{George Lima (PhD)}
+
+% Orientador(a)
+% Opção: [f] - para orientador do sexo feminino
+% e.g. \coadviser{Prof. Dr. Pedro Pedreira}
+% Comente se não se aplicar
+%\coadviser{Flávio Morais de Assis Silva}
+
+%% Inicio do documento
+\begin{document}
+
+%%
+%% Parte pré-textual
+%%
+\frontmatter
+
+% Folha de rosto
+% Comente para ocultar
+\frontpage
+
+% Portada (apresentação)
+% Comente para ocultar
+\presentationpage
+
+\include{aprov}
+
+\begin{dedicatory}
+A Vitória, Omin e  
+\end{dedicatory}
+
+% Epígrafe
+\cleardoublepage
+  \thispagestyle{empty}
+  ~\\\vfill
+
+\begin{epigraph}{Mestre Sombra}
+  As vezes se assustam com o eco do silêncio do meu grito.
+\end{epigraph}
+\begin{epigraph}{Leslie Lamport}
+  Using clocks, one can convey information by not doing something.
+\end{epigraph}
+
+\include{acknow} 
+
+\include{termo} 
+
+\setstretch{1.4}
+\include{resumo}
+ 
+% Palavras-chave do resumo em Português
+%\begin{keywords}
+%\end{keywords}
+
+\include{abstract}
+
+% Palavras-chave do resumo em Inglês
+%\begin{keywords}
+%\end{keywords}
+
+%Siglas
+\include{siglas}
+
+% Sumário
+% Comente para ocultar
+\tableofcontents
+
+% Lista de figuras
+% Comente para ocultar
+\listoffigures
+
+% Lista de tabelas
+% Comente para ocultar
+\listoftables
+
+%%
+%% Parte textual
+%%
+\mainmatter
+
+% É aconselhável criar cada capítulo em um arquivo à parte, digamos
+% "capitulo1.tex", "capitulo2.tex", ... "capituloN.tex" e depois
+% incluí-los com:
+\headsep=40pt
+\oddsidemargin=15pt
+\begin{spacing}{1.4}
+\parskip=6pt
+%% \include{introduction}
+
+%% \include{tex/motivacao}
+
+%% \include{tex/protocol}
+
+%% \include{tex/conclusion}
+\end{spacing}
+
+%%
+%% Parte pós-textual
+%%
+\backmatter
+
+% Bibliografia
+% É aconselhável utilizar o BibTeX a partir de um arquivo, digamos "biblio.bib".
+% Para ajuda na criação do arquivo .bib e utilização do BibTeX, recorra ao
+% BibTeXpress em www.cin.ufpe.br/~paguso/bibtexpress
+\renewcommand{\bibname}{REFERÊNCIAS}
+%\nocite{*}
+%\bibliographystyle{authordate2}
+%\bibliographystyle{abnt-alf}
+
+\bibliography{../../bib}
+
+%% Fim do documento
+\end{document}

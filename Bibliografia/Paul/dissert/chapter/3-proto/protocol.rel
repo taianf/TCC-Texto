@@ -1,0 +1,90 @@
+;; RefTeX parse info file
+;; File: /Users/paul/master/chapter/3-proto/protocol.tex
+;; User: paul (Paul Regnier)
+
+(set reftex-docstruct-symbol '(
+
+
+(xr nil "\\\\\\\\\\\\")
+
+(index-tags "idx")
+
+(is-multi nil)
+
+(bibview-cache)
+
+(master-dir . "/Users/paul/master/chapter/3-proto/")
+
+(label-numbers)
+
+(bof "/Users/paul/master/chapter/3-proto/protocol.tex")
+
+(toc "toc" "  1 \\doris: Especificação e verificação" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 1 "1" "\\chapter{\\doris: Especificação e verificação}" 1)
+
+("cap:doris" "s" "\\section{Introdução}  Neste capítulo, um novo protocolo de comunicação de tempo real, baseado em Eth" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "    1.1 Introdução" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.1" "\\section{Introdução}" 66)
+
+("sec:intro" "s" "Neste capítulo, um novo protocolo de comunicação de tempo real, baseado em Ethernet compartilhado, é" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "    1.2 \\doris: o protocolo" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.2" "\\section{\\doris: o protocolo}" 6099)
+
+("sec:dorisProt" "s" "O protocolo \\doriss atua como um filtro lógico, localizado entre as camadas de rede e física da pilh" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "      1.2.1 Sistema, modelo e terminologia" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.2.1" "\\subsection{Sistema, modelo e terminologia}" 6845)
+
+("sec:dorisModel" "s" "O conjunto de estações (lentas e rápidas) interligadas num barramento Ethernet compartilhado constit" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "      1.2.2 O esquema de Controle de Acesso ao Meio" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.2.2" "\\subsection{O esquema de Controle de Acesso ao Meio}" 11112)
+
+("sec:dorisMAC" "s" "A comunicação num barramento \\doriss é temporalmente dividida em uma alternância de fases (\\ing{roun" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+("fig:dorisStruct" "f" "O esquema de Divisão Temporal de \\doris" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "    1.3 A especificação formal de \\doris " "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.3" "\\section{A especificação formal de \\doris }" 16955)
+
+("sec:dorisSpec" "s" "A metodologia descritiva para apresentar a especificação de \\doriss segue uma abordagem indo de cima" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+("sec:modelHipot" "s" "descreve o conjunto das hipóteses de modelagem adotadas para especificar o protocolo. Em seguida, a " "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "      1.3.1 Hipóteses de modelagem" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.3.1" "\\subsection{Hipóteses de modelagem}" 17756)
+
+("sec:modelHipot" "s" "Características importantes do sistema devem ser incluídas na especificação de modo que se possa ver" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "      1.3.2 Conceitos de TLA+" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.3.2" "\\subsection{Conceitos de TLA+}" 19731)
+
+("sec:basicTLA" "s" "A Lógica Temporal de Ações (TLA) e sua linguagem formal associada (TLA +) combina a Lógica Temporal " "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "      1.3.3 Constantes e variáveis" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.3.3" "\\subsection{Constantes e variáveis}" 23880)
+
+("tab:specCons" "t" "O conjunto \\textsc{constants} da especificação de \\doris" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+("tab:specVars" "t" "O conjunto \\textsc{variables} da especificação de \\doris" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "      1.3.4 A fórmula principal de \\doris" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.3.4" "\\subsection{A fórmula principal de \\doris}" 30508)
+
+(toc "toc" "      1.3.5 Os \\emph{slots} elementares $\\ES$" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.3.5" "\\subsection{Os \\emph{slots} elementares $\\ES$}" 54133)
+
+(toc "toc" "      1.3.6 Os \\emph{slots} de reserva $\\RS$" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.3.6" "\\subsection{Os \\emph{slots} de reserva $\\RS$}" 57123)
+
+("sec:reservation" "s" "O mecanismo de reserva disponibiliza uma largura da banda extra para as tarefas, introduzindo um nov" "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "    1.4 O anel não-crítico" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.4" "\\section{O anel não-crítico}" 61716)
+
+(toc "toc" "    1.5 Uma ilustração gráfica" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.5" "\\section{Uma ilustração gráfica}" 68049)
+
+(index "idx" "\\index{figuras!dorisScenar}%" "/Users/paul/master/chapter/3-proto/protocol.tex" 55548 "figuras!dorisScenar" "figuras!dorisScenar" "figuras ! dorisScenar" "figuras!dorisscenar" nil)
+
+("fig:dorisScenar" "f" "Um exemplo de chip " "/Users/paul/master/chapter/3-proto/protocol.tex" nil)
+
+(toc "toc" "    1.6 Composição dos aneis" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.6" "\\section{Composição dos aneis}" 69699)
+
+(toc "toc" "      1.6.1 Modelo" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.6.1" "\\subsection{Modelo}" 69731)
+
+(toc "toc" "      1.6.2 Mecanismo" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 3 "1.6.2" "\\subsection{Mecanismo}" 71953)
+
+(toc "toc" "    1.7 Observações finais" "/Users/paul/master/chapter/3-proto/protocol.tex" nil 2 "1.7" "\\section{Observações finais}" 73719)
+
+(eof "/Users/paul/master/chapter/3-proto/protocol.tex")
+))
+

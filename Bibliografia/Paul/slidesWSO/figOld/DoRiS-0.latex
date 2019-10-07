@@ -1,0 +1,44 @@
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(4417,4860)(2551,-4486)
+\thinlines
+{\color[rgb]{0,0,0}\put(2926,-3061){\framebox(150,150){}}
+}%
+{\color[rgb]{0,0,0}\put(4651,-4036){\framebox(150,150){}}
+}%
+{\color[rgb]{0,0,0}\put(6376,-3061){\framebox(150,150){}}
+}%
+{\color[rgb]{0,0,0}\put(6376,-1111){\framebox(150,150){}}
+}%
+\thicklines
+{\color[rgb]{0,0,0}\put(4726,-3961){\line( 5, 3){1672.059}}
+\put(6415,-2986){\line( 0, 1){1950}}
+\put(6415,-1036){\line(-5, 3){1672.059}}
+\put(4726,-61){\line(-5,-3){1672.059}}
+\put(3037,-1036){\line( 0,-1){1950}}
+\put(3037,-2986){\line( 5,-3){1672.059}}
+}%
+\thinlines
+{\color[rgb]{0,0,0}\put(4651,-136){\framebox(150,150){}}
+}%
+\put(2626,-3286){\makebox(0,0)[lb]{\smash{{\SetFigFont{25}{30.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}F}%
+}}}}
+\put(2551,-961){\makebox(0,0)[lb]{\smash{{\SetFigFont{25}{30.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}A}%
+}}}}
+\put(4651, 89){\makebox(0,0)[lb]{\smash{{\SetFigFont{25}{30.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}B}%
+}}}}
+\put(6676,-3361){\makebox(0,0)[lb]{\smash{{\SetFigFont{25}{30.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}D}%
+}}}}
+\put(6601,-961){\makebox(0,0)[lb]{\smash{{\SetFigFont{25}{30.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}C}%
+}}}}
+\put(4576,-4486){\makebox(0,0)[lb]{\smash{{\SetFigFont{25}{30.0}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}E}%
+}}}}
+{\color[rgb]{1,0,0}\put(2926,-1111){\framebox(150,150){}}
+}%
+\end{picture}%

@@ -1,0 +1,1382 @@
+\chapter{Plataforma Operacional}
+\label{cap:platOp}
+
+\section{Introdução}
+\label{sec:introPlatOp}
+
+Nos capítulos que precedem, o protocolo \doris{} foi descrito e os seus objetivos
+foram apresentados.  Depois desta fase de definição, especificação formal e
+validação do protocolo \doris{}, é chegado o momento de apresentar um outro desafio
+deste projeto de desenvolvimento de um protocolo de comunicação de tempo real
+baseado em Ethernet. Isto é, a escolha de uma plataforma operacional de tempo real
+híbrida, de código livre, que possa ser utilizada tanto em computadores de uso geral
+quanto em dispositivos dedicados e que atende aos requisitos temporais necessários
+para a implementação do protocolo \doris{}.
+
+É importante notar aqui que o desafio principal concentra-se em torno do uso dos
+computadores de uso geral. De fato, os dispositivos dedicados utilizam sistemas
+embarcados ou micro-controladores para oferecer um conjunto de funcionalidades
+definidas. Integrar tais dispositivos num sistema distribuído requer levar em conta
+as suas restrições específicas como, por exemplo, capacidade de processamento, taxa
+de transferência, consumo de energia, etc. No entanto, a qualidade dos serviços
+oferecidos por tais dispositivos é uma conseqüência do seu
+projeto. Conseqüentemente, uma vez especificados os requisitos do sistema, o
+dispositivo pode ser escolhido adequadamente de tal forma a satisfazer estes
+requisitos.
+
+No caso dos computadores de uso geral, a situação é bastante diferente, pois o
+primeiro objetivo a ser alcançado é o desempenho geral do sistema. No entanto, as
+tecnologias modernas utilizadas nas arquiteturas de computadores atuais para
+aumentar o desempenho dos dispositivos de hardware são muitas vezes fontes de
+imprevisibilidade temporal.  Isto é, por exemplo, o caso da memória \ing{cache}, do
+acesso direto à memória (DMA), do co-processamento, da predição de instruções, das
+unidades \ing{multicore} ou dos \ing{pipelines}.  Devem também ser mencionadas as
+funções de gerenciamento da energia, que, por afetar a freqüência de execução do
+processador, dificultam a estimativa dos piores casos dos tempos de execução dos
+programas. Tal complexidade do hardware, embora torne os sistemas computacionais
+mais velozes, aumenta o grau de imprevisibilidade do sistema e dificulta a
+estimativa dos atributos necessários à teoria do escalonamento de Sistemas de Tempo
+Real \cite{Liu73, Audsley93, Tindell94}.  No entanto, reduzir o conjunto de serviços
+oferecidos por um Sistema Operacional de Propósito Geral (SOPG) no patamar dos SOs
+que podem garantir previsibilidade equivale a negar as evoluções do hardware das
+últimas décadas.  Para resolver este desafio, várias abordagens foram propostas ao
+longo do tempo para desenvolver plataformas operacionais determinísticas baseadas em
+SOPG.
+
+Este capítulo apresenta algumas destas abordagens com o objetivo de escolher a
+plataforma operacional que oferecerá suporte à implementação de \doris. Como esta
+deverá ser de software livre, usar a família de sistemas Linux parece ser uma
+tendência natural. Inicialmente, uma explicação geral sobre as principais
+características de Linux é apresentada na seção \ref{sec:LinuxSOPG}. Como será
+visto, Linux oferece vários aspectos que impedem seu uso direto na implementação de
+\doris. Tais aspectos serão detalhados na seção \ref{sec:compTemp}. Em seguida,
+algumas das tendências que têm incorporado características de sistemas de tempo real
+em Linux serão descritas na seção \ref{sec:sotrLinux}. Por fim, resultados
+comparativos de algumas plataformas serão apresentados na seção
+\ref{sec:experimentos} e a escolha de uma destas será justificada, de acordo com as
+necessidade de \doris.
+
+
+\section{Linux: um Sistema Operacional de Propósito Geral}
+\label{sec:LinuxSOPG}
+
+Depois de uma breve justificativa da escolha do Linux para este trabalho, esta seção
+apresenta os principais elementos do sistema Linux que causam ou que são
+relacionados à existência de imprevisibilidade temporal na execução das
+aplicações.
+
+\subsection{Motivação para o uso de Linux}
+\label{sec:porque}
+
+A escolha da plataforma operacional no contexto deste trabalho se deu pelas
+características do protocolo \doriss e pelo contexto universitário do seu
+desenvolvimento. Resumidamente, os seguintes critérios foram adotados
+para determinar uma plataforma adequada para desenvolvimento de \doris:
+
+\begin{enumerate}
+\item ser de código livre e aberto (licença GPL);
+\item garantir desvios máximos da ordem da dezena de micro-segundos para as
+  aplicações de controle via rede, conforme o padrão de qualidade de serviço
+  oferecida pelos Sistemas Operacionais de Tempo Real (SOTR);
+\item permitir o uso de aplicações multimídia, banco de dados e outros componentes
+  de software distribuídos tipicamente usadas em ambientes multi-usuários de
+  Sistemas Operacionais de Propósito Geral (SOPG);
+\item prover suporte às aplicações embarcadas usando componentes de prateleira.
+\end{enumerate}
+
+A primeira destas condições decorre do modelo de pesquisa e desenvolvimento
+defendido neste trabalho. Apesar de a ecologia política ser um assunto
+essencial aos olhos deste mesmo, foge do escopo deste trabalho apresentar os
+elementos referindo a este tópico.  A leitura de André Gorz \cite{Gorz77} ou Milton
+Santos \cite{Santos00} deverá saciar a curiosidade dos mais interessados.
+
+A segunda condição decorre dos requisitos temporais das aplicações de controle e
+corresponde também às margens de desvios necessárias para a implementação do
+protocolo \doris, conforme visto no capítulo \ref{cap:doris}. Finalmente, o terceiro
+e quarto itens são diretamente relacionados com as metas do protocolo \doris, que já
+foram amplamente discutidas nos capítulos~\ref{cap:motivacao}~e~\ref{cap:doris}.
+
+Dentre as soluções de SOPG, o sistema Linux \cite{Kernel, Bovet05} é um software
+livre e de código aberto que se distingue pela originalidade da sua proposta de
+desenvolvimento sob licença GNU/GPL (GNU \ing{General Public License}).  Uma
+conseqüência direta deste modelo de desenvolvimento cooperativo é que o \kernell
+Linux conta com uma das maior comunidade de desenvolvedores espalhada pelo mundo
+inteiro. Outra vantagem do \kernell Linux é ser baseado no sistema UNIX e oferecer
+uma interface de utilização conforme o padrão POSIX \ing{Portable Operating System
+  Interface} \cite{POSIX04}. Por fim, deve ser observado que Linux é bastante
+difundido nos ambientes de pesquisa acadêmica.
+
+Por todas estas razões, a plataforma Linux apareceu como uma candidata pertinente para
+este projeto de pesquisa. No entanto, como será visto mais adiante, o \kernell Linux
+por si só não oferece as garantias temporais definidas no item (iv) acima. Portanto,
+revelou-se necessário pesquisar soluções existentes para tornar o SOPG Linux
+determinista. Algumas destas soluções são apresentadas ao longo deste capítulo,
+assim como a extensão Linux de tempo real adotada no contexto deste trabalho.
+
+% Observa-se que nos sistemas de tempo real, o desempenho é um objetivo secundário,
+% subordinado ao determinismo.  Esta constatação e as facilidades que trazem a
+% possibilidade de trabalhar no ambiente de programação Linux têm levado vários grupos
+% de pesquisa a utilizar a plataforma Linux para fins de pesquisa sobre SOTR. Num
+% trabalho recente, por exemplo, Linux esta sendo utilizado para desenvolver a
+% plataforma $LITMUS^{RT}$ para testar algoritmos de escalonamento para arquiteturas
+% multiprocessadas \cite{Calandrino06}.
+
+Antes de abordar a caracterização das propriedades temporais do Linux e de algumas
+de suas extensões de tempo real, são apresentados brevemente alguns conceitos
+básicos de sistemas operacionais que são utilizados intensivamente ao longo deste
+capítulo.
+
+\subsection{Interrupções }
+\label{sec:interrupt}
+
+Na classe do sistema do tipo UNIX \cite{Bach86}, na qual se encontra o sistema
+Linux, o SO, ou simplesmente, \kernel, executa num modo diferente
+dos demais processos: o modo ``protegido''. Diz-se que os processos,
+associados às aplicações, executam em modo ``usuário''. Estes dois modos são
+definidos no nível do hardware do processador e são utilizados para restringir o
+acesso aos dispositivos de hardware da máquina. Por este meio, garante-se que os
+únicos processos que podem obter acesso aos dispositivos de hardware são aqueles
+executando em modo protegido.  Responsável pelo gerenciamento dos recursos, o
+\kernell provê uma camada de abstração dos dispositivos de hardware aos processos
+usuários. A interface do Linux é oferecida através de trechos de código
+denominados ``chamadas de sistema''. Cada uma destas chamadas oferece uma API (Interface de
+Programação da Aplicação) padronizada pela norma POSIX \cite{POSIX04},  para
+facilitar tanto o trabalho dos programadores, quanto a portabilidade dos códigos de
+software.
+
+A organização da comunicação entre os dispositivos, o \kernell e as aplicações é
+baseada no conceito de interrupção do processador. Tais interrupções são gerenciadas
+por um dispositivo de hardware específico, o PIC ou o APIC (\ing{Advanced
+  Programmable Interrupt Controller}) que é diretamente conectado ao processador.
+Na ocorrência de um evento de comunicação, ou seja, quando um dispositivo requer a
+atenção do processador, ele informa ao APIC via uma linha de interrupção (\ing{IRQ lines}).
+ Por sua vez, o APIC informa ao processador que uma interrupção precisa ser tratada.
+
+ Distinguem-se as interrupções síncronas e assíncronas. As primeiras são geradas pelo
+ próprio processo em execução no final do ciclo de execução de uma instrução.  Elas
+ correspondem ao uso de instruções específicas pelo programa, tais como as chamadas
+ de sistema da interface do \kernel, ou podem ser causadas pela execução de uma
+ instrução indevida.  As interrupções assíncronas são geradas pelos dispositivos de
+ hardware para informar ao processador a ocorrência de um evento externo e podem ser
+ geradas a qualquer instante do ciclo do processador.
+
+ Quando o processador percebe uma interrupção, quer seja síncrona ou assíncrona, ele
+ desvia sua execução e passa a executar o tratador de interrupção associado à linha
+ de interrupção que solicitou o APIC inicialmente.  Esta execução não é associada a
+ processo algum, mas sim à ocorrência de um evento e, portanto, não tem contexto de
+ execução próprio.  O tratador simplesmente executa no contexto do último processo
+ que estava executando no processador.
+
+ Para minimizar o impacto das interrupções sobre a execução dos processos regulares,
+ um tratador de interrupção é geralmente subdividido em três partes. A primeira
+ parte executa operações críticas que não podem ser atrasadas e que modificam
+ estruturas de dados compartilhadas pelo dispositivo e o \kernel.  Tais operações
+ são executadas imediatamente e com as interrupções desabilitadas. Também executado
+ imediatamente pelo tratador, mas com as interrupções habilitadas, são as operações
+ rápidas que modificam apenas as estruturas de dados do \kernel, pois estas são
+ protegidas por mecanismos de \ing{locks}, assim como será vista na seção
+ \ref{sec:locks}.  Estes dois conjuntos de operações constituem a parte crítica do
+ tratador, durante a qual a execução não pode ser suspensa.  Finalmente, as
+ operações não-críticas e não-urgentes são possivelmente adiadas e executadas com as
+ interrupções habilitadas. Estas execuções são chamadas de \cod{softirqs} ou
+ \cod{tasklets}.
+
+Do tratamento eficiente das interrupções depende a capacidade do sistema para reagir a
+eventos externos. O \kernell padrão garante esta eficiência, proibindo que a execução
+da parte crítica do tratador de interrupção seja suspensa, mas permitindo que a
+parte não-crítica, e geralmente mais demorada, seja suspensa para a execução da
+parte crítica de uma outra interrupção.
+
+\subsection{Tempo compartilhado}
+\label{sec:tick}
+
+O principal objetivo de um Sistemas Operacional de Propósito Geral (SOPG), tal como
+Linux, é oferecer o melhor serviço possível para o uso compartilhado por vários
+usuários de recursos limitados, tal como processadores, memória, disco, placas de
+rede e outros dispositivos de \ing{hardware} \cite{Bach86, Tanenbaum01, Oliveira01}.
+Um usuário do sistema, compartilhando um conjunto de recursos, deverá ter
+a ilusão que está sozinho atuando naquele sistema. O SOPG deve, portanto,
+garantir o acesso dos usuários a todos os recursos que ele gerencia com latências
+imperceptíveis para um ser humano. A implementação de tal serviço, cuja qualidade
+depende altamente da subjetividade de cada usuário e das aplicações que ele precisa
+executar, utiliza o mecanismo de compartilhamento temporal dos recursos. Para dar a
+impressão de exclusividade e continuidade dos serviços aos usuários, os recursos são
+alocadas sucessivamente às aplicações por fatias de tempos curtas, da ordem de
+alguns milisegundos. A alternância rápida destas alocações garante que cada
+aplicação ganhe o acesso ao recurso com uma freqüência suficiente para que não haja
+tempo ocioso perceptível do ponto de visto do usuário. O modelo de tempo compartilhado
+caracteriza assim os sistemas multi-programáveis e multi-usuários.
+
+No Linux e em SOPG similares, o entrelaçamento das execuções dos processos ao longo
+do tempo é realizado da seguinte maneira.  O tempo é dividido em intervalos de
+tamanho iguais. Para este efeito, o SO utiliza o PIT (\ing{Programable Interrupt
+  Timer}), baseado, nas arquiteturas PCs i386, num de hardware dedicado - o chip
+8254 ou seu equivalente.  O PIT é programado para gerar uma interrupção periódica, o
+\ing{tick}, cujo período, chamado de $jiffy$, é configurável, variando entre $1$ e
+$10\mu s$ em função das arquiteturas. 
+
+A cada \ing{tick} uma interrupção ocorre. Esta provoca a atualização e execução
+eventual dos temporizadores do sistema assim como a chamada do escalonador quando
+isto se faz necessário. Conseqüentemente, quanto menor o $jiffy$, mais freqüentes
+serão as ativações de cada processo, melhorando assim a capacidade de reação do
+sistema.  Por outro lado, com um $jiffy$ pequeno, a alternância entre os processos é
+mais freqüente, aumentando o tempo gasto em modo \kernel, no qual o processador só
+executa tarefas de gerenciamento.  Portanto, escolher a freqüência dos \ing{ticks}
+constitui um compromisso entre o desempenho do sistema e a resolução desejada para
+escalonar os processos.  Observa-se, em particular, que a implementação do tempo
+compartilhado por \ing{ticks} de duração constante faz com que um processo não possa
+``dormir'' por um tempo menor do que um \ing{jiffy}.
+
+Além disso, o algoritmo de gerenciamento dos temporizadores, chamado de ``roda dos
+temporizadores'', pode constituir uma outra fonte de sobrecarga nos sistemas que
+utilizam muitos temporizadores. Este algoritmo utiliza uma estrutura de
+armazenamento baseada em 5 faixas de $jiffies$ correspondendo a intervalos de tempo
+que crescem exponencialmente \cite{Bovet05, Molnar05}. Cada faixa armazena os
+temporizadores de acordo com os seus valores de instantes de expiração. A primeira
+faixa corresponde aos temporizadores com tempos de expiração contidos no intervalo
+indo de $1$ a $256 \, jiffies$. A segunda corresponde aos temporizadores expirando
+entre $257 \, jiffies$ e $16384 \, jiffies$ e assim por diante até a quinta faixa
+que corresponde a todos os temporizadores expirando depois de $67108865 \,
+jiffies$. Quando um temporizador é criado, ele é armazenado na faixa que contém o
+$jiffy$ no qual ele deve expirar. A cada $256$ $jiffies$, depois que todos os
+temporizadores da primeira faixa sejam eventualmente disparados, o sistema executa a
+rotina chamada ``cachoeira'' que atualiza as diferentes faixas, cascateando os
+temporizadores de faixa em faixa.  Por exemplo, esta rotina determina quais são os
+temporizadores da segunda faixa que vão expirar nos próximos $256$ $jiffies$ e os
+transferem para a primeira faixa. Similarmente, a rotina transfere os devidos
+temporizadores da terceira para a segunda faixa, da quarta para terceira e da quinta
+para a quarta.
+
+Além de utilizar uma estrutura de dados de tamanho limitado, este algoritmo se torna
+muito eficiente quando os temporizadores são apagados antes de serem disparados. Isto
+ocorre, por exemplo, no caso de uma estação servidor Internet na qual a grande
+maioria dos temporizadores são cancelados rapidamente. Neste caso, a sobrecarga
+causada pela execução da rotina da cachoeira passa a ser insignificante, pois os
+temporizadores são cancelados antes de serem cascateados. Por outro lado, percebe-se
+que a diminuição da duração do $jiffy$ aumenta a sobrecarga gerada por este
+algoritmo, pois a rotina da ``cachoeira'' acaba sendo executada mais
+freqüentemente. Além disso, sendo o tempo entre cada execução menor, o número de
+temporizadores ainda não cancelados é maior. Conseqüentemente, o número de
+transferências de faixa a ser realizado para cada temporizador, antes do seu
+cancelamento eventual, aumenta.
+
+Na sua publicação inicial, o \kernell 2.6 passou a usar um $jiffy$ de
+$1ms$. Percebeu-se então que este valor gerou uma sobrecarga significativa no
+sistema, notadamente devido aos temporizadores utilizados pelas conexões TCP. Este
+fato explica em parte porque as versões do \kernell  posteriores a 2.6.13 vêm com o
+valor padrão do $jiffy$ de $4 ms$, e não mais de $1 ms$.
+
+
+\subsection{Preempção}
+
+No contexto dos escalonadores baseados em prioridade, um processo de baixa
+prioridade pode ser suspenso no decorrer da sua execução para ceder o processador a
+uma processo de prioridade mais alta. Quando tal evento ocorre, diz-se que houve
+preempção do processo em execução pelo processo de mais alta prioridade.  De forma
+geral, diz-se que houve preempção de um processo A por um processo B, quando o
+processo A deve interromper sua execução para ceder o processador ao processo B. No
+caso dos processos executando em modo usuário, a preempção corresponde à alternância
+de processos que o \kernell executa para a implementação do mecanismo de tempo
+compartilhado.  Este procedimento se torna mais complexo quando se trata da
+preempção de processos executando em modo \kernel.
+
+Diz-se, de maneira simplificada, que o \kernell é preemptivo se uma alternância de
+processos pode acontecer quando o processador está em modo protegido. Considere, por
+exemplo, um processo A executando um tratador de exceção associado a uma chamada de
+sistema.  Enquanto A está executando, o tratador de uma interrupção de hardware
+acorda um processo B mais prioritário que A. Num \kernell não preemptivo, o \kernell
+completa a execução da chamada de sistema de A antes de entregar o processador para
+o processo B. No caso de um \kernell preemptivo, o \kernell suspende
+a execução da chamada de sistema para começar a executar B imediatamente.  Eventualmente,
+depois da execução de B, o processo A será escalonado novamente e a chamada de
+sistema poderá ser finalizada.
+
+O principal objetivo de tornar o SO preemptivo \cite{Bovet05} é diminuir o tempo de
+latência que o processo de mais alta prioridade pode sofrer antes de ganhar o
+processador. Este objetivo é de suma importância para que um SOPG
+tal como Linux possa oferecer as garantias temporais encontradas em STR.
+
+
+\subsubsection{Concorrência e sincronização}
+\label{sec:locks}
+
+Um dos desafios em tornar o \kernell preemptivo é garantir a integridade dos dados,
+mesmo que vários caminhos de controle do \kernell possam ter acesso aos mesmos dados
+de forma concorrente. Este é um problema fundamental e é comumente conhecido como
+problema da exclusão mútua \cite{Dijkstra65, Lamport74, Raynal86, Mellor91,
+  Lamport05}.  No entanto, já que as soluções adotadas pelo \kernell fazem parte
+das principais causas de imprevisibilidade temporal do Linux padrão, vale a pena
+apresentar brevemente estas soluções.
+
+Chama-se de região crítica qualquer recurso ou estrutura de dados que só pode ser
+utilizado por um processo (ou um conjunto de processos) de forma atômica. Isto é, se
+um processo $P$ entra numa região crítica, nenhum outro processo pode entrar nesta
+mesma região crítica enquanto $P$ não a liberou.  Uma maneira simples de garantir a
+exclusão mútua num sistema monoprocessado é desabilitar a possibilidade de preempção
+durante a execução de uma região crítica. Esta solução, bastante utilizada nas
+versões do \kernell não superiores à versão 2.4, tem dois inconvenientes
+relevantes. Primeiro, ela só funciona em sistemas monoprocessados e, segundo, ela
+não impede o acesso da região crítica por tratadores de interrupção. Neste segundo
+caso, para garantir a exclusão mútua, um processo entrando numa região crítica que é
+compartilhada com tratadores de interrupções deve também desabilitar aquelas
+interrupções.
+
+Nas suas versões mais recentes, a partir da versão 2.6, o \kernell tenta reduzir ao máximo o
+uso de tais soluções, que comprometem o desempenho do sistema em termos de capacidade
+reativa. No entanto, existem situações nas quais o uso destes mecanismos é
+necessário.  Para este efeito, a implementação da exclusão mútua em contextos
+multiprocessados e/ou em tratadores de interrupções utiliza duas primitivas básicas
+de sincronização: os semáforos e os \ing{spin-locks}.
+
+\subsubsection{Semáforos}
+\label{sec:semaf}
+
+Um semáforo \cite{Tanenbaum01, Bovet05} é constituído de um contador, de duas
+funções atômicas \cod{up} e \cod{down} e de uma fila. Quando um processo quer
+entrar numa região crítica, ou de forma equivalente, quando este quer adquirir um
+recurso compartilhado que só pode ser adquirido simultaneamente por um número
+limitado de processos, ele chama a função \cod{down} que decrementa o contador do
+semáforo. Se o valor resultante é positivo ou nulo, o processo adquiriu o
+semáforo. Senão, ele é suspenso depois de ter sido colocado na fila de espera. Após
+um processo terminar de usar o recurso, ele executa a função \cod{up} que incrementa
+o valor do contador e acorda o primeiro processo da fila.  O valor inicial $n$ do
+contador define o número máximo de processos que podem adquirir este semáforo
+simultaneamente. No caso $n = 1$, o semáforo é simplesmente chamado de \emph{mutex}.
+
+Observa-se que o tempo que um processo fica suspenso, esperando por um semáforo, é
+imprevisível. Ele depende de quantos processos já estão esperando por aquele
+semáforo e do tempo que cada um deles permanecerá na região crítica. Além disso, um
+processo é autorizado a dormir enquanto ele está em posse de um semáforo. Estes
+fatos fazem com que os tratadores de interrupção que não são autorizados a dormir
+não possam usar semáforos.
+
+Um outro ponto importante a ser observado é a ausência de ``dono'' do semáforo na
+implementação pelo \kernell padrão.  Isto é, quando um processo $P$ adquire um
+semáforo, ele se torna ``dono'' deste. Mas esta informação não é disponível para os
+demais processos que possam tentar adquirir o semáforo enquanto $P$ o detém.  As
+conseqüências deste aspecto de implementação são discutidas na seção
+\ref{sec:invPrior}
+
+
+\subsubsection{Spin-lock}
+\label{sec:spinLock}
+
+Nos ambientes multiprocessados, o uso de semáforo nem sempre é
+eficiente. Imagine o seguinte cenário: um processo $P_1$ executando num
+processador $\Pi_1$ tenta adquirir um mutex $S$, que já foi adquirido pelo processo
+$P_2$ que executa num outro processador $\Pi_2$. Conseqüentemente, $P_1$ é suspenso
+e o \kernell entrega no processador $\Pi_1$ para um outro processo $P_3$. Mas, se a
+estrutura de dados protegida por $S$ for pequena, $P_2$ pode executar a função
+\cod{up} antes mesmo que $P_3$ comece a executar. Se $P_1$ é mais prioritário que
+$P_3$, uma nova alternância será realizada pelo \kernell para permitir que $P_1$
+volte a executar no processador $\Pi_1$.  Percebe-se então que, quando o tempo de
+execução de uma troca de contexto é maior do que o tempo de execução na região
+crítica, o uso de semáforos deve ser evitado. Nestes casos, a solução é utilizar os
+mecanismos de trancas e de espera ocupada fornecidos pelos \ing{spin-locks}.
+
+No \kernell padrão, um \ing{spin-lock} é uma variável booleana que é utilizada de
+forma atômica. Só um processo pode adquirir um \ing{spin-lock} num dado
+instante. Quando um processo tenta adquirir um \ing{spin-lock} que já está em posse
+de um outro processo, ele não é suspenso mas sim executa uma espera ocupada
+(\ing{spin}), tentando periodicamente adquirir o \ing{lock}. Isto evita as trocas de
+contextos do cenário acima.  Como uma região crítica protegida por um
+\ing{spin-lock} há de ser curta, um processo que adquire um \ing{spin-lock} não pode
+ser suspenso. Portanto, a preempção é desabilitada enquanto um processo está em
+posse do \ing{lock}. Além disso, quando um caminho de controle do \kernell $C$
+utiliza um \ing{spin-lock} que pode ser adquirido por um tratador de interrupção,
+ele precisa desabilitar as interrupções. Caso contrário, se uma interrupção ocorre
+enquanto $C$ está em posse do \ing{lock}, o tratador causa a preempção do processo
+$C$ e fica em espera ocupada, tentando adquirir o \ing{lock} que $C$ detém. Mas,
+como o processador está ocupado pelo tratador, $C$ não pode mais executar, e
+portanto, não pode devolver o \ing{lock}, resultando no \ing{deadlock} do
+sistema. Para impedir que tal cenário aconteça, o \kernell adota a solução de
+desabilitar as interrupções durante um \ing{spin-lock} que pode ser adquirido por um
+tratador de interrupções. Apesar de resolver o problema, esta solução pode aumentar
+significativamente o tempo de resposta do sistema na ocorrência de uma interrupção.
+
+Observa-se que a implementação de \ing{spin-locks} no \kernell padrão não utiliza
+fila e que, assim como os semáforos, os \ing{spin-locks} não têm ``donos''.
+
+ 
+\section{Caracterização do comportamento temporal do Linux} %4
+\label{sec:compTemp}
+
+Esta seção apresenta as diferentes métricas adotadas para caracterizar o
+comportamento temporal do SOPG Linux.
+
+\subsection{Precisão temporal de escalonamento}
+\label{sec:latEscal}
+
+De acordo com \cite{Piccioni01}, o mecanismo de compartilhamento do tempo (discutido
+na seção \ref{sec:tick}) limita a resolução temporal disponível para escalonar os
+processos, utilizando o escalonador do \kernel, a até duas vezes o valor do
+$jiffy$. Para observar este fato, definiu-se aqui o seguinte cenário ilustrado na
+figura \ref{fig:tickResol}.  Seja $\varepsilon$ e $\delta$ dois números arbitrários
+positivos e menores que $jiffy$. No instante $T_1$, um \ing{tick} ocorre. Logo em
+seguida, no instante $t_1 = T_1 + \delta$, o processo corrente $P$ executa a chamada
+de sistema \cod{sleep} pedindo para dormir durante um intervalo de tempo $jiffy +
+\varepsilon$. O escalonador do \kernel, que não trabalha com frações de $jiffy$,
+arredonda este valor para $2 jiffy$, o múltiplo logo superior.  Além disso, este
+tempo só começa a ser descontado a partir do instante do próximo \ing{tick}
+$T_2$. Portanto, o temporizador associado ao \cod{sleep} acorda $P$ no instante $T_2
++ 2 jiffy$. Ao final, $P$ dormiu $3 jiffy - \delta$ ao invés de dormir $jiffy +
+\varepsilon$.
+
+\begin{figure}[hbt]
+  \index{fig!resolTick} \centering \input{fig/resolTick.pstex_t}
+  \caption{Latência causadas pela existência do \emph{tick}}
+  \label{fig:tickResol}
+\end{figure}
+
+Para ilustrar o efeito da granularidade do \ing{tick} na precisão de escalonamento
+(\ing{scheduling jitter}), montamos um experimento com o \kernell 2.6.19.7 com
+preempção do \kernell habilitada (\cod{CONFIG\_PREEMPT}).  O \ing{tick} utilizado
+foi o valor padrão do kernel, $jiffy = 4 ms$, correspondendo a uma freqüência de
+$250 Hz$. Para o experimento, um processo executou sozinho e com a prioridade máxima
+em modo \ing{single}, ou seja, com a carga mínima possível no sistema.  Este
+processo foi programado para executar as operações seguintes, apresentadas sob forma
+de pseudo-código:
+
+\setstretch{1.} 
+\begin{center}
+\hskip 10mm 
+\begin{minipage}{0.7\linewidth}
+  \verb|bef := read_tsc|\\
+  \verb|while(1) {|\\
+  \verb|     usleep(jiffy + |$\varepsilon$ \verb|)|\\
+  \verb|     now := read_tsc|\\
+  \verb|     write(now - bef)|\\
+  \verb|     bef := now|\\
+  \verb|}|\\
+\end{minipage}
+\end{center}
+\setstretch{1.4}
+
+Onde \cod{read\_tsc} é uma função que lê o valor do \ing{Time Stamp Counter} (TSC),
+\cod{bef} e \cod{now} são duas variáveis que armazem o valor lido e $\varepsilon =
+2ms$.  A operação $write$ é efetuada na memória e requer um tempo muito inferior a
+$1 ms$.
+
+O resultado ótimo esperado para os valores das diferenças, se não fosse a existência
+do \ing{tick}, seria de $6 ms$.  A figura \ref{fig:sleep} apresenta o tempo
+realmente observado entre duas chamadas sucessivas da chamada de sistema
+\cod{usleep}.  As duas execuções mostradas correspondem aos dois cenários de
+execução diferentes observados entre várias realizações deste experimento. Após o
+primeiro laço, os valores permanecem sempre iguais, portanto, só foram mostrados os
+resultados obtidos para os 5 primeiros laços.
+
+\begin{figure}[hbt]
+  \begin{center}
+    \index{fig!sleep} \input{fig/sleep}
+    \caption{Tempo de dormência com chamadas \cod{usleep} de 6 $ms$}
+    \label{fig:sleep}
+  \end{center}
+\end{figure}
+
+Observa-se que, nas duas execuções, depois da primeira chamada, os processos sempre
+dormem $8 ms$, apesar do pedido de $6 ms$ passado para a chamada \cod{usleep}. Isto
+é uma conseqüência direta do valor do $jiffy$ de $4 ms$, pois $8 ms$ é o menor
+múltiplo do $jiffy$ maior que $6 ms$.  Observa-se também que na primeira chamada da
+primeira execução, o processo chega a dormir $11 ms$ enquanto que na segunda
+execução, o processo dorme aproximadamente $7 ms$. Este dois cenários diferentes
+ilustram a dependência do tempo de dormência no instante relativo no qual a primeira
+chamada \cod{usleep} é efetuada em relação ao instante no qual o \ing{tick} ocorre,
+conforme explicado no início desta seção.
+
+É importante observar que a variabilidade discutida nesta seção caracteriza o
+comportamento do escalonador do Linux. No contexto deste trabalho, esta
+variabilidade não tem relevância, pois as plataformas de tempo real estudas
+utilizam um escalonador próprio, baseados em temporizadores de alta
+precisão. Portanto, a variabilidade de escalonamento não foi contemplada nos
+experimentos, pois não serve para efeito de comparação. No entanto, escolheu-se
+apresentar esta conseqüência da existência do \ing{tick} devido à sua importância na
+implementação dos SO modernos.
+
+
+\subsection{Latência de interrupção}
+\label{sec:latIRQ}
+
+Como foi visto na seção \ref{sec:interrupt}, as interrupções de hardware são
+assíncronas e podem acontecer em qualquer momento do ciclo de execução do
+processador. Além disso, a execução da parte crítica de um tratador de interrupção
+requer eventualmente a desabilitação das interrupções para impedir o acesso concorrente a
+dados protegidos por \ing{spin-locks} dentro de tratadores de interrupção.
+
+Portanto, quando uma interrupção acontece, vários cenários de latência para a sua
+detecção e seu tratamento pelo processador são possíveis. Se as interrupções forem
+habilitadas, ela é detectada no final do ciclo das instruções em execução. Senão, a
+interrupção pode acontecer enquanto as interrupções estão desabilitadas pela execução
+da parte crítica de um tratador de interrupção. Após o fim da execução deste
+tratador, as interrupções voltam a ser habilitadas novamente.
+
+Em seguida à detecção da interrupção, o processador começa por gravar o contador de
+programa e alguns registradores da memória para poder retomar a execução do processo
+interrompido, depois do tratamento da interrupção. Observe que um tratador de
+interrupção executa no contexto do último processo executado. Conseqüentemente, a
+troca de contexto necessária para executar o tratador no processador é bastante
+rápida.  Depois de executar mais algumas operações, tal como ler o vetor de
+interrupção no controlador de interrupção e carregar as informações necessárias no
+seus registradores, o processador finalmente começa a executar o tratador da interrupção
+que aconteceu. O tempo decorrido entre o instante no qual a interrupção aconteceu e
+o início da execução do tratador associado é chamado de \textbf{latência de
+  interrupção} (\ing{interrupt latency}).
+
+A latência de interrupção caracteriza a capacidade do sistema para reagir a eventos 
+externos. Portanto, esta grandeza foi contemplada como métrica para 
+efeito de comparação das plataformas estudas (ver seção \ref{sec:experimentos}).
+
+
+\subsection{Latência de ativação}
+\label{sec:latAtiv}
+
+Quando uma interrupção ocorre, quer seja porque um temporizador expirou ou porque um
+evento de hardware ocorreu, o tratador da interrupção executa imediatamente a parte
+crítica.  Lembrar que a palavra crítica faz aqui referência às primitivas de
+sincronização e as estruturas de dados utilizadas, no contexto de um sistema
+preemptível e com acesso concorrente aos dados (ver seção \ref{sec:interrupt}).  A
+parte não-crítica do tratador é executada num \ing{softirq} logo após o retorno da
+parte crítica do tratador.  No entanto, entre o instante no qual a interrupção
+ocorre e o instante no qual o \ing{softirq} começa a executar, outras interrupções
+podem acontecer, provocando um possível atraso na execução da parte não-crítica.
+
+Nas plataformas de tempo real, eventos de temporizadores ou de \ing{hardware} são
+utilizados para disparar tarefas, num modelo similar aos \ing{softirqs}. Tal tarefa,
+muitas vezes periódica, tem um contexto próprio e fica suspensa, na espera de um
+evento.  Quando o evento ocorre, a interrupção associada aciona o seu tratador, que,
+por sua vez, acorda a tarefa. O intervalo de tempo entre os instantes no qual o
+evento ocorre e o início da execução da tarefa associada é chamada de
+\textbf{latência de ativação}.  Assim como no caso dos \ing{softirqs}, a latência de
+ativação pode ser aumentada pela ocorrência de interrupções. Além disso, a execução
+de outros \ing{softirqs} pode ser escalonada com alguma política (ex: FIFO,
+prioridade fixa), o que pode também gerar interferências na latência de ativação.
+
+Um outro aspecto importante diz respeito à implementação dos temporizadores
+utilizados para agendar as tarefas de tempo real. Mais especificamente, a obtenção
+de uma precisão de micro-segundos nos eventos disparados por temporizadores requer a
+utilização de relógios de alta precisão, distintos daqueles usados pelo \kernell
+padrão. Desta forma, a latência de ativação passa a ser independente do escalonador
+de processos do Linux e do valor do \cod{jiffy}.
+
+Assim como a latência de interrupção, a latência de ativação caracteriza a
+capacidade de um sistema em reagir aos eventos externos.  Portanto, esta grandeza foi
+também contemplada com métrica para efeito de comparação das plataformas estudas
+(ver seção \ref{sec:experimentos}).
+
+
+\subsection{Latência causada pela inversão de prioridade}
+\label{sec:invPrior}
+
+Para organizar o compartilhamento dos recursos, os processos utilizam as primitivas
+de \ing{locks} que foram descritas na seção \ref{sec:locks}.  Quando um processo
+quer obter o acesso a um recurso, ele adquire o \ing{lock} associado. Uma vez em
+posse do \ing{lock}, um processo utiliza o recurso e, em algum momento futuro,
+devolve o \ing{lock} quando ela não precisa mais do recurso.
+
+Este mecanismo de reserva pode causar latência de ativação em contradição com as
+políticas de prioridades definida no sistema. Considere-se, primeiramente, um
+cenário envolvendo dois processos $P_A$ e $P_B$, o primeiro de alta prioridade e o
+segundo de baixa prioridade. Suponha que $P_B$ adquire um recurso compartilhado $R$,
+e que, enquanto $P_B$ está utilizando $R$, uma interrupção de \ing{hardware} acorda
+$P_A$. Então, $P_A$ causa a preempção de $P_B$ e adquire o processador.
+Possivelmente, $P_A$ tenta adquirir o \ing{lock} do recurso $R$. Porém, $P_B$ não
+liberou o \ing{lock} ainda e, conseqüentemente, $P_A$ tem que esperar que $P_B$
+ganhe o processador novamente e complete a sua execução, pelo menos até devolver o
+\ing{lock}.  Só então $P_A$ pode adquirir o processador e conseguir o recurso
+$R$. Percebe-se que, neste cenário, o processo de mais alta prioridade acaba
+esperando pelo processo de mais baixa prioridade.
+
+Esta situação simples pode se tornar ainda pior no seguinte caso.  Suponha agora que
+um (ou mais) processo $P_{M}$ de prioridade média, mais alta que a prioridade de
+$P_B$ e mais baixa que a prioridade de $P_A$ comece a executar enquanto $P_B$ está
+em posse do recurso $R$. $P_A$ não pode executar enquanto $P_B$ não libera o recurso
+$R$ e $P_B$ não pode executar enquanto $P_{M}$ não libera o processador. Portanto, o
+processo de mais alta prioridade pode ficar esperando um tempo indefinido, enquanto
+tiver processos de prioridade intermediária ocupando o processador.
+
+Duas soluções para este problema, chamado de inversão de prioridade, foram propostas
+por Sha et al em 1990 num trabalho pioneiro \cite{Sha90}. A primeira utiliza o
+conceito de herança de prioridade.  Resumidamente, enquanto um processo de baixa
+prioridade utiliza um recurso, ele herda a prioridade do processo de maior
+prioridade que está esperando por aquele recurso.  Desta forma, e na ausência de
+bloqueios encadeados, o tempo máximo que um processo de alta prioridade terá de
+esperar é o tempo máximo que um processo de mais baixa prioridade pode bloquear o
+recurso.  A segunda solução consiste em determinar em tempo de projeto, a mais alta
+prioridade dos processos que compartilham um certo recurso. Esta prioridade teto
+será então atribuída a qualquer um destes processos durante sua utilização deste
+recurso.  Apesar de não impedir a inversão de prioridade, estas soluções permitem
+limitar o tempo máximo de espera de um processo de mais alta prioridade no sistema,
+aumentando, portanto, o grau de previsibilidade do sistema.  Outras soluções são
+baseadas em protocolos sem \ing{locks} ou na replicação dos recursos
+\cite{Tanenbaum01}.
+
+A ocorrência de inversão de prioridade depende altamente das aplicações e do uso que
+elas fazem dos recursos compartilhados. Além disso, as latências por inversão de prioridade
+sofridas pelas aplicações resultam também das latências de interrupção e de
+ativação. Ambos os fatos dificultam a elaboração de experimentos de medição. Portanto,
+esta grandeza não foi utilizada como métrica no contexto deste capítulo.
+
+
+\section{Soluções de SOTR baseadas em Linux} %5
+\label{sec:sotrLinux}
+
+Nesta seção, apresentaremos os princípios de três abordagens diferentes para tornar
+o Sistema Operacional Linux de Tempo Real. A primeira, descrita na seção
+\ref{sec:preemptRT}, consiste em tornar o \kernell Linux inteiramente
+preemptível. Desta forma, é possível limitar as latências máximas de interrupção e
+de ativação.  Uma outra abordagem, descrita na seção \ref{sec:sandbox}, consiste em
+organizar a ativação das tarefas de tempo real a partir dos tratadores de
+interrupção, criando uma interface de programação acessível em modo usuário.
+Finalmente, uma terceira abordagem, baseada em \nanokernel, será descrita na seção
+\ref{sec:nanokernel}. Esta proposta utiliza uma camada intermediária entre o
+\kernell e o hardware, o \nanokernel, que oferece serviços de tempo real para as
+aplicações.  Apesar de existir em outras propostas de SOTR baseadas no Linux (ex:
+\cite{Barabanov97, Srinivasan98, Calandrino06}), estas três abordagens são
+bastante representativas para permitir a exposição dos princípios
+fundamentais destinados ao aumento da previsibilidade de um SOPG tal como Linux.
+
+
+\subsection{O \ing{patch} \preempt}
+\label{sec:preemptRT}
+
+Há alguns anos, Ingo Molnar, juntamente com outros desenvolvedores do \kernell Linux
+\cite{McKenney05, Rostedt07}, têm trabalhando ativamente para que o próprio
+\kernell possa oferecer serviços de tempo real confiáveis. Este trabalho resultou na
+publicação do \ing{patch} do \kernell chamado ``\preempt'' em abril de
+2006 e cujo código está disponível na internet \cite{PreemptRT}.
+
+Para resolver o problema da precisão temporal do escalonador baseado em \ing{ticks}
+descrito na seção \ref{sec:latEscal}, o \ing{patch} \preemptt utiliza uma nova
+implementação dos temporizadores de alta resolução desenvolvida por Thomas Gleixner
+e documentada no próprio código do \kernell Linux \cite{Kernel}. Baseados no
+registrador \ing{Time Stamp Counter} (TSC) da arquitetura Intel ou em relógios de
+alta resolução, esta implementação oferece uma API que permite obter valores
+temporais com uma resolução de micro-segundos. Desde a versão do \kernell 2.6.21,
+esta API faz parte da linha principal do \kernel.  De acordo com resultados
+apresentados \cite{Rostedt07}, os tempos de latência de ativação obtidos usando esta
+API são da ordem de algumas dezenas de micro-segundos e não dependem mais da
+freqüência do \ing{tick}. Com \preempt, o \ing{tick} continua sendo estritamente
+periódico.  No entanto, com a proposta do KURT-Linux \cite{Srinivasan98}, que
+disponibiliza o \ing{patch} $UTIME$, é possível utilizar um \ing{tick} aperiódico e
+programável com uma resolução de alguns micro-segundos.
+
+O segundo problema diz respeito aos tempos de latência de interrupção e de
+preempção.  Além de utilizar temporizadores de alta precisão, o \ing{patch}
+\preemptt comporta várias modificações para tornar o \kernell totalmente
+preemptível. Este objetivo é essencial para garantir que, quando um processo de mais
+alta prioridade acorda, ele consiga adquirir o processador com uma latência mínima,
+sem ter que esperar o fim da execução de um processo de menor prioridade, mesmo que
+este esteja executando em modo \kernel.  Como foi visto nas seções
+\ref{sec:locks} e \ref{sec:latIRQ}, a utilização das primitivas de sincronização que
+permitem garantir a exclusão mútua de regiões críticas introduz possíveis fontes de
+latência e indeterminismo. Para eliminar estas fontes de imprevisibilidade,
+\preemptt modifica estas primitivas de maneira a permitir a implementação de um
+protocolo complexo, baseado em herança de prioridade. Por exemplo, um \ing{spin-lock}
+(ou um \ing{mutex}) agora possui um dono, uma fila de processos em espera e pode sofrer
+preempção, ou seja, um processo possuindo um \ing{spin-lock} pode ser suspenso.  Os
+atributos dono e fila são necessários para a implementação do protocolo baseado em
+herança de prioridade \cite{Sha90}, como foi visto na seção \ref{sec:compTemp}.
+
+Uma outra modificação importante diz respeito ao tratamento das interrupções. No
+\kernell padrão, quando uma interrupção acontece, a parte crítica do tratador da
+interrupção é executada logo que a interrupção é detectada pelo processador, podendo,
+ conseqüentemente, atrasar a execução de um outro tratador ou processo de maior
+prioridade. Para diminuir esta causa de latência, o \ing{patch} \preemptt utiliza
+\ing{threads} de interrupções. Quando uma linha de interrupção é inicializada, um
+\ing{thread} é criado para gerar as interrupções associadas a esta linha.  Na
+ocorrência de uma interrupção, o tratador associado simplesmente mascara a
+interrupção, acorda o \ing{thread} da interrupção e volta para o código
+interrompido. Desta forma, a parte crítica do tratador de interrupção é reduzida ao
+seu mínimo e a latência causada pela sua execução, além de ser breve, é
+determinística. O \ing{thread} acordado será eventualmente escalonado, de acordo com
+a sua prioridade e os demais processos em execução no processador.
+ 
+De acordo com os resultados obtidos \cite{Rostedt07, Siro07}, o \ing{patch}
+\preemptt permite reduzir as latências do \kernell padrão para valores da ordem de
+algumas dezenas de micro-segundos.  Portanto, usando códigos confiáveis, respeitando
+as regras de programação do \ing{patch} e alocando os recursos de acordo com os
+requisitos temporais, a solução \preemptt tem a vantagem de oferecer o ambiente de
+programação do sistema Linux, dando acesso às bibliotecas C e ao conjunto de
+software disponível para este sistema.
+
+
+\subsection{Uma caixa de areia em espaço usuário}
+\label{sec:sandbox}
+
+A proposta de caixa de areia \cite{Qi04, Fry07} tem o objetivo de permitir a
+extensão do \kernell Linux padrão para oferecer uma interface de programação para
+tarefas de tempo real executadas em modo usuário. A idéia fundamental aplicada aqui
+é criar uma extensão do espaço de memória de todos os processos executados no
+sistema. Esta implementação utiliza o gerenciamento por páginas da memória virtual e
+não requer nenhum dispositivo de hardware específico. Basicamente, uma caixa de
+areia corresponde a uma ou duas páginas da memória virtual que são adicionadas a
+todas as áreas de memória dos processos do sistema.  Desta forma, qualquer código da
+caixa de areia pode ser executado em modo usuário no contexto de qualquer processo.
+
+Para oferecer as extensões da caixa de areia, o \kernell é modificado através de
+módulos carregados, cujas funcionalidades são utilizadas via \ing{ioctls}, de uma
+forma semelhante aos controladores de dispositivos. Através da interface de
+programação, um processo $P$ pode registrar serviços na caixa de areia. Para utilizar
+estes serviços, por exemplo, durante a execução de um tratador de interrupção, o \kernell usa
+uma função de \ing{upcall} que acorda um \ing{thread} previamente criado pelo
+processo $P$. Este \ing{thread} executa em modo usuário, no contexto do último
+processo que estava executando no processador. Como este processo, possivelmente
+diferente de $P$, tem a caixa de areia na sua área de memória virtual, o
+\ing{thread} acordado tem acesso a todas as funcionalidades registradas nesta área
+de memória compartilhada.
+
+O tamanho da caixa de areia é arbitrário, mas deve ser suficiente para comportar uma
+pilha de execução dos \ing{thread} e para conter uma versão pequena da biblioteca C
+padrão. Para isto, duas páginas de $4 Mb$ são utilizadas.  Uma página, chamada
+``pública'', dá direito de leitura e execução, tanto em modo usuário quanto em modo
+\kernel. Esta página contém as funções da interface de programação e as funções
+registradas pelos processos quando eles são criados. A outra página, dita
+``protegida'', dá direito de leitura e escrita em modo \kernel, mas só pode ser
+escrita por um \ing{thread} executando em modo usuário durante um \ing {upcall}.
+Isto garante que os dados de um processo, contidos na caixa de areia, não podem ser
+alterados por outros processos.
+
+Nesta implementação, os serviços da caixa de areia são obtidos a partir da parte não
+crítica do tratador de interrupção (\ing{softirq}). Apesar de esta parte dos
+tratadores ser executada com certa imprevisibilidade comparativamente com a parte
+crítica, esta escolha é justificada pelos autores pelo fato de permitir aos códigos
+da caixa de areia fazerem chamadas de sistemas bloqueantes. Resultados apresentados
+mostram que os tempos de latência de interrupção são da ordem de dezenas de
+micro-segundos, inclusive no caso de interrupções geradas pela placa de rede na
+recepção de mensagens Ethernet. No entanto, no caso de eventos de redes, os autores
+produzem desvios padrões da mesma ordem de grandeza que as latências medidas.
+Apesar deste fato, o uso da caixa de areia é advogado pelos autores \cite{Fry07}
+para sistemas de tempo real não-críticos. No contexto deste trabalho, esta solução não
+foi contemplada, pois \doriss tem requisitos de tempo real críticos.
+
+
+\subsection{\emph{Nanokernel}}
+\label{sec:nanokernel}
+
+As soluções de implementação para SOTRs baseadas em \nanokernel, sendo as mais
+divulgadas RT-Linux \cite{Barabanov97, rtLinux}, \ing{Real Time Application
+  Interface} (RTAI) \cite{Dozio03, RTAI} e Xenomai \cite{Gerum05, Xenomai} são as
+únicas, até o momento, que alcançam latências da ordem do micro-segundos e dão
+suporte a sistemas críticos. Estas soluções utilizam uma camada de indireção das
+interrupções, chamada camada de abstração do hardware (HAL), localizada entre o
+\ing{kernel} e os dispositivos de hardware e disponibilizam uma interface de
+programação para serviços de tempo real. Observa-se que os códigos fontes do Xenomai
+e RTAI são disponíveis sob licença GNU/GPL. No caso do RT-Linux, uma versão
+profissional é desenvolvida sob licença comercial. Uma outra versão livre é
+disponibilizada, sob licenças específicas, com uma interface de utilização restrita
+e sem suporte para as versões do \kernell posteriores a 2.6.9.
+
+Do ponto de vista da implementação,  os \nanokernell de Xenomai, RTAI e RT-Linux
+utilizam o mecanismo de virtualização das interrupções, também chamada de indireção
+de interrupção, introduzido na técnica de ``proteção otimista das interrupções''
+\cite{Stodolsky93}. No contexto da interação do \nanokernell com Linux, esta técnica
+pode ser resumida da seguinte maneira. Quando uma interrupção acontece, o
+\nanokernell identifica se esta é relativa a uma tarefa de tempo real ou se a
+interrupção é destinada a um processo do \kernell Linux. No primeiro caso, o
+tratador da interrupção é executado imediatamente. Caso contrário, a interrupção é
+enfileirada e, em algum momento futuro, entregue para o \kernell Linux quando
+nenhuma tarefa de tempo real estiver precisando executar. Quando o \kernell Linux
+precisa desabilitar as interrupções, o \nanokernell deixa o \kernell Linux acreditar
+que as interrupções estão desabilitadas. No entanto, o \nanokernell continua a
+interceptar qualquer interrupção de \ing{hardware}.  Nesta ocorrência, a interrupção
+é tratada imediatamente se for destinada a uma tarefa de tempo real. Caso contrário,
+a interrupção é enfileirada, até que o \kernell Linux habilite suas interrupções
+novamente.
+
+
+\subsubsection{RT-Linux}
+
+No caso da versão livre do RT-Linux, tanto a camada HAL quanto API de programação
+são fornecidas em um único \ing{patch} que modifica o código fonte do \kernell
+Linux. Este \ing{patch} permite então co-existência do \nanokernell RT-Linux que
+oferece garantias temporais críticas para as tarefas de tempo real e do \kernell
+Linux padrão. O modelo de programação das tarefas de tempo real é baseado na
+inserção de módulos no \kernell em tempo de execução.  Portanto, estas tarefas devem
+necessariamente executar em modo protegido, o que restringe a interface de
+programação fornecida pelo RT-Linux.
+
+Para realizar a virtualização das interrupções, as funções que manipulam as
+interrupções \cod{local\_irq\_enable}, antigamente \cod{sti} (\ing{set
+  interruption}) e \cod{local\_irq\_disable}, antigamente \cod{cli} (\ing{clear
+  interruption}), são modificadas. Para dar o controle à camada HAL, as novas
+funções não alteram mais a máscara real de interrupção, mas utilizam uma máscara
+virtual.  Enquanto esta máscara virtual indicar que as interrupções são
+desabilitadas, depois de uma chamada \cod{local\_irq\_disable} pelo \kernell Linux,
+o \nanokernell intercepta as interrupções que não são de tempo real e trata as
+interrupções de tempo real imediatamente. Quando o \kernell chama a função
+\cod{local\_irq\_disable}, a máscara virtual de interrupção é modificada e o
+\nanokernell entrega as interrupções pendentes para Linux.
+
+Resumindo, no RT-Linux, o \ing{kernel} Linux é uma tarefa escalonada pelo
+\nanokernell RT-Linux como se fosse a tarefa de mais baixa prioridade no sistema.
+
+\subsubsection{Adeos, RTAI e Xenomai}
+\label{sec:adeos}
+
+No caso dos projetos RTAI \cite{Dozio03} e Xenomai \cite{Gerum05}, a camada HAL é
+fornecida pelo \ing{Adaptative Domain Environment for Operating Systems} (Adeos),
+desenvolvida por Karim Yaghmour \cite{Yaghmour01}.  Adeos, fornecida por um
+\ing{patch} separado, tem os seguintes objetivos:
+
+\begin{itemize}
+\item permitir o compartilhamento dos recursos de hardware entre diferentes sistemas
+  operacionais e/ou aplicações específicas;
+\item contornar a padronização dos SO, isto é, flexibilizar o uso do hardware para
+  devolver o controle aos desenvolvedores e administradores de sistema;
+\item oferecer uma interface de programação simples e independente da arquitetura.
+\end{itemize}
+
+Para não ter que iniciar a construção de um sistema operacional de tempo real
+completo, o \nanokernell Adeos utiliza Linux como hospedeiro para iniciar o
+hardware. Logo no início, a camada Adeos é inserida abaixo do \kernell Linux para
+tomar o controle do hardware.  Após isto, os serviços de Adeos podem ser utilizados
+por outros sistemas operacionais e/ou aplicações executando conjuntamente ao
+\kernell Linux.
+
+A arquitetura Adeos utiliza dois conceitos principais, domínio e canal hierárquico
+de interrupção. Um domínio caracteriza um ambiente de execução isolado, no qual se
+pode executar programas ou até mesmo sistemas operacionais completos.  Domínios
+diferentes são associados ao SO Linux e às aplicações mais específicas como RTAI ou
+Xenomai.  Um domínio enxerga Adeos mas não enxerga os outros domínios hospedados no
+sistema.
+
+O canal hierárquico de interrupção, chamado \ing{ipipe}, serve para priorizar a
+entrega de interrupções entre os domínios.  Quando um domínio se registra no Adeos,
+ele é colocado numa posição no \ing{ipipe} de acordo com os seus requisitos
+temporais.  Adeos utiliza então o mecanismo de virtualização das interrupções para
+organizar a entrega hierárquica das interrupções, começando pelo domínio mais
+prioritário e seguindo com os menos prioritários.  Funções apropriadas
+(\ing{stall/unstall}) permitem bloquear ou desbloquear a transmissão das
+interrupções através de cada domínio.
+
+Para prover serviços de tempo real, as interfaces RTAI ou Xenomai utilizam o domínio
+mais prioritário do \ing{ipipe}, chamado ``domínio primário''. Este domínio
+corresponde, portanto, ao núcleo de tempo real no qual as tarefas são executadas em
+modo protegido. Como as interrupções são entregues começando pelo domínio primário,
+o núcleo de tempo real pode escolher atrasar, ou não, a entrega das interrupções
+para os demais domínios registrados no \ing{ipipe}, garantindo, desta forma, a execução
+das suas próprias tarefas. Módulos podem ser utilizados para carregar as tarefas, de
+forma semelhante ao RT-Linux. 
+
+Nas plataformas Xenomai e RTAI, o ``domínio secundário'' corresponde ao \kernell
+Linux.  Neste domínio, o conjunto de bibliotecas e software usual do Linux está
+disponível.  Em contrapartida, as garantias temporais são mais fracas, dado que o
+código pode utilizar as chamadas de sistemas bloqueantes do Linux.
+
+Para oferecer o serviço de tempo real em modo usuário chamado LXRT, RTAI utiliza o
+mecanismo de associação (\ing{shadowing}) de um \ing{thread} do núcleo de tempo real
+com um processo usuário executando no domínio Linux. De acordo com sua prioridade,
+este \ing{thread}, também chamado de ``sombra'' do processo, executa o escalonamento
+rápido do seu processo associado.
+
+O projeto Xenomai se distingue do RTAI/LXRT. Além de não utilizar o mecanismo de
+associação (\ing{shadowing}), Xenomai tem por objetivo privilegiar o modelo de
+programação em modo usuário. O modelo de tarefas executando no modo protegido só
+está sendo mantido para dar suporte às aplicações legadas. A implementação dos
+serviços de tempo real em modo usuário se baseia nas seguintes regras:
+
+\begin{itemize}
+\item A política de prioridade utilizada para as tarefas de tempo real, e para o
+  escalonador associado, é comum aos dois domínios.
+\item As interrupções de hardware não podem impedir a execução de uma tarefa
+  prioritária enquanto ela estiver no domínio secundário.
+\end{itemize}
+
+A primeira destas garantias utiliza um mecanismo de herança de prioridade entre o
+domínio primário e o domínio secundário.  Quando uma tarefa do domínio primário
+migra para o secundário, por exemplo, porque ela efetua uma chamada de sistema do
+Linux, esta tarefa continua com a mesma prioridade, maior que a de qualquer processo
+do Linux.  Este mecanismo garante notadamente que a preempção de uma tarefa de tempo
+real executando no domínio secundário não possa ser causada por uma tarefa de menor
+prioridade executando no domínio primário. A segunda garantia é obtida por meio de
+um domínio intermediário, chamado de ``escudo de interrupção'', registrado no
+\ing{ipipe}, entre o primeiro domínio (o \nanokernell) e o segundo domínio (o
+\kernell Linux).  Enquanto uma tarefa de tempo real está executando no segundo
+domínio, o ``escudo de interrupção'' é utilizado para bloquear as interrupções de
+hardware destinadas ao Linux. No entanto, aquelas interrupções destinadas à tarefa
+em execução são entregues imediatamente.
+
+Para completar esta arquitetura, as chamadas de sistema executadas por uma tarefa
+enquanto está no domínio primário e secundário são interceptadas por Adeos que
+determina a função a ser executada, seja ela do Linux padrão ou da API do 
+Xenomai. Isto permite que uma tarefa executando no domínio secundário possa
+obter os serviços providos por Xenomai.
+
+Observa-se que quando uma tarefa está no domínio secundário, ela pode sofrer uma
+latência de escalonamento devido à execução de alguma sessão não preemptiva do
+Linux. Portanto, Xenomai se beneficia do esforço de desenvolvimento do
+\ing{patch} \preempt, que tem por objetivo tornar o \kernell inteiramente
+preemptível.  Apesar de ainda constituir um \ing{patch} separado, várias propostas
+do grupo de desenvolvedores deste \ing{patch} já foram integrados na linha principal
+do \kernell 2.6, melhorando significativamente suas capacidades de preempção.
+
+
+
+\section{Metodologia experimental}
+\label{sec:experimentos}
+
+
+Em geral, realizar medições precisas de tempo no nível dos tratadores
+de interrupção pode não ser tão simples.  De fato, o instante exato no
+qual uma interrupção acontece é de difícil medição, pois tal evento é
+assíncrono e pode ser causado por qualquer dispositivo de \ing{hardware}. Para
+obter medidas das latências de interrupção e ativação confiáveis com
+alto grau de precisão, aparelhos externos, tais como osciloscópios ou
+outros computadores, são necessários. No entanto, como o objetivo do
+presente trabalho não foi medir estas latências de forma precisa, mas
+caracterizar e comparar o grau de determinismo das plataformas
+operacionais estudadas, adotou-se uma metodologia experimental simples
+e efetiva, que pode ser reproduzida facilmente em outros contextos.
+
+\subsection{Configuração do experimento}
+
+O dispositivo experimental utilizou três estações: (1) a estação de
+medição $E_M$, na qual os dados foram coletados e onde temos uma
+tarefa de tempo real $\tau$ à espera de eventos externos; (2) a
+estação de disparo $E_D$, que foi utilizada para enviar pacotes
+Ethernet com uma freqüência fixa à estação $E_M$; e (3) a estação de
+carga $E_C$, utilizada para criar uma carga de interrupção na estação
+$E_M$. As estações de disparo e carga foram conectadas à estação de
+medição por duas redes Ethernet distintas, conforme ilustrado no
+diagrama da figura \ref{fig:config}.
+
+
+\begin{figure}[hbt]
+  \centering {\scalebox{1}{\input{fig/config.pstex_t}}}
+  \caption{Configuração do experimento.} \label{fig:config}
+\end{figure}
+
+As chegadas em $E_M$ dos pacotes enviados por $E_D$ servem para disparar uma cascata
+de eventos na estação $E_M$, permitindo a simulação de eventos externos via a porta
+paralela (PP). Mais explicitamente, cada chegada de um pacote Ethernet na placa foi
+utilizada para disparar uma interrupção na PP, escrevendo no pino de interrupção
+desta porta. Esta escrita foi realizada pelo próprio tratador $T_{eth}$ de
+interrupção da placa de rede de $E_M$.  O instante $t_1$ de escrita no pino de
+interrupção da PP pelo tratador $T_{eth}$ constitui então o início da seqüência de
+eventos utilizados para medir as latências de interrupção ($Lat_{irq}$) e de ativação
+($Lat_{ativ}$).
+
+\begin{figure}[hbt]
+  \centering {\scalebox{1}{\input{fig/dispExp.pstex_t}}}
+  \caption{Cálculo das latências de interrupção e ativação na estação
+    $E_M$.} \label{fig:dispExp}
+\end{figure}
+
+
+As medidas de latência foram realizadas pela consulta do contador do
+processador, chamado \ing{Time Stamp Counter} (TSC), permitindo uma
+precisão da ordem de micro-segundos. Concretamente, um módulo
+específico ($M$) foi desenvolvido na estação $E_M$ para exportar as
+funcionalidades seguintes:
+
+\begin{itemize}
+\item Ler os 64 bits do TSC e armazenar o valor lido na memória.
+\item Escrever na porta de entrada e saída 0x378 da porta paralela para gerar
+  interrupções de hardware.
+\item Criar uma tarefa $\tau$ que, num sistema real, executaria algum código útil
+  precisando de garantias de tempo real crítico. Neste experimento, $\tau$
+  simplesmente grava o valor do TSC.
+\item Requisitar a captura das interrupções na linha 7 associada à porta paralela e
+  registrar o tratador de interrupção $T_{PP}$ associado.
+\item Definir o tratador $T_{PP}$ que executa as duas operações seguintes: (1)
+  gravar o TSC; (2) acordar tarefa $\tau$.
+\item Criar um canal de comunicação FIFO assíncrono para a transferência dos dados
+  temporais coletados em modo protegido para o espaço usuário.
+\end{itemize}
+
+Parte deste conjunto de funções foi disponibilizado sob forma de \cod{ioctl} para os
+processos executando em modo usuário através de um arquivo especial \cod{/dev/M} do
+sistema de arquivos. A outra parte foi diretamente exportada, sob a forma de serviços do
+\kernell podendo ser utilizados somente por \ing{threads} do \kernel. 
+
+As medidas seguiram o seguinte roteiro, ilustrado pela figura \ref{fig:dispExp}:
+
+\begin{itemize}
+\item A estação $E_D$ envia pacotes Ethernet para a estação $E_M$, provocando
+  interrupções assíncronas em relação às aplicações executando em $E_M$.
+\item A interrupção associada à chegada de um pacote provoca a preempção da
+  aplicação executando pelo tratador de interrupção $T_{eth}$.
+\item $T_{eth}$ escreve no pino de interrupção da PP e o instante $t_1$ é armazenado
+  na memória.  Este valor $t_1$ corresponde ao valor lido no relógio local, no
+  instante na escrita da PP, logo após a chegada de uma pacote Ethernet.
+\item A interrupção associada à escrita no pino de interrupção da PP provoca a
+  preempção da aplicação executando pelo tratador de interrupção $T_{PP}$.
+\item $T_{PP}$ grava o instante $t_2$ e acorda a tarefa $\tau$. Este valor $t_2$
+  corresponde ao valor do relógio local, logo após o início de $T_{PP}$.
+\item No momento que a tarefa $\tau$ acorda, ela grava o instante $t_3$ e volta a
+  ficar suspensa até a próxima interrupção na PP. O valor de $t_3$ corresponde ao
+  tempo no qual a tarefa $\tau$ começa a executar, no final da cascata de eventos
+  provocada pela chegada de um pacote na placa de rede.
+\end{itemize}
+
+Assim como representado na figura \ref{fig:dispExp}, $Lat_{irq}$ corresponde a
+diferença $t_2 - t_1$ e $Lat_{ativ}$ a diferença $t_3 - t_2$.
+
+No decorrer do experimento, a transferência das medições da memória para o sistema
+de arquivos é efetuada por um processo usuário ($P$) (não representado na
+figura). Antes de iniciar a fase de medidas, $P$ abre o arquivo especial
+\ing{/dev/M} para poder ter acesso às funções \ing{ioctl} disponibilizadas pelo
+módulo $M$.  $P$ entra então num laço infinito no qual ele executa a chamada de
+sistema \cod{read} para ler os dados do canal FIFO. Enquanto não há dados, $P$ fica
+bloqueado.  Em algum momento depois da escrita de dados pela tarefa $\tau$, $P$
+acorda, lê o canal e escreve os dados num arquivo do disco rígido. Tal procedimento
+permitiu impedir qualquer interferência entre a aquisição dos dados e seu
+armazenamento no sistema de arquivos, pois a execução do processo $P$ em modo
+usuário, não interfere na execução dos módulos do experimento, executados em modo
+\kernel.
+
+O mecanismo do disparo das interrupções na porta paralela pelos eventos de chegada
+de pacotes na placa de rede foi utilizado para garantir que estas interrupções
+ocorressem de forma assíncrona em relação aos processos executando na estação de
+medição. É interessante observar que a interrupção na porta paralela sempre
+acontece logo após a execução de $T_{Eth}$. Portanto, a medida da latência de
+interrupção $Lat_{irq}$ deve ser considerada apenas como indicativa.  No entanto,
+ela pôde ser utilizada para o objetivo principal destes experimentos, isto é,
+comparar as diferentes plataformas estudadas.
+
+Como foi visto na seção \ref{sec:latAtiv}, a latência de ativação $Lat_{ativ}$
+caracteriza o tempo necessário para ativar uma tarefa após a ocorrência do seu
+evento de disparo.  O dispositivo apresentado aqui permitiu obter resultados de
+acordo como esperado, como será visto na seção \ref{sec:concPlat}. Além disso,
+o efeito do aumento da atividade na estação de medição pôde ser investigado, pois o
+instante de disparo da interrupção na porta paralela era totalmente independente da
+atividade dos processos na estação de medição.
+
+
+\subsection{Cargas de I/O, processamento e interrupção}
+\label{sec:carga}
+
+Num primeiro momento, realizaram-se experimentos com uma carga mínima no processador
+da estação de medição (modo \ing{single}). Desta forma, observou-se o comportamento
+temporal das três plataformas em situação favorável.  Em seguida, dois tipos de
+cargas foram utilizados simultaneamente para sobrecarregar a estação de medição.
+Tais sobrecargas tiveram por objetivo avaliar a capacidade de cada plataforma em
+garantir uma latência determinista no tratamento das interrupções e na ativação de
+tarefas de tempo real, apesar da existência de outras atividades não-críticas.  As
+cargas de I/O e processamento foram realizadas executando as instruções seguintes:
+
+\vspace{ 4pt }
+% \setstretch{0.94}
+\begin{center}
+  \framebox[0.8\textwidth]{%
+    \begin{minipage}{0.74\linewidth}
+      \vspace{ 4pt } \footnotesize{%
+        \texttt{while "true"; do\\
+          \rule{1cm}{0pt} dd if=/dev/hda2 of=/dev/null bs=1M count=1000\\
+          \rule{1cm}{0pt} find / -name ''*.c'' | xargs egrep include\\
+          \rule{1cm}{0pt} tar -cjf /tmp/root.tbz2 /usr/src/linux-xenomai\\
+          \rule{1cm}{0pt}  cd /usr/src/linux-preempt; make clean; make\\
+          done \vspace{ 4pt } %\nolinebreak %\raisebox{10mm}{\rule{0cm}{0.01cm}}
+        }}
+    \end{minipage}
+  }
+\end{center}
+\vspace{ 4pt }
+% \setstretch{1}
+
+Um outro estresse de interrupção foi criado utilizando uma comunicação UDP entre a
+estação $E_M$ configurada como servidor e a estação $E_C$ configurada como
+cliente. Para isolar esta comunicação da comunicação entre $E_M$ e $E_D$,
+utilizou-se uma segunda placa de rede em $E_M$, assim com ilustrado pelo diagrama da
+figura \ref{fig:dispExp}.  Durante o experimento, o cliente transmitiu pequenos
+pacotes de 64 bytes na freqüência máxima permitida pela rede, ou seja, com uma
+freqüência superior a $200~kHz$ (um pacote a cada $10\mu s$).  Desta forma, mais de
+100.000 interrupções por segundos foram geradas pela segunda placa de rede de $E_M$.
+Esta placa de rede foi registrada na linha de interrupção 18 cuja prioridade é menor
+que a prioridade da porta paralela. Portanto, as interrupções geradas nesta placa de
+rede não deveriam, a princípio, interferir nas latências de interrupção mensuradas.
+
+Nos experimentos com cargas, os dois tipos de estresses foram aplicados
+simultaneamente e as medições só foram iniciadas alguns segundos depois.
+
+
+\section{Avaliação de Linux$^{\mathbf{Prt}}$, Linux$^{\mathbf{Rtai}}$ e
+  Linux$^{\mathbf{Xen}}$}
+\label{cap:platEstud}
+
+\subsection{Configuração}
+
+Os experimentos foram realizados em computadores Pentium 4 com processadores de 2.6
+Ghz e 512 Mb de memória, com o objetivo de ilustrar o comportamento temporal das
+quatro plataformas seguintes:
+
+\begin{description}
+\item[$\bullet \;$ Linux$^{\mathbf{Std}}$:] Linux padrão - \kernell versão 2.6.23.9
+  (opção \ing{low-latency});
+\item[$\bullet \;$ Linux$^{\mathbf{Prt}}$:] Linux com o \ing{patch}
+  \preemptt (rt12) - \kernell versão 2.6.23.9.
+\item[$\bullet \;$ Linux$^{\mathbf{Rtai}}$:] Linux com o \ing{patch} RTAI - versão
+  ``magma'' - \kernell versão 2.6.19.7;
+\item[$\bullet \;$ Linux$^{\mathbf{Xen}}$:] Linux com o \ing{patch} Xenomai - versão
+  2.4-rc5 - \kernell versão 2.6.19.7;
+\end{description}
+
+Utilizou-se a configuração Linux$^{\mathbf{Std}}$ para realizar experimentos de
+referência para efeito de comparação com as duas plataformas de tempo real
+Linux$^{\mathbf{Prt}}$ e Linux$^{\mathbf{Xen}}$.  A versão estável do \kernell
+2.6.23.9, disponibilizada em dezembro de 2007 foi escolhida para o estudo de
+Linux$^{\mathbf{Prt}}$, pois este \ing{patch} tem evoluído rapidamente desde sua
+primeira versão publicada há dois anos.  No entanto, utilizou-se a versão do
+\kernell 2.6.19.7 para o estudo das versões ``magma'' de RTAI e 2.4-rc5 de
+Xenomai. De fato, considerou-se desnecessário atualizar a versão do \kernel, pois
+RTAI e Xenomai são baseadas no Adeos (ver seção \ref{sec:adeos}) e, portanto, as
+garantias temporais oferecidas para as aplicações executando no primeiro domínio
+dependem apenas da versão de RTAI ou Xenomai e do \ing{patch} Adeos associado, e
+não, da versão do \kernell Linux.
+
+Utilizou-se uma freqüência de disparo dos eventos pela estação $E_D$ de 20Hz.  Para
+cada plataforma, dois experimentos de 10 minutos foram realizados. O primeiro sem
+carga nenhuma do sistema e o segundo aplicando os estresses apresentados na seção
+\ref{sec:carga}.  Para a plataforma Linux$^{\mathbf{Xen}}$, o experimento com
+estresses foi repetido por uma duração de 12 horas.
+
+Para as duas plataformas Linux$^{\mathbf{Rtai}}$ e Linux$^{\mathbf{Xeno}}$, os
+diferentes testes de latências fornecidos foram utilizados, dando resultados menores
+que $10\mu s$ no pior caso para a latência de interrupção, conforme os padrões da
+arquitetura Intel Pentium 4. Em ambas as plataformas, desabilitaram-se as interrupções de
+gerenciamento do sistema (\ing{SMI}), conforme as recomendações dos desenvolvedores
+\cite{RTAI, Xenomai}. Isto cancelou uma latência periódica (a cada 32 segundos) de
+aproximadamente $2.5ms$ que aparecia nos testes.  No caso das plataformas
+Linux$^{\mathbf{Std}}$ e Linux$^{\mathbf{Prt}}$, estas interrupções foram também
+desabilitadas, porém, não foi constatada nenhuma alteração das medidas realizadas.
+
+
+\subsection{Resultados experimentais}
+\label{sec:resExp}
+
+Os resultados experimentais são apresentados nas figuras
+\ref{fig:latIrq} e \ref{fig:latAtiv}, onde o eixo horizontal
+representa o instante de observação variando de 0 a 60 segundos e o
+eixo vertical representa as latências medidas em micro-segundos. Apesar de
+cada experimento ter durado no mínimo uma hora, escolheu-se apresentar
+apenas resultados para um intervalo de $60s$, pois este intervalo é
+suficiente para observar o padrão de comportamento de cada plataforma.
+Neste intervalo, o total de eventos por experimentos é 1200, pois a
+freqüência de chegada de pacotes utilizada foi de $20 Hz$.
+
+Abaixo de cada figura, os seguintes valores são indicados: Valor Médio (VM), desvio
+padrão (DP), valor mínimo (Min) e valor máximo (Max). Estes valores foram obtidos
+considerando a duração de uma hora de cada experimento. Na medida do possível,
+utilizou-se uma mesma escala vertical para todos os gráficos.  Conseqüentemente,
+alguns valores altos podem ter ficado fora das figuras. Tal ocorrência foi
+representada por um triângulo próximo do valor máximo do eixo vertical.
+
+
+\subsubsection{Latência de interrupção}
+\label{sec:latIrq}
+
+
+\newcommand{\scaleFact}{0.52}
+\newcommand{\spaceFact}{10pt}
+
+\begin{figure}%
+  \centering
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM:     8.9, DP:     0.3,  Min:     8.7, Max:    18.4}]{%
+    \label{fig:ker23Sem}%
+    {\scalebox{\scaleFact}{\input{fig/ker23Sem}}}} \hspace{4pt}%
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Com carga} \newline
+  \vskip 1mm {\footnotesize VM:    10.4, DP:     1.9,  Min:     8.8, Max:    67.7}]{%
+    \label{fig:ker23Tot}%
+    {\scalebox{\scaleFact}{\input{fig/ker23Tot}}}} \hspace{4pt}%
+
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+  \vskip 1mm  {\footnotesize VM: 21.5, DP: 1.7, Min: 20.3, Max: 45.1}]{%
+    \label{fig:preSem}%
+    {\scalebox{\scaleFact}{\input{fig/preSem}}}} \hspace{4pt}%
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+  \vskip 1mm {\footnotesize VM: 58.5, DP: 26.4, Min: 17.2, Max: 245.9}]{%
+    \label{fig:preTot}%
+    {\scalebox{\scaleFact}{\input{fig/preTot}}}} \hspace{4pt}%
+
+  \subfloat[\textbf{Linux$^{\mathbf{Rtai}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM: 8.7, DP: 0.1, Min: 8.8, Max: 10.7}]{%
+    \label{fig:rtaiSem}%
+    {\scalebox{\scaleFact}{\input{fig/rtaiSem}}}} \hspace{4pt}%
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Rtai}}$ - Com carga} \newline
+  \vskip 1mm  {\footnotesize VM: 10.0, DP: 0.8, Min: 8.8, Max: 20.8}]{%
+    \label{fig:rtaiTot}%
+    {\scalebox{\scaleFact}{\input{fig/rtaiTot}}}} \hspace{4pt}%
+
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM: 9.0, DP: 0.1, Min: 8.8, Max: 11.1}]{%
+    \label{fig:xenSem}%
+    {\scalebox{\scaleFact}{\input{fig/xenSem}}}} \hspace{4pt}%
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Com carga} \newline
+  \vskip 1mm {\footnotesize VM: 10.4, DP: 0.7, Min: 8.9, Max: 20.8}]{%
+    \label{fig:xenTot}%
+    {\scalebox{\scaleFact}{\input{fig/xenTot}}}} \hspace{4pt}%
+
+  \caption[Latências de interrupção]{Latência de interrupção com
+    freqüência de escrita na PP de $20 Hz$.}
+  \label{fig:latIrq}%
+\end{figure}
+
+
+A figura \ref{fig:latIrq} apresenta as latências de interrupção medidas, com e sem
+estresse do sistema.  Como pode ser observado, sem carga, o Linux$^{\mathbf{Std}}$,
+Linux$^{\mathbf{Rtai}}$ e Linux$^{\mathbf{Xen}}$ têm comportamentos parecidos. Com
+carga, observa-se uma variação significativa do Linux$^{\mathbf{Std}}$, como
+esperado.
+
+Com relação ao Linux$^{\mathbf{Prt}}$, dois resultados chamam atenção.  Primeiro, o
+comportamento do sistema sem carga exibe latências da ordem de $20\mu s$. Isto é
+causado pela implementação dos \ing{threads} de interrupção vista na seção
+\ref{sec:preemptRT}.  Segundo, contradizendo as expectativas, a aplicação do
+estresse teve um impacto significativo, provocando uma alta variabilidade das
+latências. De fato, entre o instante no qual o tratador $T_{PP}$ acorda o
+\ing{thread} de interrupção e o instante no qual este \ing{thread} acorda
+efetivamente, uma ou várias interrupções podem ocorrer.  Neste caso, a execução dos
+tratadores associados pode provocar o atraso da execução de $T_{PP}$.
+
+Para cancelar esta variabilidade indesejável, é possível usar o
+Linux$^{\mathbf{Prt}}$ sem utilizar a implementação de \ing{threads}
+de interrupção.  Para tanto, usa-se a opção \cod{IRQF\_NODELAY} na
+requisição da linha de interrupção. Utilizando esta opção na
+requisição da linha de interrupção da porta paralela, o comportamento
+do Linux$^{\mathbf{Prt}}$ passa a ser semelhante ao
+Linux$^{\mathbf{Std}}$.
+
+%\pagebreak
+\subsubsection{Latência de ativação}
+
+A figura \ref{fig:latAtiv} apresenta os resultados para as latências de ativação sem
+estresse e com estresse do processador.  Como pode ser observado, o comportamento de
+Linux$^{\mathbf{Std}}$ é inadequado para atender os requisitos de tempo real.
+Linux$^{\mathbf{Prt}}$, Linux$^{\mathbf{Rtai}}$ e Linux$^{\mathbf{Xen}}$, por outro
+lado, apresentam valores de latências dentro dos padrões esperados.  Vale a pena
+notar o comportamento destes sistemas com carga.  Constata-se que o valor médio
+encontrado para Linux$^{\mathbf{Xen}}$ ($8,7\mu s$) é superior ao do
+Linux$^{\mathbf{Prt}}$ ($3,8\mu s$) e ao Linux$^{\mathbf{Rtai}}$ ($4,4\mu s$). No
+entanto, o desvio padrão de Linux$^{\mathbf{Xen}}$ é significativamente menor que
+este de Linux$^{\mathbf{Prt}}$, característica desejável para sistemas de tempo real
+críticos.  Por outro lado, acredita-se que o fato de Linux$^{\mathbf{Xen}}$ ter um
+valor médio superior ao Linux$^{\mathbf{Rtai}}$ é devido à sobrecarga introduzida
+pelo projeto Xenomai para poder oferecer uma interface disponível em modo usuário.
+
+
+\begin{figure}%
+  \centering
+
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM:     4.6, DP:     0.4,  Min:     4.4, Max:    16.2}]{%
+    \label{fig:ker23SemSched}%
+    {\scalebox{\scaleFact}{\input{fig/ker23SemSched}}}}
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Com carga}\newline
+  \vskip 1mm {\footnotesize VM:    37.3, DP:    48.2,  Min:     4.6, Max:   617.5}]{%
+    \label{fig:ker23TotSched}%
+    {\scalebox{\scaleFact}{\input{fig/ker23TotSched}}}}
+
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM: 2.1, DP: 0.2, Min: 1.2, Max: 9.4}]{%
+    \label{fig:preSemSched}%
+    {\scalebox{\scaleFact}{\input{fig/preSemSched}}}}
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+  \vskip 1mm {\footnotesize VM: 3.8, DP: 2.8, Min: 1.1, Max: 27.4}]{%
+    \label{fig:preTotSched}%
+    {\scalebox{\scaleFact}{\input{fig/preTotSched}}}}
+
+  \subfloat[\textbf{Linux$^{\mathbf{Rtai}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM: 0.6, DP: 0.3, Min: 0.4, Max: 3.8}]{%
+    \label{fig:rtaiSemSched}%
+    {\scalebox{\scaleFact}{\input{fig/rtaiSemSched}}}} \hspace{4pt}%
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Rtai}}$ - Com carga} \newline
+  \vskip 1mm  {\footnotesize VM: 4.4, DP: 0.7,  Min: 0.5, Max: 14.7}]{%
+    \label{fig:rtaiTotSched}%
+    {\scalebox{\scaleFact}{\input{fig/rtaiTotSched}}}} \hspace{4pt}%
+
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Sem carga} \newline
+  \vskip 1mm {\footnotesize VM: 2.1, DP: 0.5, Min: 1.8, Max: 8.4}]{%
+    \label{fig:xenSemSched}%
+    {\scalebox{\scaleFact}{\input{fig/xenSemSched}}}}
+  \hspace{\spaceFact}%
+  \subfloat[\textbf{Linux$^{\mathbf{Xen}}$ - Com carga} \newline
+  \vskip 1mm {\footnotesize VM: 8.7, DP: 0.3, Min: 1.8, Max: 18.7}]{%
+    \label{fig:xenTotSched}%
+    {\scalebox{\scaleFact}{\input{fig/xenTotSched}}}}
+
+  \caption[]{Latência de ativação com freqüência de escrita
+    na PP de $20 Hz$.}
+  \label{fig:latAtiv}%
+\end{figure}
+
+É interessante ainda observar o comportamento de
+Linux$^{\mathbf{Prt}}$ sem utilizar o contexto de \ing{threads} de
+interrupção, isto é, com a opção \cod{IRQF\_NODELAY}, comentada
+anteriormente. Como pode ser observado na figura \ref{fig:latAtivND},
+apesar de as latências de ativação sem estresse apresentar uns bons
+resultados em comparação ao Linux$^{\mathbf{Prt}}$, seus valores com
+estresse indicam um comportamento menos previsível que o
+Linux$^{\mathbf{Xen}}$.
+
+\begin{figure}%
+  \centering
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Sem carga} \newline
+  \vskip 1mm VM:     5.3, DP:     0.3,  Min:     5.0, Max:    13.1]{%
+    \label{fig:preSemSchedND}%
+    {\scalebox{0.58}{\input{fig/preSemSchedND}}}}
+  \subfloat[\textbf{Linux$^{\mathbf{Prt}}$ - Com carga} \newline
+  \vskip 1mm VM:     8.0, DP:     2.0,  Min:     5.2, Max:    31.0]{%
+    \label{fig:preTotSchedND}%
+    {\scalebox{0.58}{\input{fig/preTotSchedND}}}}
+
+  \caption[]{Latência de ativação do Linux$^{\mathbf{Prt}}$
+    desabilitando o \ing{thread} associado as interrupções da
+    PP (opção \cod{IRQF\_NODELAY}).}
+  \label{fig:latAtivND}%
+\end{figure}
+
+
+\section{Conclusão}
+\label{sec:concPlat}
+
+Neste capítulo, os conceitos de sistemas operacionais de propósito geral e de
+sistemas operacional de tempo real foram apresentados, assim como as principais
+abstrações que são necessárias para a descrição das suas funcionalidades.  Em
+seguida, as principais causas de imprevisibilidade de um SOPG tal como Linux foram
+identificadas.
+
+Para descrever os desafios que devem ser resolvidos para tornar um
+SOPG mais previsível, três soluções baseadas em Linux foram descritas
+em detalhes. Experimentos foram realizados com o objetivo de comparar as
+três soluções de SOTR baseadas em Linux consideradas para a
+implementação de \doris.
+
+A metodologia experimental permitiu medir as
+latências de interrupção e de ativação, em situações de carga
+variável, tanto do processador quanto de eventos externos tratados por
+interrupção.  Linux padrão apresentou latências no pior caso acima de
+$100\mu s$, enquanto as plataformas Linux$^{\mathbf{Prt}}$,
+Linux$^{\mathbf{Rtai}}$ e Linux$^{\mathbf{Xen}}$ conseguiram prover
+garantias temporais com uma precisão abaixo de $20\mu s$. No entanto,
+para se conseguir este comportamento em relação ao
+Linux$^{\mathbf{Prt}}$, foi necessário desabilitar \ing{threads} de
+interrupção, tornando o sistema menos flexível. Com tais
+\ing{threads}, o comportamento de Linux$^{\mathbf{Prt}}$ sofreu
+considerável degradação da sua previsibilidade temporal. 
+
+Observa-se que os experimentos foram realizados numa arquitetura específica e que
+resultados quantitativamente diferentes teriam provavelmente sido encontradas em
+outras configurações de máquinas. No entanto, os resultados obtidos aqui são
+qualitativamente consistentes com os resultados apresentados em trabalhos similares
+\cite{Rostedt07, Siro07, Benoit05, Dozio03}.
+
+Mais especificamente, o presente trabalho apresentou resultados de latência de
+interrupção que confirmam os resultados obtidos em \cite{Benoit05},
+numa avaliação bastante abrangente do \ing{patch} Adeos, publicada
+apenas na Internet. Já os resultados encontrados aqui para
+Linux$^{\mathbf{Prt}}$, sem a opção \cod{IRQF\_NODELAY}, diferiram dos
+apresentados por \cite{Benoit05}, pois uma degradação das garantias
+temporais por esta plataforma foi observada, tal como visto na seção
+\ref{sec:latIrq}. Em relação às latências de ativação, não temos
+conhecimento de nenhum outro trabalho comparativo.
+
+A proposta do projeto Xenomai se destacou pelo fato de oferecer um ambiente de
+programação em modo usuário e ao mesmo tempo conseguir tempos de latência
+típicos das soluções baseadas em \nanokernel.

@@ -1,0 +1,33 @@
+\begin{picture}(0,0)%
+\includegraphics{fig/colisaoCSMA-CD.pstex}%
+\end{picture}%
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFontNFSS\undefined%
+\gdef\SetFigFontNFSS#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(6624,3249)(1264,-5098)
+\put(3751,-4411){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Esperando}%
+}}}}
+\put(5476,-4411){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Colis\~ao}%
+}}}}
+\put(1876,-4786){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}"Jam" seq\"uencia}%
+}}}}
+\put(3976,-4786){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}IPG}%
+}}}}
+\put(7051,-4261){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tempo}%
+}}}}
+\put(1876,-4411){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Transmitindo}%
+}}}}
+\put(1501,-3511){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Est. C}%
+}}}}
+\put(1501,-2311){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Est. B}%
+}}}}
+\put(1501,-2911){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Est. A}%
+}}}}
+\put(5101,-4786){\makebox(0,0)[lb]{\smash{{\SetFigFontNFSS{12}{14.4}{\rmdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}Tempo de backoff (aleat\'orio)}%
+}}}}
+\end{picture}%

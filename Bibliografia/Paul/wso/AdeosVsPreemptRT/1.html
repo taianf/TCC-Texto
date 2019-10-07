@@ -1,0 +1,181 @@
+<html><head>
+ <meta http-equiv="Content-Type" content="text/html "><title>'PREEMPT_RT vs ADEOS: the numbers, part 1' - MARC</title></head><body bgcolor="#ffffff" link="#0000c0" text="#000000" vlink="#800080">
+<pre><b>[<a href="http://marc.info/?l=linux-kernel&amp;m=111846476019323&amp;w=2">prev in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=111846753719696&amp;w=2">next in list</a>] [<font color="#c0c0c0">prev in thread</font>] [<a href="http://marc.info/?l=linux-kernel&amp;m=111847063006857&amp;w=2">next in thread</a>] </b>
+<b><font size="+1">
+List:       <a href="http://marc.info/?l=linux-kernel&amp;r=1&amp;w=2">linux-kernel</a>
+Subject:    <a href="http://marc.info/?t=111846497400001&amp;r=1&amp;w=2">PREEMPT_RT vs ADEOS: the numbers, part 1</a>
+From:       <a href="http://marc.info/?a=111826369100002&amp;r=1&amp;w=2">Kristian Benoit &lt;kbenoit () opersys ! com&gt;</a>
+Date:       <a href="http://marc.info/?l=linux-kernel&amp;r=1&amp;w=2&amp;b=200506">2005-06-11 4:36:59</a>
+Message-ID: <a href="http://marc.info/?i=42AA6A6B.5040907%20%28%29%20opersys%20%21%20com">42AA6A6B.5040907 () opersys ! com</a></font>
+[<a href="http://marc.info/?l=linux-kernel&amp;m=111846495403131&amp;q=raw">Download message RAW</a>]</b>
+
+For the past few weeks, we've been conducting comparison tests between
+PREEMPT_RT and the Adeos nanokernel. As was clear from previous discussion,
+we've been open to be proven wrong regarding endorsement of either method.
+Hence, this comparison was done in order to better understand the impact
+of each method vis-a-vis vanilla Linux.
+
+At this time, we are publishing the summary results of the various test
+runs we've conducted. There is, of course, a lot of background information
+that needs to be provided (.configs, scripts, drivers, etc.) We will be
+making those available sometime early next week. In the mean time, the
+following is meant as food-for-thought.
+
+In our tests, we've used a set up with 3 machines. The two main systems
+were Dell PowerEdge SC420 machines with a P4 2.8 (UP not SMP configured) with
+FC3. One had 256 MB RAM and was the guinea pig (i.e. the machine controlling
+the mechanical saw a.k.a. TARGET) The other, having 512 MB RAM, was used to
+collect data regarding the guinea pig's responsiveness (a.k.a LOGGER.) The
+third machine, an Apple PowerBook 5,6 G4 / 1GB, was used for a dual purpose.
+First, it controlled both the target and the logger via ssh, and was also
+used to ping flood the target. This 3rd system is known as the HOST.
+
+Data was generated on all three systems:
+TARGET: LMbench data
+LOGGER: Interrupt response time
+HOST: LMbench total running time
+
+Both the host and the logger had a constant kernel configuration. The logger
+was running an adeos-enabled kernel in order to trigger and deterministically
+measure the responsiveness of the target. The host was running a plain
+gentoo-based kernel. The target and the logger were rigged via their parallel
+ports so that an output from the logger would trigger an interrupt on the
+target who's response would itself trigger an interrupt on the logger.
+
+In the various test runs, we've attempted to collect two sets of data. One
+regarding LMbench's total running time for a given set up and the other
+regarding the system's interrupt response time. Where appropriate, both tests
+were conducted simultaneously. Otherwise, they were conducted in isolation.
+The following tables should be self-explanatory.
+
+For LMbench test runs, 3 passes were conducted and an average running time
+was collected. Certainly, 3 passes is not as much as we'd like, but for the
+immediate purposes, it provides a sufficiently corroborated data set for
+analysis (as can be seen in the following tables.)
+
+For the interrupt response time measurement, the logger generated between
+500,000 to 650,000 interrupts and measured the target's response time. The
+logger was not subject to any load whatsoever, except that imposed by the
+logging driver (running in a prioritary Adeos domain, and hence being truly
+hard-rt, a.k.a. "ruby" hard) and that of the user-space daemon committing the
+data to storage. It could be argued that the use of Adeos imposes a penalty
+to the measured response time. However, this penalty is imposed on all data
+sets, and verification of its impact can be inferred by analyzing the adeos-to-
+adeos set up provided below.
+
+With no further ado, here are the results we've obtained. As we said above, we
+will be making all related scripts, patches, and drivers available, so that
+others may conduct their own tests.
+
+Note that in the tests we've conducted, we've tried, in as much possible, to
+use similar kernels. However, we were unable to find a recent Adeos and a
+recent PREEMPT_RT patch which would both cleanly apply to a same recent kernel.
+Hence, we've compared vanilla 2.6.12-rc2 with an adeos-patched one and a
+2.6.12-rc4 with a PREEMPT_RT-patched one. As can be seen below, the runs of
+the vanilla rc2 and rc4 yield very similar numbers, and can therefore
+reasonably be considered equivalent.
+
+LMbench running times:
++--------------------+--------+----------+------------+------------+----------+
+| Kernel             | plain  | IRQ test | ping flood | IRQ &amp; ping | IRQ &amp; hd |
++====================+========+==========+============+============+==========+
+| Vanilla-2.6.12-rc2 | 174  s | 175    s | 189      s | 193      s | 217    s |
++--------------------+--------+----------+------------+------------+----------+
+| with Adeos-r10c3   | 180  s | 180    s | 185      s | 183      s | 211    s |
++--------------------+--------+----------+------------+------------+----------+
+| %                  | +3.4   | +2.9     | -2.1       | -5.2       | -2.8     |
++====================+========+==========+============+============+==========+
+| Vanilla-2.6.12-rc4 | 176  s | 177    s | 189      s | 191      s | 218    s |
++--------------------+--------+----------+------------+------------+----------+
+| with RT-V0.7.47-08 | 184  s | 187    s | 206      s | 201      s | 225    s |
++--------------------+--------+----------+------------+------------+----------+
+| %                  | +4.5   | +5.6     | +9.0       | +5.2       | +3.2     |
++--------------------+--------+----------+------------+------------+----------+
+
+Legend:
+plain          = Nothing special
+IRQ test       = on logger: triggering target every 1ms
+ping flood     = on host: "sudo ping -f $TARGET_IP_ADDR"
+IRQ &amp; ping     = combination of the previous two
+IRQ &amp; hd       = IRQ test with the following being done on the target:
+                 "while [ true ]
+                     do dd if=/dev/zero of=/tmp/dummy count=512
+                  done"
+
+In the following, interrupts are triggered by the logger at every 1ms. It would
+be interesting to redo such tests with shorter trigger times. However, we
+wanted to keep the logger as "off-the-shelf" as possible.
+
+Interrupt response times (all in micro-seconds):
++--------------------+------------+------+-------+------+--------+
+| Kernel             | sys load   | Aver | Max   | Min  | StdDev |
++====================+============+======+=======+======+========+
+|                    | None       | 15.5 |  64.8 | 15.2 | 1.0    |
+|                    | Ping       | 15.7 |  63.4 | 15.2 | 1.2    |
+| Vanilla-2.6.12-rc2 | lm. + ping | 16.0 |  72.2 | 15.2 | 1.4    |
+|                    | lmbench    | 15.8 |  65.6 | 15.2 | 1.1    |
+|                    | lm. + hd   | 15.8 | 179.9 | 15.2 | 1.3    |
++--------------------+------------+------+-------+------+--------+
+|                    | None       | 13.4 |  53.3 | 13.2 | 0.2    |
+|                    | Ping       | 13.8 |  53.3 | 13.3 | 0.6    |
+| with Adeos-r10c3   | lm.+ ping  | 13.9 |  21.8 | 13.2 | 0.7    |
+|                    | lmbench    | 13.9 |  21.3 | 13.3 | 0.6    |
+|                    | lm. + hd   | 13.9 |  53.2 | 13.2 | 0.5    |
++====================+============+======+=======+======+========+
+|                    | None       | 15.2 |  64.2 | 15.2 | 0.5    |
+|                    | Ping       | 15.6 |  63.0 | 15.2 | 0.9    |
+| Vanilla-2.6.12-rc4 | lm. + ping | 16.0 | 170.5 | 16.0 | 1.4    |
+|                    | lmbench    | 15.8 | 184.1 | 15.2 | 1.2    |
+|                    | lm. + hd   | 15.8 |  67.1 | 15.0 | 1.1    |
++--------------------+------------+------+-------+------+--------+
+|                    | None       | 15.5 | 73.8  | 15.2 | 1.2    |
+|                    | Ping       | 17.1 | 79.8  | 15.2 | 2.3    |
+| with RT-V0.7.47-08 | lm. + ping | 17.7 | 77.2  | 15.2 | 3.1    |
+|                    | lmbench    | 17.1 | 80.0  | 15.3 | 2.3    |
+|                    | lm. + hd   | 17.0 | 80.0  | 15.3 | 1.8    |
++--------------------+------------+------+-------+------+--------+
+
+Legend:
+None           = nothing special
+ping           = on host: "sudo ping -f $TARGET_IP_ADDR"
+lm. + ping     = previous test and "make rerun" in lmbench-2.0.4/src/ on target
+lmbench        = "make rerun" in lmbench-2.0.4/src/ on target
+lm. + hd       = previous test  with the following being done on the target:
+                 "while [ true ]
+                     do dd if=/dev/zero of=/tmp/dummy count=512
+                  done"
+
+Note: Adeos-r10c3 is a "combo" patch including both Adeos and PREEMPT_RT, though
+PREEMPT_RT is disabled.
+
+The above data has been provided as-is without any analysis for now. We will
+provide such analysis when publishing the complete data sets and related
+software. In the mean time, we hope such results will help further reflection.
+
+Best regards and have fun !!!
+
+Kristian Benoit
+Karim Yaghmour
+-- 
+Pushing Embedded and Real-Time Linux Systems Beyond the Limits
+<a href="http://www.opersys.com/">http://www.opersys.com</a> || 1-866-677-4546
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  <a href="http://vger.kernel.org/majordomo-info.html">http://vger.kernel.org/majordomo-info.html</a>
+Please read the FAQ at  <a href="http://www.tux.org/lkml/">http://www.tux.org/lkml/</a>
+<b>[<a href="http://marc.info/?l=linux-kernel&amp;m=111846476019323&amp;w=2">prev in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=111846753719696&amp;w=2">next in list</a>] [<font color="#c0c0c0">prev in thread</font>] [<a href="http://marc.info/?l=linux-kernel&amp;m=111847063006857&amp;w=2">next in thread</a>] </b>
+</pre>
+  <br><center>
+    <a href="http://marc.info/?q=configure">Configure</a> | 
+
+    <a href="http://marc.info/?q=about">About</a> |
+    <a href="http://marc.info/?q=news">News</a> |
+    <a href="http://marc.info/?q=about#Begware">Donate</a> |
+    <a href="mailto:webguy@theaimsgroup.com?subject=Add%20a%20list%20to%20MARC">Add&nbsp;a&nbsp;list</a> |
+    Sponsors:&nbsp;<a href="http://www.10east.com/">10East</a>,&nbsp;<a href="http://www.korelogic.com/">KoreLogic</a>,&nbsp;<a href="http://www.terra-intl.com/">Terra-International</a>
+</center>
+
+</body></html>

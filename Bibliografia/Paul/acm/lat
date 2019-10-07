@@ -1,0 +1,12 @@
+#!/bin/bash
+rm *.eps *.log *.ps sigops.pdf
+file=$1.dvi
+if [ -f $file ]; then
+  echo  $file
+#  latex $file
+  dvips -t letter -o $1.eps $1.dvi
+  epstopdf $1.eps
+#  evince $1.pdf
+else
+  echo $file "n'existe pas"
+fi

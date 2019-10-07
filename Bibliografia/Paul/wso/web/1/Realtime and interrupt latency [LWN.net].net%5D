@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head><title>Realtime and interrupt latency [LWN.net]</title>
+        
+        
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+        <link rel="icon" href="http://old.lwn.net/images/bookmark.png" type="image/png">
+        <link rel="alternate" type="application/rss+xml" title="LWN Headlines" href="http://lwn.net/headlines/newrss">
+        <link rel="stylesheet" href="Realtime%20and%20interrupt%20latency%20%5BLWN.net%5D_files/lwn.css">
+<link rel="stylesheet" href="Realtime%20and%20interrupt%20latency%20%5BLWN.net%5D_files/nosub.css"></head><body alink="Green" bgcolor="#ffffff" link="Blue" vlink="Green">
+        <table class="Page">
+<tbody><tr>
+<td class="LeftColumn">
+
+        <center>
+        <a href="http://lwn.net/"><img src="Realtime%20and%20interrupt%20latency%20%5BLWN.net%5D_files/lcorner.png" alt="LWN.net Logo" border="0" height="120" width="153"></a>
+        </center>
+        <p>
+        
+</p><div class="TextAd">
+    <p class="TextAdHeader">Advertisement</p>
+    <p class="TextAdLink"><a href="http://lwn.net/TextAds/583/click">TrustCommerce</a></p>
+    <p class="TextAdBody">E-Commerce &amp; credit card processing - the Open Source way!
+</p>
+    <p class="TextAdFooter"><a href="http://lwn.net/TextAds/">Advertise here</a></p>
+</div>
+<p>
+</p><div class="SideBox">
+<p class="Header">Not logged in</p>
+<p><a href="http://lwn.net/login">Log in now</a></p><p>
+                                 </p><p><a href="http://lwn.net/newaccount">Create an account</a></p><p>
+                                 </p><p><a href="http://lwn.net/subscribe/">Subscribe to LWN</a></p></div>
+
+<div class="SideBox">
+<p class="Header">Weekly Edition</p>
+Return to the <a href="http://lwn.net/Articles/139208/">Kernel page</a></div>
+
+<div class="SideBox">
+<p class="Header">Sponsored link</p>
+<p style="margin-left: 0px; text-indent: 0px;">
+Serve your customers, not your servers, with VERIO Linux VPS. 
+Full-access test-drive 
+<a href="http://ad.doubleclick.net/clk;72795825;15630339;s">here</a>.
+</p>
+</div>
+
+<div class="SideBox">
+<p class="Header">Recent Features</p>
+<p><a href="http://lwn.net/Articles/273209/">LWN.net Weekly Edition for March 20, 2008</a></p>
+            	<p><a href="http://lwn.net/Articles/273714/">Who maintains dpkg?</a></p>
+            	<p><a href="http://lwn.net/Articles/272011/">LWN.net Weekly Edition for March 13, 2008</a></p>
+            	<p><a href="http://lwn.net/Articles/272615/">Still waiting for Flash</a></p>
+            	<p><a href="http://lwn.net/Articles/272048/">GCC 4.3.0 exposes a kernel bug</a></p>
+            	</div>
+
+<div class="SideBox">
+<a href="http://lwn.net/Articles/139784/?format=printable" rel="nofollow">Printable page</a>
+</div>
+
+</td><!-- LC -->
+
+<td class="MidColumn">
+<div class="MidColHeader">
+<table class="TopNavigation">
+
+<!-- First row - content links -->
+<tbody><tr>
+  <td class="NavLink"><a href="http://lwn.net/current/">Weekly edition</a></td>
+  <td class="NavLink">
+	<a href="http://lwn.net/Kernel/">Kernel</a></td>
+  <td class="NavLink"><a href="http://lwn.net/Security/">Security</a></td>
+  <td class="NavLink">
+	<a href="http://lwn.net/Distributions/">Distributions</a></td>
+  <td class="NavLink"><a href="http://lwn.net/Search/">Search</a> </td>
+</tr>
+<!-- Second row: navigation links -->
+<tr>
+  <td class="NavLink"><a href="http://lwn.net/Archives/">Archives</a></td>
+  <td class="NavLink"><a href="http://www.linuxcalendar.com/">Calendar</a></td>
+  <td class="NavLink"><a href="http://lwn.net/op/Subscriptions.lwn">Subscribe</a></td>
+  <td class="NavLink"><a href="http://lwn.net/op/AuthorGuide.lwn">Write for LWN</a></td>
+  <td class="NavLink"><a href="http://lwn.net/op/FAQ.lwn">LWN.net FAQ</a></td>
+</tr>
+
+</tbody></table>
+<div class="PageHeadline">
+<h1>Realtime and interrupt latency</h1>
+<div class="Byline">[Posted June 14, 2005 by corbet]
+               <p>
+               </p></div>
+</div>
+</div>
+<div class="ArticleText">
+The realtime Linux patches,  covered at length (too much length, according
+to some) on these pages, have been aimed primarily at reducing scheduling
+latency: the amount of time it takes to switch control to a high-priority
+process in response to an event which makes it runnable.  Scheduling
+latency is important, but the harder end of the realtime spectrum also
+places a premium on interrupt latency: how long the system takes to respond
+to a hardware interrupt.  In many realtime situations, the processor must
+answer quickly when the hardware asks for attention; excessive latency can
+lead to lost data and failure to respond quickly enough to external
+events.  A Linux-based, realtime beer monitoring system may only have a
+few milliseconds to deal with a "refrigerator door opened" interrupt before
+one's roommate has swiped a bottle and left the scene.  In this sort of
+high-stakes deployment, interrupt latency is everything.
+<!-- LWNRightSideAdMarker --><p>
+
+One of the biggest sources of interrupt latency is periods when the
+processor has simply disabled interrupt delivery.  Device drivers often
+disable interrupts - on the local processor at least - to avoid creating
+race conditions with themselves.  Even (or especially) when spinlocks are
+used to control concurrency with interrupt handlers, interrupts must be
+disabled.  Imagine a driver which duly acquires a spinlock before working
+with its data structures.  One of that driver's devices raises an interrupt while
+the lock is held, and the interrupt handler runs on the same CPU.  That
+interrupt handler will try to acquire the same spinlock, and, finding it
+busy, will proceed to spin until the lock becomes free.  But, since the
+interrupt handler has preempted the only thread which can ever release the
+lock, it will spin forever.  That is a different sort of interrupt latency
+altogether, and one which even general-purpose kernels try to avoid.  The
+usual technique is simply to disable interrupts while holding a spinlock
+which might be acquired by an interrupt handler.  Disabling interrupts
+solves the immediate problem, but it can lead to increased interrupt
+latency. 
+</p><p>
+
+Ingo Molnar's realtime preemption patches improve the situation by moving
+interrupt handlers into their own processes.  Since interrupt handlers are
+scheduled with everything else, and since "spinlocks" no longer spin with
+this patch set, the sort of deadlock described in the previous paragraph
+can not happen.  So there is no longer any need to disable interrupts when
+acquiring spinlocks.  Changing the locking primitives eliminated the major
+part of the code in the kernel which runs with interrupts disabled.
+</p><p>
+
+Daniel Walker recently noticed that one could do a little better - and
+followed up with <a href="http://lwn.net/Articles/139044/">a patch</a> showing how.
+Fixing the locking primitives got rid of most of the driver code which runs
+with interrupts turned off, but it did nothing for all of the places where
+drivers explicitly disable interrupts themselves with a call to
+<tt>local_irq_disable()</tt>.  In most of these cases, the driver is simply
+trying to avoid racing with its interrupt handler.  But when interrupt handlers
+run in their own threads, all 
+that is really needed to avoid concurrency problems is to disable
+preemption.  So Daniel's patch reworks <tt>local_irq_disable()</tt> to turn
+off preemption while leaving the interrupt
+configuration alone.  For the few cases where it is truly necessary to
+disable interrupts at the hardware level, <tt>hard_local_irq_disable()</tt>
+(later renamed to <tt>raw_local_irq_disable()</tt>)
+has been provided.
+</p><p>
+
+One might argue that disabling preemption is counterproductive, given that
+any code which runs with preemption disabled will contribute to the
+scheduling latency problem.  But any code which disables interrupts already
+runs with preemption turned off, so the situation is not made any worse by
+this patch.  It could, in fact, be improved: all that really needs to be
+protected against is preemption by one specific interrupt handler thread.
+The extra scheduler complexity which would be required to implement that
+solution is unlikely to be worth it, however; better to just fix the
+drivers to use locks.  So Ingo picked up Daniel's patch, spent a few
+minutes completely reworking it, and added it to his realtime preemption
+patch set.
+
+</p><p>
+Meanwhile, Karim Yaghmour was <a href="http://lwn.net/Articles/139801/">heard
+wondering</a>:
+</p><p>
+</p><div class="BigQuote">
+	I'm not sure exactly why you guys are reinventing the wheel. Adeos
+	already does this soft-cli/sti stuff for you, it's been available
+	for a few years already, tested, and ported to a number of
+	architectures, and is generalized, why not just adopt it?
+</div>
+<p>
+It does seem that not everybody understands what the Adeos patch (available
+from <a href="https://gna.org/projects/adeos">the Gna server</a>) does.
+The description of Adeos, in its current form, as a "nanokernel" probably
+does this work a disservice; what Adeos really comes down to is a patch to
+the kernel's interrupt handling code.
+</p><p>
+
+To reduce interrupt latency, Adeos takes the classic approach of adding a
+layer of indirection.  The patch adds an "interrupt pipeline" to the
+low-level, architecture-specific code.  Any "domain" (read "piece of code")
+can register itself with this interrupt pipeline, providing a priority as
+it does so.  Whenever a hardware interrupt arrives, Adeos works its way
+down the pipeline, calling into the handler of each domain which has
+expressed an interest in that interrupt.  The higher-priority handlers are,
+of course, called first.
+</p><p>
+
+In this world, the regular Linux interrupt subsystem is registered as just
+another Adeos domain.  Any code which absolutely, positively must have its
+interrupts arrive within microseconds can register itself as a
+higher-priority domain.  When interrupt time comes, the high-priority code
+can respond to the interrupt before Linux even hears about it.  Since
+nothing in Linux can possibly get in the way (unless it does evil things to
+the hardware), there is no need to worry about which parts of Linux might
+create latency problems.
+</p><p>
+
+Some <a href="http://lwn.net/Articles/139403/">benchmark results</a> were recently
+posted; they showed generally better performance from Adeos than from the
+realtime preemption patch.  Some issues have been raised, however, with how
+those numbers were collected; the tests are set to be rerun in the near
+future.
+</p><p>
+
+Meanwhile, a slow debate over inclusion of the realtime work continues,
+with some participants pushing for the code to be merged eventually, others
+being skeptical, and a few asking for the realtime discussion to be removed
+from linux-kernel altogether.  One viewpoint worth considering can be found
+in <a href="http://lwn.net/Articles/139806/">this posting</a> from Gerrit Huizenga, who
+argued that the realtime patches of today resemble the scalability patches
+from a few years ago, and that they must follow a similar path toward
+inclusion: 
+</p><p>
+</p><div class="BigQuote">
+	I believe that any effort towards mainline support of RT has to
+	follow a similar set of guidelines.  And, I believe strongly that
+	*most* of the RT code should be crafted so that every single laptop
+	user is running most of the code *and* benefiting from it.  If most
+	of the RT code goes unused by most of the population, and the only
+	way to get an RT kernel of any reasonable level is to ask the
+	distros to build yet another configuration, RT will always be a
+	poor, undertested, underutilized ugly stepchild of Linux.
+</div>
+<p>
+
+Ingo Molnar clearly understands this; he has consistently worked toward
+making the realtime patches minimally intrusive and useful in many
+situations.  Parts of the realtime work have already been merged, and this
+process may continue.  There may come a time when developers will be
+surprised to discover that most of the realtime preemption patch can be
+found in the mainline.</p><hr align="left" width="60%">
+           (<a href="http://lwn.net/login?target=/Articles/139784/">Log in</a> to post comments)
+           <p>
+           
+</p></div> <!-- ArticleText -->
+<p><a name="Comments"></a>
+
+</p><div class="CommentBox">
+  <p class="CommentTitle">Realtime discussion coverage excellent</p>
+  <div class="CommentBody">
+    <p class="CommentPoster">Posted Jun 18, 2005 18:58 UTC (Sat) by <b>erwbgy</b> (subscriber, #4104)
+       [<a href="http://lwn.net/Articles/140453/">Link</a>]
+    </p>
+    <font class="QuotedText">&gt; The realtime Linux patches, covered at length (too much length, according to some) on   </font><br>
+<font class="QuotedText">&gt; these pages,  </font><br>
+ <br>
+I for one would disagree that there has been too much coverage of this issue - I find it <br>
+fascinating area.  The Kernel page is one of the main reasons that I subscribe to LWN, and I <br>
+know I'm not alone, so keep up the good work. <br>
+  </div>
+  <p>
+  </p><div class="CommentReplyButton">
+    <form action="/Articles/140453/comment" method="post">
+      <input value="Reply to this comment" type="submit">
+    </form>
+  </div>
+  
+</div>
+</td> <!-- MC -->
+</tr></tbody></table><!-- endpage -->
+
+        <center>
+        <p>
+        <font size="-2">
+        Copyright © 2005, Eklektix, Inc.<br>
+        Comments and public postings are copyrighted by their creators.<br>
+        Linux  is a registered trademark of Linus Torvalds<br>
+        Powered by <a href="http://www.rackspace.com/index.php?CMP=BAC-2GH696668493">Rackspace Managed Hosting</a>.
+        </font>
+        </p></center>
+        
+        
+        
+            <script src="Realtime%20and%20interrupt%20latency%20%5BLWN.net%5D_files/urchin.js" type="text/javascript">
+            </script>
+            <script type="text/javascript">
+                _uacct = "UA-2039382-1";
+                urchinTracker();
+            </script>
+            
+        </body></html>

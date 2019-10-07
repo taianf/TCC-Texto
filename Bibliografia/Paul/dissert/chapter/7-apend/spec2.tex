@@ -1,0 +1,776 @@
+\chapter{Especificação de DoRiS com configuração dinâmica}
+\label{ap:dorisSpec2}
+
+Por ter sido desenvolvido durante a fase final deste trabalho, a especificação
+formal do mecanismo de configuração dinâmica do anel não-crítico não foi apresentada
+no capítulo \ref{cap:doris}. No entanto, a sua especificação em TLA+ e sua
+verificação com TLC foram realizados com sucesso. Este apêndice 
+apresenta esta nova versão da especificação.
+
+\clearpage
+\begin{figure}[h!]
+\raisebox{-1.3mm}{\rule{\textwidth}{.1pt}}
+\raisebox{3mm}{\rule{\textwidth}{.1pt}}
+\par\setstretch{1.2}
+
+\tlatex
+\setboolean{shading}{true}
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+This is a \ensuremath{TLC} configuration file for testing \ensuremath{DoRiS
+}%
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ This statement tells \ensuremath{TLC} that it is to take formula
+ \ensuremath{Spec} as
+ the specification it is checking.
+\end{cpar}%
+\end{lcom}%
+\@x{ SPECIFICATION\@s{4.91} Spec}%
+\par\vspace{8.0pt}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+This statement defines the type invariants of formula \ensuremath{Spec
+}%
+\end{cpar}%
+\end{lcom}%
+\@x{ INVARIANTS\@s{4.91} TypeInvariance}%
+\par\vspace{8.0pt}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+This statement tells \ensuremath{TLC} to check that the specification implies
+ the listed properties. In TLA+, a specification is also a property.
+\end{cpar}%
+\end{lcom}%
+\@x{ PROPERTIES}%
+\@x{\@s{29.51} CollisionAvoidance}%
+\@x{\@s{29.51} HardRingCorrectness}%
+\@x{\@s{29.51} ReservationSafety}%
+\@x{\@s{29.51} SoftRingFairness}%
+\@x{\@s{29.51} Omission}%
+\@x{\@s{29.51} Failure}%
+\@x{}%
+\@y{\@s{0}%
+ This 3 properties are false and are used to generate counter-examples
+}%
+\@xx{}%
+\@x{\@s{29.51}}%
+\@y{\@s{0}%
+ \ensuremath{NoCollisionAvoidance
+}}%
+\@xx{}%
+\@x{\@s{29.51}}%
+\@y{\@s{0}%
+ \ensuremath{NoReservationSafety
+}}%
+\@xx{}%
+\@x{\@s{29.51}}%
+\@y{\@s{0}%
+ \ensuremath{NoOmission
+}}%
+\@xx{}%
+\par\vspace{8.0pt}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+This statement defines the constants of the \ensuremath{Spec
+}%
+\end{cpar}%
+\end{lcom}%
+\@x{ {\CONSTANTS}}%
+\@x{\@s{29.51} nServ \.{=} 7}%
+\@x{\@s{29.51} deltaChip \.{=} 300}%
+\@x{\@s{29.51} delta \.{=} 6}%
+\@x{\@s{29.51} pi \.{=} 111}%
+\@x{\@s{29.51} maxTxTime \.{=} 122}%
+\@x{\@s{29.51} horiz \.{=} 5}%
+\par
+
+\setstretch{0.74}%
+
+\raisebox{-2mm}{\rule{\textwidth}{.1pt}}
+\raisebox{1mm}{\rule{\textwidth}{.1pt}}
+\par
+
+%\raisebox{0mm}{\parbox{\textwidth}}%
+\caption{Arquivo de configuração da especificação de \doris} 
+\label{fig:configFile2}
+\end{figure}
+
+
+\newpage
+\setstretch{0.94}
+
+\tlatex
+\setboolean{shading}{true}
+\@x{}\moduleLeftDash\@xx{ {\MODULE} DoRiS}\moduleRightDash\@xx{}%
+\@x{ {\EXTENDS} Naturals ,\, Reals ,\, TLC ,\, Sequences}%
+\par\vspace{8.0pt}%
+\@x{ {\VARIABLES} Shared ,\,\@s{120.26}}%
+\@y{\@s{0}%
+ Distributed vision shared by tasks and processes
+}%
+\@xx{}%
+\@x{\@s{61.70} TaskState ,\,\@s{104.86}}%
+\@y{\@s{0}%
+ Tasks local state
+}%
+\@xx{}%
+\@x{\@s{61.70} ProcState ,\,\@s{105.44}}%
+\@y{\@s{0}%
+ Processes local state
+}%
+\@xx{}%
+\@x{\@s{61.70} History\@s{123.79}}%
+\@y{\@s{0}%
+ An observer variable
+}%
+\@xx{}%
+\par\vspace{8.0pt}%
+\@x{ {\CONSTANTS} nServ ,\,\@s{121.01}}%
+\@y{\@s{0}%
+ Number of hard tasks
+}%
+\@xx{}%
+\@x{\@s{65.70} deltaChip ,\,\@s{102.22}}%
+\@y{\@s{0}%
+ Duration length of \ensuremath{DoRiS} Period,
+}%
+\@xx{}%
+\@x{\@s{65.70} delta ,\,\@s{126.06}}%
+\@y{\@s{0}%
+ Duration length of hard message slot
+}%
+\@xx{}%
+\@x{\@s{65.70} pi ,\,\@s{140.45}}%
+\@y{\@s{0}%
+ Slot message processing time
+}%
+\@xx{}%
+\@x{\@s{65.70} maxTxTime ,\,\@s{88.56}}%
+\@y{\@s{0}%
+ Maximum soft message sizes
+}%
+\@xx{}%
+\@x{\@s{65.70} horiz\@s{131.71}}%
+\@y{}%
+\@xx{}%
+\par\vspace{8.0pt}%
+\@x{}\midbar\@xx{}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+Miscellaneous definitions
+\end{cpar}%
+\end{lcom}%
+ \@x{ min ( Set )\@s{4.91} \.{\defeq} {\CHOOSE} m \.{\in} Set \.{:} \A\, y
+ \.{\in} Set \.{:} m \.{\leq} y}%
+\par\vspace{8.0pt}%
+ \@x{ next ( i ,\, Set ) \.{\defeq} {\IF} \A\, j \.{\in} Set \.{:} j \.{\leq}
+ i}%
+\@x{\@s{83.15} \.{\THEN} min ( Set )}%
+\@x{\@s{83.15} \.{\ELSE} min ( \{ j \.{\in} Set \.{:} j \.{>} i \} )}%
+\par\vspace{8.0pt}%
+\@x{ Task \.{\defeq} 1 \.{\dotdot} nServ\@s{63.14}}%
+\@y{\@s{0}%
+ Tasks indices
+}%
+\@xx{}%
+ \@x{ T \.{\defeq} [ i \.{\in} Task \.{\mapsto} {\langle}\@w{T} ,\, i
+ {\rangle} ]\@s{17.48}}%
+\@y{\@s{0}%
+ Tasks identifiers array
+}%
+\@xx{}%
+\@x{ TaskSet \.{\defeq} \{ T [ i ] \.{:} i \.{\in} Task \}\@s{9.83}}%
+\@y{\@s{0}%
+ Tasks identifiers set
+}%
+\@xx{}%
+\@x{ taskId ( t ) \.{\defeq} {\CHOOSE} i \.{\in} Task \.{:} t \.{=} T [ i ]}%
+\par\vspace{8.0pt}%
+\@x{ Proc \.{\defeq} 1 \.{\dotdot} nServ}%
+ \@x{ P \.{\defeq} [ j \.{\in} Proc \.{\mapsto} {\langle}\@w{P} ,\, j
+ {\rangle} ]\@s{9.83}}%
+\@y{\@s{0}%
+ Processes identifiers array
+}%
+\@xx{}%
+\par\vspace{8.0pt}%
+ \@x{ vars \.{\defeq} {\langle} Shared ,\, ProcState ,\, TaskState ,\, History
+ {\rangle}}%
+\@x{}\midbar\@xx{}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+Two alternative soft message list fabric.
+\end{cpar}%
+\end{lcom}%
+\@x{ C\_list ( j ,\, cycle ) \.{\defeq}}%
+ \@x{\@s{46.68} {\CASE}\@s{4.91} j \.{\in} \{ cycle \} \.{\rightarrow} [ i
+ \.{\in} 1 \.{\dotdot} 4 \.{\mapsto} [ txTime \.{\mapsto} maxTxTime ] ]}%
+\@x{\@s{56.52} {\Box}\@s{4.91} {\OTHER} \.{\rightarrow} {\langle} {\rangle}}%
+\par\vspace{8.0pt}%
+\@x{ list ( j ,\, cycle ) \.{\defeq}}%
+ \@x{\@s{38.51} {\CASE}\@s{4.91} j \.{\in} \{ cycle \} \.{\rightarrow} [ i
+ \.{\in} 1 \.{\dotdot} 4 \.{\mapsto} [ txTime \.{\mapsto} maxTxTime ] ]}%
+ \@x{\@s{48.35} {\Box}\@s{4.91} j\@s{12.36} \.{\in} \{ 2 ,\, 3 \}
+ \.{\,\backslash\,} \{ cycle \} \.{\rightarrow} {\langle} {\rangle}}%
+ \@x{\@s{48.35} {\Box}\@s{4.91} j\@s{12.36} \.{\in} \{ 4 ,\, 7 \}
+ \.{\,\backslash\,} \{ cycle \} \.{\rightarrow} [ i \.{\in} 1 \.{\dotdot} 2
+ \.{\mapsto} [ txTime \.{\mapsto} maxTxTime ] ]}%
+ \@x{\@s{48.35} {\Box}\@s{4.91} {\OTHER} \.{\rightarrow} 1 \.{\colongt} [
+ txTime \.{\mapsto} maxTxTime ]}%
+\par\vspace{8.0pt}%
+ \@x{ A\_list ( j )\@s{0.77} \.{\defeq} 1 \.{\colongt} [ txTime \.{\mapsto}
+ maxTxTime ]}%
+\par\vspace{8.0pt}%
+\@x{ B\_list ( j ) \.{\defeq} {\IF} j \.{=} 1}%
+ \@x{\@s{50.60} \.{\THEN} 1 \.{\colongt} [ txTime \.{\mapsto} maxTxTime ]
+ \.{\,@@\,} 2 \.{\colongt} [ txTime \.{\mapsto} maxTxTime ] \.{\,@@\,}}%
+\@x{\@s{88.17} 3 \.{\colongt} [ txTime \.{\mapsto} maxTxTime ]}%
+\@y{%
+ \ensuremath{\.{\,@@\,} 4 \.{\colongt}} [ \ensuremath{txTime \.{\mapsto} 50} ]
+}%
+\@xx{}%
+ \@x{\@s{50.60} \.{\ELSE} {\IF} j \.{=} 2 \.{\THEN} {\langle} {\rangle}
+ \.{\ELSE} 1 \.{\colongt} [ txTime \.{\mapsto} maxTxTime ]}%
+\@x{\@s{214.24}}%
+\@y{\@s{0}%
+ \ensuremath{\.{\,@@\,} 2 \.{\colongt}} [ \ensuremath{txTime \.{\mapsto}
+ maxTxTime} ]
+}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+Initializations of the variables.
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+\@x{ Init \.{\defeq}}%
+ \@x{\@s{24.68} \.{\land} Shared \.{=} [ proc \.{\mapsto} 1 \.{\dotdot} nServ
+ ,\, chipTimer \.{\mapsto} 0 ,\, chipCount \.{\mapsto} 1 ,\, cycleCount
+ \.{\mapsto} 1 ,\,}%
+\@x{\@s{92.08} macTimer \.{\mapsto} 0 ,\, medium \.{\mapsto} \{ \} ]}%
+ \@x{\@s{24.68} \.{\land} TaskState \.{=} [ i \.{\in} Task \.{\mapsto} [ msg
+ \.{\mapsto} {\langle} {\rangle} ,\, execTimer \.{\mapsto} Infinity ,\,}%
+ \@x{\@s{175.01} res\@s{5.31} \.{\mapsto} [ j \.{\in} Task \.{\mapsto} \.{-} 1
+ ] ,\, cons \.{\mapsto} nServ \.{-} i \.{+} 1 ] ]}%
+\@x{\@s{24.68} \.{\land} ProcState\@s{0.58} \.{=}}%
+ \@x{\@s{62.61} [ j \.{\in} Shared . proc \.{\mapsto} [ token \.{\mapsto} 1
+ ,\, list \.{\mapsto} list ( j ,\, 1 ) ,\, count \.{\mapsto} 0 ] ]
+ \.{\,@@\,}}%
+ \@x{\@s{62.61} [ j \.{\in} Proc \.{\,\backslash\,} Shared . proc \.{\mapsto}
+ [ token \.{\mapsto} \.{-} 1 ,\, list \.{\mapsto} list ( j ,\, 1 ) ,\, count
+ \.{\mapsto} 0 ] ]}%
+ \@x{\@s{24.68} \.{\land} History \.{=} [ elem \.{\mapsto} 0 ,\, rese
+ \.{\mapsto} 0 ]}%
+\@x{}\midbar\@xx{}%
+\par\vspace{8.0pt}%
+\@x{ ProcSet ( S ) \.{\defeq} \{ P [ j ] \.{:} j \.{\in} S \}\@s{34.44}}%
+\@y{\@s{0}%
+ Processes identifiers set
+}%
+\@xx{}%
+ \@x{ procId ( p ,\, S ) \.{\defeq} {\CHOOSE} j \.{\in} S \.{:} p \.{=} P [ j
+ ]}%
+\par\vspace{8.0pt}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+The elementary and reservation slot action.\@s{18.0}   \newline 
+ \ensuremath{reservation(i)} is an arbitrary reservation function
+ that states that tasks wants to reserve as much slots as possible.
+ ``pi'' is the time the message will need to be processed by others tasks.
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+\@x{ reservation ( i ) \.{\defeq}}%
+\@x{\@s{29.51} {\IF} TaskState [ i ] . cons \.{=} nServ}%
+ \@x{\@s{29.51} \.{\THEN} \{ j \.{\in} Task \.{:} TaskState [ i ] . res [ j ]
+ \.{=} \.{-} 1 \}}%
+ \@x{\@s{29.51} \.{\ELSE} \{ ( ( ( i \.{-} 1 ) \.{+} ( nServ \.{-} 1 )
+ )\@s{4.91} \.{\%}\@s{4.91} nServ ) \.{+} 1 \}}%
+\par\vspace{8.0pt}%
+\@x{ SendElem ( t ) \.{\defeq}}%
+\@x{\@s{29.51} \.{\land} Shared . medium \.{=} \{ \}}%
+\@x{\@s{29.51} \.{\land} Shared . chipTimer \.{=} 0}%
+\@x{\@s{29.51} \.{\land} \.{\LET} i \.{\defeq} taskId ( t )}%
+ \@x{\@s{67.33} flag \.{\defeq} {\IF} ProcState [ i ] . list \.{\neq}
+ {\langle} {\rangle} \.{\THEN} 1 \.{\ELSE} 0}%
+\@x{\@s{42.85} \.{\IN} \.{\land} Shared . chipCount \.{=} i}%
+\@x{\@s{67.33} \.{\land} \.{\LET} resSet \.{\defeq} reservation ( i )}%
+\@x{\@s{80.66} \.{\IN} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+\@x{\@s{138.15} ! . macTimer \.{=} delta ,\,}%
+ \@x{\@s{138.15} ! . medium \.{=} \{ [ id \.{\mapsto} i ,\, type
+ \.{\mapsto}\@w{hard} ,\,}%
+\@x{\@s{210.55} res \.{\mapsto} resSet ,\, procFlag \.{\mapsto} flag ] \} ]}%
+\@x{\@s{105.14} \.{\land} TaskState \.{'} \.{=} [ TaskState {\EXCEPT}}%
+ \@x{\@s{138.15} ! [ i ] . res \.{=} [ j \.{\in} Task \.{\mapsto} {\IF} j
+ \.{\in} resSet \.{\THEN} i \.{\ELSE} @ [ j ] ] ,\,}%
+\@x{\@s{138.15} ! [ i ] . cons \.{=} 1 ]}%
+\@x{\@s{105.14} \.{\land} ProcState \.{'} \.{=} [ ProcState {\EXCEPT}}%
+ \@x{\@s{138.15} ! [ i ] . token \.{=} {\IF} flag \.{=} 0 \.{\THEN} \.{-} 1
+ \.{\ELSE} @ ]}%
+ \@x{\@s{105.14} \.{\land} History \.{'} \.{=} [ History {\EXCEPT} ! . elem
+ \.{=} @ \.{+} 1 ]}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\@x{ SendRese ( t ) \.{\defeq}}%
+\@x{\@s{29.51} \.{\land} Shared . medium \.{=} \{ \}}%
+\@x{\@s{29.51} \.{\land} Shared . chipTimer \.{=} delta}%
+\@x{\@s{29.51} \.{\land} \.{\LET} i \.{\defeq} taskId ( t )}%
+ \@x{\@s{42.85} \.{\IN} \.{\land} TaskState [ i ] . res [ Shared . chipCount ]
+ \.{=} i}%
+\@x{\@s{67.33} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+\@x{\@s{100.34} ! . macTimer \.{=} delta ,\,}%
+ \@x{\@s{100.34} ! . medium \.{=} \{ [ id \.{\mapsto} i ,\, type
+ \.{\mapsto}\@w{hard} ,\, res \.{\mapsto} \{ \.{-} 1 \} ] \} ]}%
+ \@x{\@s{67.33} \.{\land} TaskState \.{'} \.{=} [ j \.{\in} Task \.{\mapsto} [
+ TaskState [ j ] {\EXCEPT}}%
+\@x{\@s{100.34} ! . res [ Shared . chipCount ] \.{=} \.{-} 1 ] ]}%
+ \@x{\@s{67.33} \.{\land} History \.{'} \.{=} [ History {\EXCEPT} ! . rese
+ \.{=} @ \.{+} 1 ]}%
+\@x{\@s{67.33} \.{\land} {\UNCHANGED} ProcState}%
+\@x{}\midbar\@xx{}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+The soft window action.
+ \ensuremath{lenTX} is the message transmission time. The \ensuremath{Failed}
+ set has to be define according
+ to which processes failure scenario is chosen.
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+ \@x{ Failed \.{\defeq} {\CASE}\@s{4.91} Shared . chipCount \.{=} 2
+ \.{\rightarrow} \{ 3 \}}%
+ \@x{\@s{99.81} {\Box}\@s{4.91} Shared . chipCount \.{\in} \{ 3 ,\, 4 \}
+ \.{\rightarrow} \{ 3 ,\, 5 \}}%
+ \@x{\@s{99.81} {\Box}\@s{4.91} Shared . chipCount \.{=} 5 \.{\rightarrow} \{
+ 3 ,\, 5 \}}%
+\@x{\@s{99.81} {\Box}\@s{4.91} {\OTHER} \.{\rightarrow} \{ \}}%
+\par\vspace{8.0pt}%
+\@x{ A\_Failed \.{\defeq} \{ \}}%
+\par\vspace{8.0pt}%
+\@x{ lenMsg ( i ) \.{\defeq}}%
+ \@x{\@s{19.67} {\IF} ProcState [ i ] . list \.{\neq} {\langle} {\rangle}
+ \.{\THEN} Head ( ProcState [ i ] . list ) . txTime \.{\ELSE} delta}%
+\par\vspace{8.0pt}%
+\@x{ SendSoft ( p ) \.{\defeq}}%
+\@x{\@s{29.51} \.{\land} 2 \.{*} delta \.{\leq} Shared . chipTimer}%
+\@x{\@s{29.51} \.{\land} Shared . chipTimer \.{\leq} deltaChip}%
+\@x{\@s{29.51} \.{\land} Shared . medium \.{=} \{ \}}%
+\@x{\@s{29.51} \.{\land} \.{\LET} i \.{\defeq} procId ( p ,\, Proc )}%
+\@x{\@s{67.33} lenTX \.{\defeq} lenMsg ( i )}%
+\@x{\@s{67.33} d \.{\defeq} Shared . chipTimer \.{+} lenTX}%
+\@x{\@s{67.33} NoMsg \.{\defeq} i \.{\in} Failed \.{\lor} d \.{>} deltaChip}%
+\@x{\@s{67.33} Cond \.{\defeq} \.{\land} i \.{=} Shared . chipCount}%
+\@x{\@s{118.04} \.{\land} ProcState [ i ] . list \.{=} {\langle} {\rangle}}%
+\@x{\@s{42.85} \.{\IN} \.{\land} i \.{=} ProcState [ i ] . token}%
+\@x{\@s{67.33} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+ \@x{\@s{100.34} ! . macTimer \.{=} {\IF} NoMsg \.{\THEN} Infinity \.{\ELSE}
+ lenTX ,\,}%
+ \@x{\@s{100.34} ! . medium \.{=} {\IF} NoMsg \.{\THEN} @ \.{\ELSE} \{ [ id
+ \.{\mapsto} i ,\, type \.{\mapsto}\@w{soft} ] \} ]}%
+\@x{\@s{67.33} \.{\land} ProcState \.{'} \.{=} [ ProcState {\EXCEPT}}%
+ \@x{\@s{100.34} ! [ i ] . token \.{=} {\IF} NoMsg \.{\THEN} @ \.{\ELSE} {\IF}
+ Cond}%
+\@x{\@s{274.34} \.{\THEN} \.{-} 1}%
+\@x{\@s{274.34} \.{\ELSE} next ( i ,\, Shared . proc ) ,\,}%
+ \@x{\@s{100.34} ! [ i ] . list \.{=} {\IF} d \.{>} deltaChip \.{\lor} @ \.{=}
+ {\langle} {\rangle} \.{\THEN} @ \.{\ELSE} Tail ( @ ) ,\,}%
+ \@x{\@s{100.34} ! [ i ] . count \.{=} {\IF} NoMsg \.{\THEN} @ \.{\ELSE} @
+ \.{+} 1 ]}%
+ \@x{\@s{67.33} \.{\land} {\UNCHANGED} {\langle} TaskState ,\, History
+ {\rangle}}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+The hard and soft messages receiving actions.
+ We may introduce omission failures in the hard message reception action.
+ \ensuremath{noMsgReceptionSet} defines the set of nodes that shall not
+ receive a message. When an
+ omission failure happens, the ``Reserv'' and ``Consistency'' sequence are
+ not updated.
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+ \@x{ NoRecvSet ( m ) \.{\defeq} {\IF} Shared . chipCount \.{\in} \{ 2 ,\, 4
+ \} \.{\THEN} \{ m . id ,\, 3 \} \.{\ELSE} \{ m . id \}}%
+\par\vspace{8.0pt}%
+\@x{ A\_NoRecvSet ( m ) \.{\defeq} \{ m . id \}}%
+\par\vspace{8.0pt}%
+\@x{ RecvHard ( m ) \.{\defeq}}%
+\@x{\@s{29.51} \.{\land} m . type \.{=}\@w{hard}}%
+\@x{\@s{29.51} \.{\land} Shared . macTimer \.{=} 0}%
+ \@x{\@s{29.51} \.{\land} {\CASE}\@s{4.91} m . res \.{\neq} \{ \.{-} 1 \}
+ \.{\land} m . procFlag \.{=} 1}%
+ \@x{\@s{52.69} \.{\rightarrow}\@s{7.58} \.{\land} Shared \.{'} \.{=} [ Shared
+ {\EXCEPT} ! . medium \.{=} \{ \} ,\,}%
+\@x{\@s{234.57} ! . proc \.{=} @ \.{\cup} \{ m . id \} ]}%
+\@x{\@s{78.94} \.{\land} {\UNCHANGED} ProcState}%
+ \@x{\@s{52.69} {\Box}\@s{4.91} m . res \.{\neq} \{ \.{-} 1 \} \.{\land} m .
+ procFlag \.{=} 0}%
+ \@x{\@s{52.69} \.{\rightarrow} \.{\land} Shared \.{'} \.{=} [ Shared
+ {\EXCEPT} ! . medium \.{=} \{ \} ,\,}%
+\@x{\@s{226.98} ! . proc \.{=} @ \.{\,\backslash\,} \{ m . id \} ]}%
+\@x{\@s{71.35} \.{\land} ProcState \.{'} \.{=}}%
+ \@x{\@s{109.29} [ i \.{\in} ( Proc \.{\,\backslash\,} Shared . proc )
+ \.{\cup} NoRecvSet ( m ) \.{\mapsto} ProcState [ i ] ] \.{\,@@\,}}%
+ \@x{\@s{109.29} [ i \.{\in} Shared . proc \.{\,\backslash\,} NoRecvSet ( m )
+ \.{\mapsto} [ ProcState [ i ] {\EXCEPT}}%
+\@x{\@s{133.16} ! . token \.{=} {\IF} m . id \.{=} ProcState [ i ] . token}%
+\@x{\@s{183.69} \.{\THEN} next ( m . id ,\, Shared . proc )}%
+\@x{\@s{183.69} \.{\ELSE} @ ] ]}%
+\@x{\@s{52.69} {\Box}\@s{4.91} m . res \.{=} \{ \.{-} 1 \}}%
+ \@x{\@s{52.69} \.{\rightarrow} \.{\land} Shared \.{'} \.{=} [ Shared
+ {\EXCEPT} ! . medium \.{=} \{ \} ]}%
+\@x{\@s{71.35} \.{\land} {\UNCHANGED} ProcState}%
+\@x{\@s{29.51} \.{\land} TaskState \.{'} \.{=}}%
+ \@x{\@s{67.45} [ i \.{\in} NoRecvSet ( m ) \.{\mapsto} TaskState [ i ] ]
+ \.{\,@@\,}}%
+ \@x{\@s{67.45} [ i \.{\in} Task \.{\,\backslash\,} NoRecvSet ( m )
+ \.{\mapsto} [ TaskState [ i ] {\EXCEPT}}%
+\@x{\@s{96.24} ! . msg \.{=} Append ( @ ,\, m ) ,\,}%
+ \@x{\@s{96.24} ! . execTimer \.{=} {\IF} Len ( TaskState [ i ] . msg ) \.{=}
+ 0 \.{\THEN} pi \.{\ELSE} @ ,\,}%
+ \@x{\@s{96.24} ! . cons \.{=} {\IF} m . res \.{\neq} \{ \.{-} 1 \} \.{\THEN}
+ @ \.{+} 1 \.{\ELSE} @ ,\,}%
+\@x{\@s{96.24} ! . res \.{=} {\IF} m . res\@s{2.26} \.{=} \{ \.{-} 1 \}}%
+ \@x{\@s{134.11} \.{\THEN} [ j \.{\in} Task \.{\mapsto} {\IF} j \.{=} m . id
+ \.{\THEN} \.{-} 1 \.{\ELSE} @ [ j ] ]}%
+ \@x{\@s{134.11} \.{\ELSE} [ j \.{\in} Task \.{\mapsto} {\IF} j \.{\in} m .
+ res \.{\THEN} m . id \.{\ELSE} @ [ j ] ] ] ]}%
+\@x{\@s{29.51} \.{\land} {\UNCHANGED} History}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\@x{ RecvSoft ( m ) \.{\defeq}}%
+\@x{\@s{29.51} \.{\land} m . type \.{=}\@w{soft}}%
+\@x{\@s{29.51} \.{\land} Shared . macTimer \.{=} 0}%
+ \@x{\@s{29.51} \.{\land} \.{\LET} lastSoft \.{\defeq} \.{\land} 2 \.{*} delta
+ \.{\leq} Shared . chipTimer}%
+\@x{\@s{128.74} \.{\land} Shared . chipTimer \.{\leq} deltaChip}%
+ \@x{\@s{128.74} \.{\land} \A\, j \.{\in} Proc \.{:} ProcState [ j ] . token
+ \.{=} \.{-} 1}%
+ \@x{\@s{42.85} \.{\IN} Shared \.{'} \.{=} [ Shared {\EXCEPT} ! . medium \.{=}
+ \{ \} ,\,}%
+ \@x{\@s{209.62} ! . macTimer \.{=} {\IF} lastSoft \.{\THEN} Infinity
+ \.{\ELSE} @ ,\,}%
+\@x{\@s{209.62} ! . proc \.{=} {\IF} lastSoft \.{\THEN} \{ \} \.{\ELSE} @ ]}%
+ \@x{\@s{29.51} \.{\land} ProcState \.{'}\@s{9.66} \.{=} [ j \.{\in} ( Proc
+ \.{\,\backslash\,} Shared . proc ) \.{\cup} \{ m . id \} \.{\mapsto}
+ ProcState [ j ] ] \.{\,@@\,}}%
+ \@x{\@s{120.93} [ j \.{\in} Shared . proc \.{\,\backslash\,} \{ m . id \}
+ \.{\mapsto} [ ProcState [ j ] {\EXCEPT}}%
+\@x{\@s{139.36} ! . token\@s{0.54} \.{=} next ( @ ,\, Shared . proc ) ,\,}%
+\@x{\@s{139.36} ! . count \.{=} @ \.{+} 1 ] ]}%
+ \@x{\@s{29.51} \.{\land} {\UNCHANGED} {\langle} TaskState ,\, History
+ {\rangle}}%
+\@x{}\midbar\@xx{}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ \ensuremath{NextTick} and \ensuremath{NextChip} are the only actions that
+ update timers according to passage
+ of time.
+ \ensuremath{NextTick} search the best next time increment and updates all
+ timers
+ \ensuremath{NextChip} reset the \ensuremath{ChipTimer} and increment
+ \ensuremath{ChipCount} modulo the number of task.
+ It sets the arbitrary soft sequence of message of each process during every
+ cycle.
+ Alltogether, this 2 actions allow the time circularity of the model.
+ The count counter allows to check if a soft message has been sent in the
+ previous
+ chip. If it is not the case, all processes increment the token value by 1 at
+ the end of the chip.
+\end{cpar}%
+\end{lcom}%
+\@x{}\midbar\@xx{}%
+\@x{ NextTick \.{\defeq}}%
+ \@x{\@s{29.51} \.{\LET} noRese \.{\defeq} \.{\land} Shared . medium \.{=} \{
+ \}}%
+\@x{\@s{113.53} \.{\land} Shared . chipTimer \.{=} delta}%
+ \@x{\@s{113.53} \.{\land} \A\, i \.{\in} Task \.{:} TaskState [ i ] . res [
+ Shared . chipCount ] \.{\neq} i}%
+ \@x{\@s{53.99} noSoft\@s{3.21} \.{\defeq} \.{\land} 2 \.{*} delta \.{\leq}
+ Shared . chipTimer}%
+\@x{\@s{113.53} \.{\land} Shared . chipTimer \.{\leq} deltaChip}%
+\@x{\@s{113.53} \.{\land} Shared . medium \.{=} \{ \}}%
+ \@x{\@s{113.53} \.{\land} \A\, j \.{\in} Proc \.{:} ProcState [ j ] . token
+ \.{=} \.{-} 1}%
+ \@x{\@s{53.99} tmp \.{\defeq} min ( \{ TaskState [ i ] . execTimer \.{:} i
+ \.{\in} Task \} \.{\cup}}%
+\@x{\@s{121.97} \{ deltaChip \.{-} Shared . chipTimer \} )}%
+ \@x{\@s{53.99} d \.{\defeq} {\CASE}\@s{4.91} noRese \.{\rightarrow} min ( \{
+ delta ,\, tmp \} )}%
+ \@x{\@s{93.55} {\Box}\@s{4.91} noSoft\@s{15.58} \.{\rightarrow} min ( \{ tmp
+ \} )}%
+ \@x{\@s{93.55} {\Box}\@s{4.91} {\OTHER} \.{\rightarrow} min ( \{ Shared .
+ macTimer ,\, tmp \} )}%
+\@x{\@s{29.51} \.{\IN} \.{\land} d \.{>} 0}%
+\@x{\@s{53.99} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+\@x{\@s{87.01} ! . chipTimer \.{=} @ \.{+} d ,\,}%
+\@x{\@s{87.01} ! . macTimer \.{=} {\CASE}\@s{4.91} noRese \.{\rightarrow} @}%
+\@x{\@s{173.42} {\Box}\@s{4.91} noSoft\@s{15.58} \.{\rightarrow} Infinity}%
+\@x{\@s{173.42} {\Box}\@s{4.91} @ \.{=} Infinity \.{\rightarrow} Infinity}%
+\@x{\@s{173.42} {\Box}\@s{4.91} {\OTHER} \.{\rightarrow} @ \.{-} d ]}%
+ \@x{\@s{53.99} \.{\land} TaskState \.{'} \.{=} [ i \.{\in} Task \.{\mapsto} [
+ TaskState [ i ] {\EXCEPT}}%
+ \@x{\@s{87.01} ! . msg \.{=} {\IF} TaskState [ i ] . execTimer \.{-} d \.{=}
+ 0\@s{4.91} \.{\THEN} Tail ( @ ) \.{\ELSE} @ ,\,}%
+\@x{\@s{87.01} ! . execTimer \.{=} {\IF} @ \.{-} d \.{=} 0}%
+ \@x{\@s{163.58} \.{\THEN} {\IF} Len ( TaskState [ i ] . msg ) \.{>} 1
+ \.{\THEN} pi \.{\ELSE} Infinity}%
+ \@x{\@s{163.58} \.{\ELSE} {\IF} @ \.{=} Infinity \.{\THEN} @ \.{\ELSE} @
+ \.{-} d ] ]}%
+ \@x{\@s{53.99} \.{\land} {\UNCHANGED} {\langle} ProcState ,\, History
+ {\rangle}}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\@x{ NextChip \.{\defeq}}%
+\@x{\@s{29.51} \.{\land}\@s{5.30} Shared . medium \.{=} \{ \}}%
+\@x{\@s{29.51} \.{\land}\@s{5.30} Shared . chipTimer \.{=} deltaChip}%
+ \@x{\@s{29.51} \.{\land}\@s{5.30} \.{\LET} Overflow \.{\defeq} \E\, j \.{\in}
+ Shared . proc \.{:} Len ( ProcState [ j ] . list ) \.{>} 14}%
+\@x{\@s{72.63} TimeCircle \.{\defeq} Shared . cycleCount \.{=} horiz}%
+\@x{\@s{72.63} NextCycle \.{\defeq} Shared . chipCount \.{=} nServ}%
+ \@x{\@s{48.15} \.{\IN}\@s{4.91} \.{\land} Shared \.{'} \.{=} [ Shared
+ {\EXCEPT}}%
+\@x{\@s{110.57} ! . macTimer \.{=} 0 ,\,}%
+ \@x{\@s{110.57} ! . chipCount\@s{0.90} \.{=} ( @\@s{4.91} \.{\%}\@s{4.91}
+ nServ ) \.{+} 1 ,\,}%
+ \@x{\@s{110.57} ! . chipTimer \.{=} {\IF} Overflow \.{\THEN} \.{-} 1
+ \.{\ELSE} 0 ,\,}%
+ \@x{\@s{110.57} ! . cycleCount \.{=} {\IF} TimeCircle \.{\THEN} 1 \.{\ELSE}
+ {\IF} NextCycle \.{\THEN} @ \.{+} 1 \.{\ELSE} @ ]}%
+ \@x{\@s{77.55} \.{\land} ProcState \.{'} \.{=} [ j\@s{6.44} \.{\in} ( Proc
+ \.{\,\backslash\,} Shared . proc ) \.{\mapsto} ProcState [ j ] ] \.{\,@@\,}}%
+ \@x{\@s{159.31} [ j\@s{6.44} \.{\in} Shared . proc \.{\mapsto} [ ProcState [
+ j ] {\EXCEPT}}%
+ \@x{\@s{110.57} ! . token\@s{0.54} \.{=} {\IF} ProcState [ j ] . count \.{=}
+ 0 \.{\THEN}\@s{4.91} ( @\@s{4.91} \.{\%}\@s{4.91} nServ ) \.{+} 1 \.{\ELSE}
+ @ ,\,}%
+\@x{\@s{110.57} ! . count \.{=} 0 ,\,}%
+ \@x{\@s{110.57} ! . list \.{=} {\IF} NextCycle \.{\THEN} @ \.{\circ} list ( j
+ ,\, Shared . cycleCount ) \.{\ELSE} @ ] ]}%
+\@x{\@s{77.55} \.{\land} {\IF} NextCycle}%
+ \@x{\@s{90.89} \.{\THEN} History \.{'} \.{=} [ elem \.{\mapsto} 0 ,\, rese
+ \.{\mapsto} 0 ]}%
+\@x{\@s{90.89} \.{\ELSE} {\UNCHANGED} History}%
+\@x{\@s{29.51} \.{\land}\@s{5.30} {\UNCHANGED} TaskState}%
+\@x{}\midbar\@xx{}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ Next defines the set of possible actions that doesn\mbox{'}t alterate the
+ timers.
+ \ensuremath{Init} is the initial state, \ensuremath{Next} is the disjunct of
+ steps choices,
+ and \ensuremath{Tick} describes the passage of time.
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+\@x{ Tick\@s{5.39} \.{\defeq} NextTick \.{\lor} NextChip}%
+\par\vspace{8.0pt}%
+ \@x{ Next\@s{4.92} \.{\defeq}\@s{4.91} \.{\lor} \E\, t\@s{1.69} \.{\in}
+ TaskSet \.{:} SendElem ( t ) \.{\lor} SendRese ( t )}%
+ \@x{\@s{56.87} \.{\lor} \E\, p \.{\in} ProcSet ( Shared . proc ) \.{:}
+ SendSoft ( p )}%
+ \@x{\@s{56.87} \.{\lor} \E\, msg \.{\in} Shared . medium \.{:} RecvHard ( msg
+ ) \.{\lor} RecvSoft ( msg )}%
+\par\vspace{8.0pt}%
+\@x{ Liveness \.{\defeq}\@s{4.91} {\Box} {\Diamond} Tick}%
+\par\vspace{8.0pt}%
+ \@x{ Spec\@s{4.91} \.{\defeq}\@s{4.91} Init \.{\land} {\Box} [ Next\@s{4.91}
+ \.{\lor} Tick ]_{ vars} \.{\land} Liveness}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ The following temporal properties are checked when specified in the
+ \ensuremath{DoRiS.cfg
+} configuration file.
+\end{cpar}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+``\ensuremath{TypeInvariance}'' checks the variables type invariance.
+\end{cpar}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ ``\ensuremath{CollisionAvoidance}'' checks that the token can be hold by only
+ one task or process
+ at once.
+ ``\ensuremath{HardRingCorrectness}'' makes use of the ``History'' variable
+ to check that all
+ mandatory elementary message are sent in a \ensuremath{DoRiS} cycle.
+ ``\ensuremath{ReservationSafety}'' guaranty that if a task holds the token
+ in a reservation slot,
+ then all other tasks are aware of its reservation.
+\end{cpar}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ ``\ensuremath{SoftRingFairness}'' guaranty that each process will eventually
+ receive the token.
+\end{cpar}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+``Omission'' states that some task omission failure takes place.
+\end{cpar}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+``Failure'' states that some process failure takes place.
+\end{cpar}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+ ``\ensuremath{NoReservationSafety}'', ``\ensuremath{NoCollisionAvoidance}''
+ and ``\ensuremath{NoOmission}'' are contradiction
+ of the respective properties, used to generate handfull conter-examples.
+\end{cpar}%
+\end{lcom}%
+\par\vspace{8.0pt}%
+ \@x{ HardMsg \.{\defeq} Seq ( [ id \.{:} Task ,\, type \.{:} \{\@w{hard} \}
+ ,\, res \.{:} {\SUBSET} ( \{ \.{-} 1 \} \.{\cup} Task ) ,\, procFlag \.{:} 0
+ \.{\dotdot} 1 ] \.{\cup}}%
+ \@x{\@s{91.74} [ id \.{:} Task ,\, type \.{:} \{\@w{hard} \} ,\, res \.{:} \{
+ \{ \.{-} 1 \} \} ] )}%
+\par\vspace{8.0pt}%
+ \@x{ MediumMsg \.{\defeq} \{ m \.{:} m \.{\in} [ id \.{:} Proc ,\,
+ type\@s{1.18} \.{:} \{\@w{soft} \} ] \.{\cup}}%
+ \@x{\@s{137.80} [ id \.{:} Task ,\, type \.{:} \{\@w{hard} \} ,\, res \.{:}
+ {\SUBSET} ( \{ \.{-} 1 \} ) ] \.{\cup}}%
+ \@x{\@s{137.80} [ id \.{:} Task ,\, type \.{:} \{\@w{hard} \} ,\, res \.{:}
+ {\SUBSET} ( \{ \.{-} 1 \} \.{\cup} Task )}%
+ \@x{\@s{184.80} ,\, procFlag \.{:} 0 \.{\dotdot}
+ 1\@s{4.91} ] \}}%
+\par\vspace{8.0pt}%
+\@x{ TypeInvariance \.{\defeq}}%
+\@x{\@s{29.51} \.{\land} Shared . chipCount \.{\in} 1 \.{\dotdot} nServ}%
+\@x{\@s{29.51} \.{\land} Shared . cycleCount \.{\in} 1 \.{\dotdot} horiz}%
+\@x{\@s{29.51} \.{\land} Shared . chipTimer \.{\in} 0 \.{\dotdot} deltaChip}%
+ \@x{\@s{29.51} \.{\land} Shared . macTimer \.{\in} 0 \.{\dotdot} maxTxTime
+ \.{\cup} \{ Infinity \}}%
+ \@x{\@s{29.51} \.{\land} \A\, m \.{\in} Shared . medium \.{:} m \.{\in}
+ MediumMsg}%
+ \@x{\@s{29.51} \.{\land} ProcState \.{\in} [ Proc \.{\rightarrow} [ token
+ \.{:} Shared . proc \.{\cup} \{ \.{-} 1 \} ,\, count \.{:} 0 \.{\dotdot} 50
+ ,\,}%
+ \@x{\@s{67.45} list \.{:} \{ {\langle} {\rangle} \} \.{\cup} Seq ( [ txTime
+ \.{:} \{ maxTxTime \} ] ) ] ]}%
+\@x{}%
+\@y{\@s{15.0}%
+ \ensuremath{\.{\land} TaskState \.{\in}} [ \ensuremath{Task \.{\rightarrow}}
+ [ \ensuremath{msg} : \ensuremath{\{{\langle} {\rangle}\} \.{\cup} HardMsg},
+ \ensuremath{res} : [ \ensuremath{Task \.{\rightarrow} \{\.{-}1\} \.{\cup}
+ Task} ],
+}%
+\@xx{}%
+\@x{}%
+\@y{\@s{102.0}%
+ \ensuremath{execTimer} : \ensuremath{0\.{\dotdot}pi \.{\cup} \{Infinity\}},
+ \ensuremath{cons} :\ensuremath{Task} ] ]
+}%
+\@xx{}%
+\par\vspace{8.0pt}%
+\@x{ Send ( q ) \.{\defeq} \.{\lor} \.{\land} q \.{\in} TaskSet}%
+ \@x{\@s{77.24} \.{\land} ( {\ENABLED} SendElem ( q ) \.{\lor} {\ENABLED}
+ SendRese ( q ) )}%
+\@x{\@s{63.90} \.{\lor} \.{\land} q \.{\in} ProcSet ( Shared . proc )}%
+\@x{\@s{77.24} \.{\land} {\ENABLED} SendSoft ( q )}%
+\par\vspace{8.0pt}%
+ \@x{ CollisionAvoidance \.{\defeq} \A\, p ,\, q \.{\in} TaskSet \.{\cup}
+ ProcSet ( Proc ) \.{:}}%
+ \@x{\@s{143.85} {\Box} ( {\ENABLED} ( Send ( p ) \.{\land} Send ( q ) )
+ \.{\implies} ( p \.{=} q ) )}%
+\par\vspace{8.0pt}%
+ \@x{ NoCollisionAvoidance \.{\defeq} \E\, p ,\, q \.{\in} TaskSet \.{\cup}
+ ProcSet ( Proc ) \.{:}}%
+ \@x{\@s{151.31} {\Diamond} ( ( p \.{\neq} q ) \.{\land} {\ENABLED} ( Send ( p
+ ) \.{\land} Send ( q ) ) )}%
+\par\vspace{8.0pt}%
+\@x{ HardRingCorrectness \.{\defeq}}%
+ \@x{\@s{29.51} \.{\land} \A\, t \.{\in} TaskSet \.{:} \.{\land} {\Box} ( Len
+ ( TaskState [ taskId ( t ) ] . msg ) \.{\leq} 3 )}%
+\@x{\@s{123.03} \.{\land} {\Box} {\Diamond} {\ENABLED} SendElem ( t )}%
+ \@x{\@s{29.51} \.{\land} {\Box} ( {\ENABLED} NextChip \.{\implies} History .
+ elem \.{=} Shared . chipCount )}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+
+\newpage
+\@x{}\contLeftDash\@xx{ ( Continue ) }\contRightDash\@xx{}%
+
+\@x{ ReservationSafety \.{\defeq}}%
+ \@x{\@s{29.51} {\Box}\@s{4.91} \A\, chip ,\, j \.{\in} Task \.{:} \.{\land}
+ {\ENABLED} SendRese ( T [ j ] )}%
+\@x{\@s{137.11} \.{\land} Shared . chipCount \.{=} chip}%
+\@x{\@s{43.40} \.{\implies} \.{\land} TaskState [ j ] . res [ chip ] \.{=} j}%
+ \@x{\@s{62.07} \.{\land} \A\, i \.{\in} Task \.{\,\backslash\,} \{ j \} \.{:}
+ TaskState [ i ] . res [ chip ] \.{\in} \{ j ,\, \.{-} 1 \}}%
+\par\vspace{8.0pt}%
+\@x{ SoftRingFairness \.{\defeq}}%
+ \@x{\@s{29.51} \.{\land} \A\, i \.{\in} Proc \.{:} {\Box} ( {\IF} i \.{\in}
+ Shared . proc}%
+ \@x{\@s{119.39} \.{\THEN} ProcState [ i ] . list \.{\neq} {\langle} {\rangle}
+ \.{\implies} {\Diamond} ( i \.{=} ProcState [ i ] . token )}%
+\@x{\@s{119.39} \.{\ELSE} {\TRUE} )}%
+ \@x{\@s{29.51} \.{\land} {\Box} {\Diamond} ( \A\, i \.{\in} Proc
+ \.{\,\backslash\,} Failed \.{:} {\IF} i \.{\in} Shared . proc}%
+\@x{\@s{170.30} \.{\THEN} Len ( ProcState [ i ] . list ) \.{=} 0}%
+\@x{\@s{170.30} \.{\ELSE} {\TRUE} )}%
+\par\vspace{8.0pt}%
+\@x{ NoReservationSafety \.{\defeq}}%
+ \@x{\@s{29.51} {\Box} {\Diamond}\@s{4.91} \E\, chip \.{\in} Task \.{:} \E\, j
+ \.{\in} Task \.{:}}%
+\@x{\@s{61.57} \.{\land} TaskState [ j ] . res [ chip ] \.{\neq} \.{-} 1}%
+\@x{\@s{61.57} \.{\land} {\ENABLED} SendRese ( T [ j ] )}%
+\@x{\@s{61.57} \.{\land} Shared . chipCount \.{=} chip}%
+ \@x{\@s{61.57} \.{\land} \E\, i \.{\in} Task \.{\,\backslash\,} \{ j \} \.{:}
+ {\neg} TaskState [ i ] . res [ chip ] \.{\in} \{ j ,\, \.{-} 1 \}}%
+\par\vspace{8.0pt}%
+\@x{ Omission \.{\defeq} \E\, t \.{\in} TaskSet \.{:}}%
+ \@x{\@s{48.89} {\Diamond} ( {\ENABLED} SendElem ( t )\@s{4.91} \.{\land}
+ TaskState [ taskId ( t ) ] . cons \.{<} nServ )}%
+\par\vspace{8.0pt}%
+\@x{ NoOmission \.{\defeq} \A\, t \.{\in} TaskSet \.{:}}%
+ \@x{\@s{44.28} {\Box} ( {\ENABLED} SendElem ( t )\@s{4.91} \.{\implies}
+ TaskState [ taskId ( t ) ] . cons \.{=} nServ )}%
+\par\vspace{8.0pt}%
+ \@x{ Failure \.{\defeq} {\Box} {\Diamond} ( \E\, p \.{\in} ProcSet ( Proc )
+ \.{:} procId ( p ,\, Proc ) \.{\in} Failed )}%
+\par\vspace{8.0pt}%
+\@x{}\bottombar\@xx{}%
+\par\vspace{8.0pt}%
+
+
+
+\begin{comment}
+\@x{}\midbar\@xx{}%
+\@x{}%
+\@y{\@s{0}%
+    \newpage 
+}%
+\@xx{}%
+\@x{}\midbar\@xx{}%
+\par\vspace{8.0pt}%
+\end{comment}

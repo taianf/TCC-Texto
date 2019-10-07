@@ -1,0 +1,680 @@
+\chapter{Ethernet e Tempo Real}
+\label{cap:motivacao}
+
+A seção \ref{sec:caracEther} descreve as características físicas do padrão Ethernet
+assim como o protocolo de acesso ao meio CSMA/CD \cite{CSMA/CD01}.  Algumas das
+soluções propostas para tornar Ethernet determinista serão apresentadas na seção
+\ref{sec:etherDeterm}.  Duas destas propostas serão detalhadas na seção
+\ref{sec:TempraVTPE}, pois serviram de fontes de inspiração a este
+trabalho. Finalmente, considerações sobre sistemas híbridos serão discutida na seção
+\ref{sec:sisHibrid}.
+
+\section{Ethernet}
+\label{sec:caracEther}
+
+\subsection{Características físicas}
+\label{sec:carFisis}
+
+O padrão de comunicação Ethernet compartilhada (modalidade \emph{half-duplex})
+\cite{CSMA/CD01} define um barramento Ethernet como um conjunto de estações
+utilizando um mesmo barramento (meio físico) e trocando mensagens entre elas.  Um
+barramento Ethernet caracteriza um \textbf{domínio de colisão}, isto porque as
+mensagens emitidas por duas estações do barramento podem colidir de acordo com o
+protocolo CSMA/CD, como será visto na seção \ref{sec:CSMACD}.
+ 
+As mensagens, encapsuladas de acordo com o padrão (ver figura
+\ref{fig:ethernetFrame}), são chamadas de quadro Ethernet, ou simplesmente
+quadro. Durante a transmissão de um quadro, diz-se que o barramento está
+\textbf{ocupado}, enquanto que, na ausência de transmissão, o barramento é dito
+\textbf{livre}.  No fim da transmissão de um quadro, a transição de estado do
+barramento provoca uma interrupção em todas as estações, chamada de interrupção de
+fim de quadro (\emph{End-Of-Frame interrupt}) e denotada EOF.
+
+Dois tempos caracterizam a transmissão de um quadro no barramento: o
+tempo de transmissão e o tempo de propagação.  O tempo de propagação
+$T_{prop}$ de um pacote de uma extremidade a outra do barramento
+Ethernet só depende das características do meio físico, isto é, da
+velocidade de propagação de um sinal elétrico na rede e do comprimento
+total do barramento.  Nas redes 10Mbps e 100Mbps, o valor máximo deste
+comprimento é $500 m$. Considerando a velocidade de propagação
+constante de $2,5\,10^{8}\,m/s$, tem-se $T_{prop} \approx 2\,\mu s$.
+
+Para caracterizar o tempo de transmissão de maneira independente da largura de
+banda, utiliza-se a unidade temporal elementar \ing{bit-time} (bT) definido da
+seguinte maneira: $1 bT$ é o tempo que um bit leva para ser transmitido no meio
+físico.  Por exemplo, numa rede \emph{Fast}-Ethernet (100Mbps), $1\,bT = 10\,ns$.
+Já numa rede Gigabits (1Gbps), este valor é $1\,ns$.
+
+Entre duas transmissões consecutivas, é preciso reservar um tempo de recuperação
+para que as diferentes camadas da pilha de rede possam esvaziar as suas memórias
+locais de recepção e redefinir as variáveis do protocolo CSMA/CD.  Portanto, a
+transmissão de dois quadros consecutivos deve sempre ser separada por um tempo
+mínimo, chamado \emph{\textbf{Interframe Gap} (IFG)}, durante o qual o meio
+permanece livre.  Nas redes 10 e 100Mbps, $IFG = 96\,bT$.
+
+\begin{figure}[tb]
+  \centering
+  \input{fig/ethernetFrame.pstex_t}  
+  \caption{Um quadro Ethernet (números em \ing{bytes})}
+  \label{fig:ethernetFrame} 
+\end{figure}
+
+A figura \ref{fig:ethernetFrame} apresenta o detalhe do formato de um quadro
+Ethernet com a indicação do tamanho dos campos em bytes.  Os \ing{bytes} do
+preâmbulo e \textit{Start of frame} (SOF) marcam o início de um quadro. Eles são
+associados à camada física e servem para sincronizar o relógio da interface com a
+freqüência do sinal de entrada.  Em seguida, o quadro contém o cabeçalho Ethernet,
+com os campos de endereços da estação  de destino e da estação de origem, e o campo
+\emph{type field} utilizado para definir o tipo ou o tamanho do quadro. Os demais
+cabeçalhos associados a protocolos de rede tais como IP ou TCP (não mostrados na
+figura) são encapsulados juntos com os dados de aplicações.  Depois deste segmento de
+dados de tamanho variando entre 46 e 1500 \ing{bytes}, o campo \emph{Frame Check
+  Sequence} (FCS) termina o quadro. Este campo serve para conferir a integridade do
+quadro depois da sua recepção.
+
+Deduz-se que no padrão Ethernet, o tamanho dos quadros varia de 64 a 1518 bytes. Um
+quadro de tamanho mínimo de 64 bytes (512 bits) é chamado de \ing{slot time}.
+Usualmente, não se considera no tamanho de um quadro os campos do preâmbulo e do
+SOF, pois são associados à camada física.  No entanto, o cálculo do tempo de
+transmissão de um quadro deve levar em conta estes 8 bytes iniciais.
+
+Denota-se $\boldsymbol{\delta}$ o intervalo de tempo necessário para transmitir um
+quadro mínimo de tamanho $576$ bits (7 bytes). Na taxa de 100Mbps, $\delta = 5,76\,\mu
+s$.  Denota-se $\delta_m$ o tempo máximo de transmissão de um quadro de 1526
+bytes. Na taxa de 100Mbps, $\delta_m = 12.208\,bT\,=\,122,08\,\mu s$.
+
+\subsection{Controle de acesso ao meio}
+\label{sec:CSMACD}
+
+Como foi visto na seção anterior, o barramento Ethernet constitui um recurso
+compartilhado pelas estações de um mesmo barramento.  Para permitir o desempenho da
+comunicação e o sucesso das transmissões, é preciso definir uma política justa,
+eficiente e confiável que organiza o acesso ao meio para que as estações possam se
+comunicar.  Podemos expressar estas propriedades pelos seguintes requisitos:
+\begin{enumerate}
+\item Uma estação que quer transmitir conseguirá o meio (\emph{liveness});
+\item Um quadro transmitido chega sem alteração ao seu destinatário
+  (\emph{safety});
+\item Todas as estações têm o mesmo direito de acesso ao meio
+  (\emph{fairness}).
+\end{enumerate}
+
+Para atender a estes requisitos, o mecanismo de Controle do Acesso ao Meio (MAC)
+utiliza a capacidade que as estações têm de monitorar o meio físico para detectar se
+seu estado está livre ou ocupado \cite{CSMA/CD01,Wang99,Wang02}.  De forma resumida,
+o protocolo funciona da seguinte maneira.  Todas as estações monitoram o meio de
+maneira contínua.  Quando uma estação quer transmitir, ela espera detectar o meio
+livre durante um tempo padrão igual ao \emph{Interframe Gap} (IFG).  Depois deste
+tempo, ela começa a emitir imediatamente.  Enquanto ela está transmitindo, a estação
+continua monitorando o meio durante um \ing{slot time}.  Dois cenários podem então
+acontecer.  No primeiro, a estação consegue transmitir durante um \ing{slot time}
+sem perceber nenhuma diferença entre o sinal que ela transmite e o sinal que ela
+monitora. Este é o cenário de transmissão com sucesso.  No segundo, a estação
+detecta uma alteração entre o sinal que ela está transmitindo e o sinal que ela está
+recebendo. Se isto ocorre, uma colisão está acontecendo, ou seja, uma outra estação
+começou a emitir um quadro simultaneamente.  Neste caso, a estação pára de
+transmitir o seu quadro e transmite uma seqüência padrão de 48 bits, chamada de
+\ing{jam}, para garantir que todas as estações do barramento detectam a colisão.
+Depois, ela, e as demais estações que participaram da colisão, entram em estado de
+\ing{backoff} antes de tentar transmitir novamente.
+
+O tempo de \emph{backoff} é um múltiplo do \emph{slot time}.  Um fator
+multiplicativo inteiro $K$ é escolhido aleatoriamente dentro de um intervalo
+exponencialmente crescente de acordo com o número de colisões. Depois de $n$
+colisões, $K$ é escolhido no conjunto $\{0, 1, 2, \ldots, 2^{m-1}\}$ onde $m
+= min(n,10)$.  Depois da enésima colisão, a estação espera então $K.512 \, bT$ antes
+de poder tentar transmitir novamente. Desta forma, a probabilidade que aconteçam
+colisões em série decresce exponencialmente, tal como sugere o nome \emph{Binary
+  Exponencial Backoff} (BEB) deste algoritmo, que é parte do protocolo CSMA/CD.
+
+Num barramento 100Mbps de $500 m$ de comprimento, o tamanho mínimo de
+$72$ bytes para um quadro Ethernet garante a detecção de uma colisão
+no pior caso. Para entender esta propriedade, imagine o seguinte
+cenário envolvendo duas estações $A$ e B a uma distância de $500 m$
+uma da outra. O tempo de propagação de $A$ a $B$ é aproximadamente
+$T_{prop} = 2 \mu s$ (ver seção \ref{sec:carFisis}).  Suponha que o
+meio está inicialmente livre. Num instante $t_1$, a estação $A$ começa
+a emitir um quadro $q$ de tamanho mínimo.  Num instante $t_2$, logo
+antes da chegada de $q$, a estação $B$ começa a emitir. Em seguida,
+uma colisão ocorre num instante $t_c$ tal que $t_2 \leqslant t_c
+\leqslant t_1 + T_{prop} $.  Observe que no instante $t_c$, $A$ ainda
+não terminou de enviar $q$, cuja transmissão leva $\delta = 5,76 \mu
+s$. No instante $t_1 + T_{prop}$, $B$ percebe a colisão, e
+conseqüentemente, pára de transmitir seu quadro e começa a emitir um
+quadro \ing{jam}. Este quadro se propaga no meio e chega em $A$ num
+instante $t_3$ tal que $t_3 \leqslant t_1 + 2 T_{prop}$.  A condição
+$2 T_{prop} < \delta$ garante portanto que o quadro \ing{jam} chegue
+em $A$ antes que $A$ tenha terminada a transmissão do quadro $q$
+envolvido na colisão.  Desta forma, $A$ percebe a colisão envolvendo
+$q$. Além disto, o quadro \ing{jam} garante que a percepção da colisão
+acontece tanto em $A$ quanto em todas as outras estações conectadas ao
+barramento.
+
+Num outro cenário, considerando, por exemplo, duas estações distante
+de $1.000m$, o tempo de propagação entre $A$ e $B$ seria então de $4
+\mu s$. Neste caso, a informação da colisão poderá chegar em $A$ quase
+$8 \mu s$ depois do início da transmissão de $q$.  Depois de tanto
+tempo, não somente a transmissão de $q$ já poderá ter sido terminada,
+como também, $A$ poderá já ter iniciado uma nova transmissão. O quadro
+\ing{jam} será então associado erradamente ao segundo quadro.
+Percebe-se, portanto, que a condição $2 T_{prop} < \delta$ é
+necessária para que o mecanismo de detecção das colisões funcione
+corretamente.
+
+
+\subsection{Probabilidade de colisão}
+\label{sec:probCol}
+
+Considerando duas estações $A$ e $B$ isoladas, a probabilidade máxima
+de colisão entre estas duas estações acontece quando $A$ e $B$ estão
+distantes o máximo possível uma da outra, isto é, de 500m. Imagine que
+$A$ começa a transmitir, a probabilidade que uma colisão ocorra é a
+probabilidade que $B$ começa a transmitir antes de ter percebido que
+$A$ já está transmitindo, ou seja, antes de $T_{prop}$. Esta
+probabilidade depende da freqüência de transmissão de quadros por B.
+Mas, de qualquer forma, ela é relativamente pequena, pois $T_{prop}$ é
+pequeno em comparação ao tempo médio de transmissão de quadros.
+
+No entanto, um efeito de sincronização das estações pode acontecer e
+aumentar a probabilidade de colisão significativamente.  Efetivamente,
+quando duas estações esperam o meio ocupado por uma terceira, elas
+sofrem um efeito de sincronização provocado pela espera conjunta do
+meio.  A figura \ref{fig:colisaoCSMACD} ilustra um cenário de colisão,
+provocada pela espera conjunta com três estações $A$, $B$ e $C$
+competindo pelo meio. Nesta figura, os tamanhos dos intervalos de
+tempo são apenas ilustrativos.
+
+No cenário de ``espera conjunta'', suponha que a estação $A$ esteja entre as duas
+estações $B$ e $C$ e aproximadamente a igual distância de ambas.  Quando as estações $B$ e
+C tentam transmitir, elas constatam que o meio está ocupado pela estação $A$ que já
+está transmitindo. Portanto, elas esperam até sentir o meio livre. Quando a
+interrupção de EOF provocada pelo fim da transmissão de $A$ acontece, $B$ e $C$ esperam
+$IFG$ antes de começar a transmitir. Como as distâncias entre $A$ e $B$ e entre $A$ e C
+são quase iguais, a interrupção EOF do fim da transmissão de $A$ chega em $B$ e C
+aproximadamente no mesmo instante. Portanto, depois de $IFG$, ambas começam a
+transmitir simultaneamente, resultando numa colisão, pois, após um tempo curto,
+as duas estações observam as diferenças entre os sinais que elas estão emitindo e
+recebendo. Conseqüentemente, após diagnosticar a colisão, ambas mandam imediatamente
+as mensagens \emph{jam} antes de parar de transmitir e entrar em estado de
+\emph{backoff} por um tempo aleatório, assim como foi visto no início desta
+seção. Se os tempos de \emph{backoff} escolhidos foram diferentes, as duas estações
+conseguem transmitir com sucesso. Senão, uma nova colisão acontece e as
+estações entram novamente em estado de \emph{backoff}.
+
+\begin{figure}[bt]
+  \index{figuras!colisaoCSMACD}%
+  \centering \input{fig/colisaoCSMA-CD.pstex_t}
+  \caption{Um cenário de colisão \label{fig:colisaoCSMACD}}
+\end{figure}
+
+Este cenário simples mostra o principal mecanismo responsável pelas colisões na
+Ethernet e, portanto, o caráter não determinista do algoritmo BEB do protocolo
+CSMA/CD.  Como os tempos de \emph{backoff} são aleatórios, eles causam atrasos não
+deterministas nas entregas dos quadros. Utilizando um modelo probabilístico, a
+distribuição dos atrasos em função da carga da rede pode ser estimada teoricamente
+\cite{Schneider00,Laqua02}.
+
+O cenário do pior caso é chamado de ``efeito de captura''.  Continuando o cenário da
+figura \ref{fig:colisaoCSMACD}, o efeito de captura do meio acontece, por exemplo,
+quando ocorrem colisões sucessivas entre $C$ e uma ou mais estações. No exemplo da
+figura \ref{fig:colisaoCSMACD}, quando $B$ termina de transmitir, $C$ começa a
+transmitir logo em seguida. Suponha que uma outra estação, eventualmente B, começa a
+transmitir também, provocando uma nova colisão do quadro de C. O contador de
+colisões de $C$ é incrementado, e portanto, o intervalo de escolha do número
+aleatório de \ing{backoff} é multiplicado por 2.  Logo, a probabilidade que $C$
+ganhe o acesso ao meio diminui. A cada nova colisão do quadro de $C$ com um quadro
+ainda não envolvido em colisão alguma, a probabilidade que $C$ ganhe o acesso ao
+meio é dividida por 2.  No pior caso, este efeito provoca o descarte daquele quadro,
+depois de 16 tentativas \cite{Wang02,Decotignie05}. Só então, com o custo do
+descarte de um quadro, a estação volta a competir para o meio com o seu contador de
+colisões igual a 0, e conseqüentemente, com a maior probabilidade de ganhar o meio
+em casos de colisão. A possibilidade de atrasos ou mesmo de perdas de quadros do
+algoritmo BEB do protocolo CSMA/CD torna este protocolo impróprio para ambientes
+\emph{hard real time} \cite{Wang99}.
+
+\section{Ethernet: o desafio do determinismo}
+\label{sec:etherDeterm}
+
+As propostas para aumentar a previsibilidade das redes Ethernet e oferecer garantias
+temporais às aplicações típicas de plantas industriais encontram-se em grande número
+na literatura \cite{Hanssen03, Decotignie05}.  Na modalidade Ethernet compartilhada
+(\ing{half-duplex}), distinguem-se duas classes principais de soluções. Aquelas
+baseadas em modificações do hardware dos cartões Ethernet são apresentadas
+na seção \ref{sec:ethHardware} e as outras baseadas em software serão descritas na
+seção \ref{sec:ethSoftware}. Na seção \ref{sec:ethSwitch}, a modalidade Ethernet
+comutada (\ing{full-duplex}) será discutida, pois é a modalidade dominante no
+mercado.
+
+\subsection{Soluções baseadas em modificações do hardware padrão}
+\label{sec:ethHardware}
+
+As soluções baseadas em hardware modificam a camada MAC do protocolo CSMA/CD para
+diminuir ou mesmo anular a probabilidade de perda de quadro. Esta seção apresenta
+brevemente as principais soluções que seguem esta abordagem.
+
+O protocolo CSMA/CA (\ing{Collision Avoidance}), usado no padrão 802.11 para redes
+Ethernet sem fio \cite{Crow97, 80211}, implementa um tempo de espera aleatório
+(\ing{backoff}) não somente depois de uma colisão (como o CSMA/CD), mas também
+quando uma estação está esperando para o meio ficar livre, na situação de ``espera
+conjunta'' descrita na seção \ref{sec:probCol}. Suponha que uma
+estação queira transmitir uma mensagem, mas que o meio esteja ocupado. Ela espera
+até sentir o meio livre, mas ao contrário do CSMA/CD, quando ocorre o EOF, a estação
+não transmite imediatamente. Ela entra em estado de \ing{backoff} para um tempo de
+espera aleatório antes de tentar emitir. Desta forma, o efeito de sincronização pela
+``espera conjunta'' é diminuído \cite{Kurose05}.  No caso de uma colisão, o tamanho
+do domínio de escolha do tempo de espera aleatório aumenta exponencialmente, assim
+como para o CSMA/CD.
+
+O protocolo CSMA/DCR (\ing{Deterministic Collision Resolution}) \cite{LeLann93}
+utiliza estruturas de dados adequadas para eliminar estações da competição para o
+meio depois de uma colisão. Resumidamente, o conjunto de estações de um segmento Ethernet
+é dividido em uma árvore binária de sub-conjuntos. A cada colisão sucessiva que
+ocorre, um dos dois sub-conjuntos ainda participando da competição pelo meio é
+retirado da competição.  No caso do protocolo, CSMA/BLAM (\ing{Binary Logarithmic
+  Arbitration Method}) \cite{Molle94}, uma fase de arbitragem é utilizada depois de
+uma colisão para garantir que todas as estações competindo pelo meio utilizam o mesmo
+contador de colisão. Desta forma, todas as estações em competição têm chances
+iguais de ganhar o meio.  Apesar de serem deterministas, estes dois protocolos
+apresentam uma variabilidade significativa nos tempos de respostas, entre o pior e o
+melhor caso. Esta variabilidade é indesejável em sistemas de tempo real,
+principalmente para aqueles que têm características periódicas (sistemas de controle,
+por exemplo).
+
+Outras soluções utilizam um tamanho variável do quadro \ing{jam}. Exemplos desta
+abordagem são os protocolos CSMA/PRI \cite{Guo05} \ing{Priority Reservation by
+Interruptions} e o EQuB \cite{Sobrinho98}. Estes protocolos permitem definir
+prioridades entre as estações da seguinte forma.  Quando uma estação quer ter acesso
+ao meio, apesar de este estar ocupado, ela começa a transmitir sem esperar que o meio
+fique livre.  Desta forma, ela provoca uma colisão. Transmitindo uma mensagem
+\ing{jam} de tamanho predefinido, ela informa às demais estações que elas devem
+abandonar a competição pelo meio. As prioridades das estações são associadas
+ao tamanho dos quadros \ing{jam}, sendo o maior tamanho associado a estação
+com a prioridade mais alta.
+
+Uma outra abordagem com prioridades utiliza dois valores de $IFG$ diferentes para as
+comunicações com ou sem requisitos temporais \cite{LoBello01}.  A prioridade alta
+corresponde ao valor de $IFG$ definido pela norma CSMA/CD \cite{CSMA/CD01}. A
+prioridade baixa utiliza este valor de $IFG$ aumentado de 512 bT. Para enviar uma
+mensagem com prioridade baixa, um processo deve observar o meio livre durante este
+tempo maior. Portanto, qualquer mensagem com prioridade alta será transmitida
+antes. Esta solução permite o isolamento efetivo dos dois tipos de comunicações mas
+não elimina a possibilidade de colisão entre mensagens de alta prioridade.
+
+É importante observar que as soluções baseadas em prioridades não garantem
+determinismo, a não ser quando a camada de controle lógico (LLC) utiliza alguma
+política de escalonamento dos envios.
+
+Apesar das suas qualidades, as soluções com modificação do hardware não permitem o
+aproveitamento dos dispositivos existentes que são de baixo custo e de grande
+disponibilidade no mercado. Além disso, as alterações de hardware comprometem a
+compatibilidade do protocolo com o padrão Ethernet 802.3.  Neste trabalho, uma
+abordagem mais flexível foi escolhida, onde o determinismo da rede é garantido
+exclusivamente no nível de software.
+
+
+\subsection{Soluções baseadas em software}
+\label{sec:ethSoftware}
+
+As soluções baseadas em software consistem em estender a camada MAC do protocolo
+CSMA/CD, utilizando a sub-camada de controle lógico (LLC) localizada
+entre a camada de rede e a camada MAC. Esta camada intermediária filtra as mensagens
+de acordo com regras predefinidas de forma a evitar as colisões ou reduzir a
+probabilidade de elas acontecerem.
+
+Um dos mecanismos mais simples para oferecer garantias temporais é a divisão do meio
+físico em ciclos temporais com atribuição de \emph{slots} temporais de emissão para
+cada estação. O exemplo mais conhecido desta idéia é o \emph{Time Division Multiple
+  Access} (TDMA) \cite{Kurose05}. Apesar de prover alto grau de determinismo, o TDMA
+apresenta um problema de desempenho em situação de baixa carga da rede, já que mesmo
+que uma estação não tenha nada para transmitir, nenhuma outra estação pode
+aproveitar o \emph{slot} de transmissão disponível.
+
+Uma outra abordagem é a utilização do modelo Mestre-Escravo. Uma estação (o mestre) 
+gerencia a rede e distribui as autorizações de emissão por meio de mensagens para as
+demais estações (os escravos).  Baseado neste modelo, o protocolo FTT-Ethernet
+\cite{Pedreiras02} permite a coexistência de comunicação crítica e não-crítica.
+Nesta arquitetura, o mestre constitui um ponto único de falha, que deve ser
+replicado a fim de prover tolerância a falhas.  Devido a esta estrutura
+centralizada, a assimetria nas cargas da rede podem implicar problemas de extensão
+e de desempenho do protocolo.
+
+Vários protocolos, tais como 802.5 e FDDI \cite{Hanssen03}, RETHER
+\cite{Venkatrami94} e RTnet \cite{Hanssen05} utilizam arquiteturas baseadas em anel
+lógico e bastão circulante (\emph{token}) explícito para carregar as reservas e os
+direitos de acesso ao meio. Quando uma estação recebe o bastão circulante, ela
+adquire o direito de transmitir. Depois de completar a transmissão de uma ou mais
+mensagens, ela transmite o bastão circulante para o seu sucessor no anel lógico.  O
+bastão circula regularmente, passando em todas as estações do anel uma
+após a outra. Algumas destas soluções utilizam o bastão circulante para transmitir
+informações de prioridades e de tempos alocados.  No caso geral, estas soluções
+conseguem oferecer garantias temporais. No entanto, elas apresentam dois problemas.
+Primeiro, o tempo de transmissão do bastão circulante gera uma sobrecarga que pode
+ser significativa quando a maioria das mensagens são de tamanho mínimo. Segundo, no
+caso da perda do bastão circulante, o tempo de recuperação, necessário para detectar
+a falha e criar um novo bastão circulante, é maior do que o tempo de transmissão do
+bastão circulante na ausência de falhas. Isto causa um indeterminismo potencial na
+entrega das mensagens, pois as falhas ocorrem de forma não previsível.
+
+Para tentar resolver as limitações dos protocolos com bastão circulante explícito, novas
+abordagens foram desenvolvidas com mecanismos implícitos de passagem do
+bastão circulante. Muitas vezes, estas abordagens utilizam temporizadores
+\cite{Lamport84} para definir bifurcações no fluxo de execução de um processo, em
+função de condições temporais e lógicas. Observando a comunicação, cada estação
+determina o instante no qual ela tem direito de transmitir em função da sua posição
+no anel lógico e do valor do seu temporizador.  Dois protocolos utilizando esta
+abordagem com bastão circulante implícito serão descritos detalhadamente na seção
+\ref{sec:TempraVTPE}.
+
+Outros protocolos utilizam mecanismos baseados em janelas temporais ou em tempo
+virtual \cite{Hanssen03}, mas estas abordagens são probabilísticas e não oferecem
+garantias temporais para sistemas críticos. Também probabilísticas, mas com
+mecanismos diferentes, as técnicas de \emph{smoothing} \cite{Carpenzano02} consistem
+em observar os padrões de comunicação na rede para impedir que haja transmissões em
+rajadas (\emph{bursts}) \cite{Decotignie05}.
+
+
+\subsection{Ethernet comutada}
+\label{sec:ethSwitch}
+
+A tecnologia Ethernet comutada vem sendo muito utilizada nos últimos
+anos. Nesta arquitetura de rede, todas as estações são conectadas a um comutador
+que dispõe de memórias de recepção e emissão para armazenar e transmitir as
+mensagens.  Quando uma estação $A$ quer emitir uma mensagem $m$ para uma estação B,
+ela a envia para o comutador o qual a encaminha para B. Se o comutador já
+estiver transmitindo uma mensagem para $B$ quando $m$ chega, ele coloca $m$ na fila
+das mensagens esperando para serem transmitidas para B.  Desta forma, a utilização
+de um comutador elimina o compartilhamento do meio físico entre as estações e a
+existência das colisões decorrentes.  Além disso, nesta tecnologia, uma estação pode
+transmitir e receber ao mesmo tempo, multiplicando por dois a vazão total disponível
+para a comunicação.
+
+Apesar destas vantagens, a tecnologia Ethernet comutada apresenta vários
+desafios relacionados a sua utilização em redes de controle industriais.  Em particular, a
+utilização de filas no comutador dificulta a implementação de comunicação
+\emph{broadcast} rápida e determinista por duas razões. Em primeiro lugar, o
+processamento das mensagens (recepção, roteamento e transmissão) no comutador tem
+um custo temporal de vários $\mu s$ \cite{Wang02}, isso mesmo na ausência de filas
+de espera. Em segundo lugar, o comutador constitui um ponto de gargalo na
+comunicação, como ilustra o seguinte cenário. Suponha que várias estações mandem
+mensagens para o mesmo destinatário $A$ de tal forma que a taxa acumulada de chegada
+de mensagem para $A$ no comutador seja várias vezes maior que a taxa de
+transmissão do canal conectando o comutador a A.  Portanto, a fila de espera, que tem
+um tamanho limitado, acaba se enchendo até provocar perdas de mensagens.
+
+Tanto em Ethernet comutada quanto em Ethernet compartilhada, a abordagem do
+protocolo ``Time Triggered Ethernet'' resolve estas limitações \cite{Kopetz05},
+oferecendo previsibilidade temporal e segurança no funcionamento. No entanto, estas
+garantias dependem de uma análise de escalonamento em tempo de projeto, e portanto,
+esta abordagem não permite reconfiguração da rede em tempo de execução.
+
+
+\section{Os protocolos TEMPRA e VTPE}
+\label{sec:TempraVTPE}
+
+Como foi visto, nem todas as abordagens descritas conseguem atender aos requisitos
+específicos dos sistemas de tempo real críticos. Algumas apresentam pontos de falhas
+únicos, ou tempo de latência significativo na ocorrência de certos eventos (ex:
+perda do bastão circulante). As soluções baseadas em Ethernet comutada são
+bastante eficientes, mas dificultam a implementação de comunicação ``um-para-muitos''
+deterministas. Além disso, perdas de mensagens podem ocorrer nos comutadores em
+caso de congestionamento nas memórias internas \cite{Decotignie05}.
+
+No contexto de um barramento Ethernet compartilhada, o protocolo VTPE \ing{Virtual
+  Token Passing Ethernet} desenvolvido por Carreiro et al \cite{Carreiro03}, combina
+as abordagens de \emph{token implícito} e TPR (\emph{Timed Packet Release})
+encontrada no protocolo TEMPRA \cite{Pritty95}.  Estes dois protocolos, VTPE e
+TEMPRA, constituíram as duas fontes principais de inspiração do nosso
+trabalho. Portanto, dedicaremos a próxima seção às suas descrições detalhadas.
+
+\subsection{Modelo \ing{publish-subscribe}}
+\label{sec:modelo}
+
+Os dois protocolos apresentados nesta seção utilizam o modelo de comu\-ni\-ca\-ção
+\ing{pub\-lish-sub\-scribe} \cite{Dolejs04}.  Quando uma estação precisa emitir uma
+mensagem, ela a publica no meio físico, utilizando no campo de destino o endereço
+para a comunicação um-para-todos, reservado pelo padrão Ethernet (48 bits com valor
+1).  Portanto, qualquer mensagem transmitida é recebida por todas as estações do
+barramento. Na sua recepção, uma estação determina quem publicou a mensagem através
+do campo ``endereço de origem'' do quadro Ethernet (ver figura
+\ref{fig:ethernetFrame}). Ela então decide o que fazer com a mensagem: descartá-la
+ou encaminhá-la para a camada superior.
+
+Como pode ser notado, este modelo de comunicação é coerente com o uso de Ethernet
+compartilhada, já que esta tecnologia permite disponibilizar modos de comunicação
+ponto-a-ponto, um-para-muitos e um-para-todos de forma eficiente. Por outro lado, o
+modelo \ing{publish-subscribe} implica que todos os membros de um mesmo barramento
+recebem todas as mensagens publicadas. Isto tem conseqüências no que se refere ao
+uso da banda, como será descrito na seção \ref{sec:sisHibrid}.
+
+No TEMPRA e no VTPE, assim como no protocolo de bastão circulante \cite{TokenBus},
+as estações são organizadas em um anel lógico. Cada estação tem um identificador
+inteiro único, variando de $1$ a $N$, onde $N$ é o número de estações do
+barramento. Define-se o tempo de rotação do bastão circulante ($T_{RT}$) como sendo
+o tempo entre duas passagens consecutivas do bastão circulante numa mesma estação.
+
+No caso do protocolo TEMPRA, assume-se que o anel lógico coincide com o anel físico,
+ou seja, quanto maior é o identificador da estação, maior é a distância desta
+estação à primeira estação da rede. No caso do VTPE, a ordem dos identificadores é
+arbitrária. A figura \ref{fig:aneis} apresenta estes anéis para estes dois
+protocolos. As letras correspondem às estações e o eixo horizontal representa as
+distâncias entre elas. Os números correspondem aos identificadores e as linhas
+pontilhadas indicam o anel lógico associado.
+
+\begin{figure}[bt]
+  \index{figuras!aneis}%
+  \centering
+{\scalebox{1}{
+  \centering \input{fig/aneis.pstex_t}
+ }}
+  \caption{Os anéis VTPE e TEMPRA \label{fig:aneis}}
+\end{figure}
+
+O protocolo TEMPRA necessita da adição de um hardware específico, enquanto o
+protocolo VTPE não envolve modificações da camada MAC.
+
+
+\subsection{O protocolo TEMPRA}
+\label{sec:TEMPRA}
+
+O protocolo TEMPRA \cite{Pritty95} utiliza o mecanismo de \emph{Timed Packet
+  Release} (TPR) para impedir as colisões inerentes ao protocolo CSMA/CD. Quando uma
+estação precisa de um serviço com requisitos temporais críticos, ela emite uma
+requisição e as demais estações do barramento mudam do protocolo CSMA/CD para o
+protocolo TEMPRA, utilizando uma outra interface de rede dedicada à comunicação de
+tempo real. Depois que a comunicação de tempo real termina, as estações voltam para
+o CSMA/CD.
+
+Para organizar o serviço de tempo real, assume-se que a primeira estação (que tem o
+menor identificador do anel) está posicionada numa extremidade do barramento.  Esta
+estação, chamada de \emph{monitor}, é selecionada para emitir um pulso (\ing{slot
+  pulse}), com um período predefinido.  Este sinal, de duração $t_s$, tem um padrão
+único e se propaga unidirecionalmente no barramento, dando uma referência temporal
+sem ambigüidade para as estações, através da sua interrupção de fim de quadro (EOF).
+Na passagem de um pulso, cada estação inicia um temporizador.  Estes seguem uma
+regra aritmética de parâmetro $t_d = 1 \, \mu s$, ou seja, o temporizador da estação
+de identificador $id$ vale $id * t_d$.  Para adquirir o bastão circulante e ter o
+direito de transmitir, uma estação deve esperar o fim do seu temporizador e sentir o
+meio físico.  Se este estiver livre, ela começa a emitir imediatamente. Logo depois
+desta transmissão, o monitor emite um pulso sem espera.
+
+Entre dois pulsos, no máximo uma mensagem pode ser transmitida. Para impedir que uma
+estação de identificador pequeno possa monopolizar o uso do meio indefinidamente,
+impedindo as demais estações de transmitirem, uma estação só pode emitir novamente
+depois que ela observa uma janela livre, isto é, a passagem de dois pulsos
+consecutivos sem mensagens intercaladas.
+
+Para garantir que todas as estações tenham a oportunidade de transmitir, o período
+$T_{sp}$ do pulso na ausência de transmissão deve ser igual a $N t_d + 2
+T_{prop} + T_s$, onde $T_s$ é um tempo de segurança que leva em consideração o tempo
+de transmissão do pulso.  ($T_s = 3 \, \mu s$ de acordo com
+\cite{Pritty95b}).
+
+A principal vantagem do protocolo TEMPRA é sua simplicidade, o que o torna bastante
+confiável. Por exemplo, o mecanismo de temporizador permite tolerar a ausência
+(falha) de uma estação.  No entanto, TEMPRA é um protocolo centralizado que requer a
+existência de um monitor para emitir o pulso.  Portanto, falhas do
+monitor podem provocar falhas de comunicação no barramento.
+
+Uma outra limitação do TEMPRA é a grande variabilidade dos tempos de rotação do
+bastão circulante entre o melhor e o pior caso.  Denota-se,
+respectivamente $T_{mc}$ e $T_{pc}$ estes dois tempos.  Se houver uma mistura de
+mensagens de tamanho máximo ($\delta_m = 122,08 \mu s$), típicas de aplicações
+não-críticas, e de mensagens de tamanho $\delta$, típicas de aplicações com
+requisitos temporais críticos, a variabilidade de $T_{mc}$ e $T_{pc}$ torna-se
+significativa.  No melhor caso, o tempo $T_{mc}$ entre duas mensagens consecutivas
+da mesma estação de identificador $id$ vale: $T_{mc} = \delta + id * t_d + T_s +
+T_{sp}$. O tempo $T_{sp}$ corresponde ao tempo necessário para que a estação observe
+uma janela livre.  No pior caso, todas as estações (inclusive o monitor) têm
+mensagens de tamanho $\delta_m$ para transmitir. Neste caso, o cálculo do tempo
+$T_{pc}$ envolve a soma dos temporizadores e dos tempos de segurança:
+
+\[
+T_{pc} = N \, (\delta_m + T_s) + \sum_{id = 1}^{N-1} id * t_d = N \, ( \delta_m + T_s
++ (N-1) t_d/2)
+\]
+ 
+Neste cálculo, os tempos de propagação são desprezados.
+
+Considerando um exemplo com 10 estações num barramento de $500m$ de comprimento numa
+rede 100Mbps, os valores para $T_{prop}$, $T_{sp}$, $T_{mc} $ e $T_{pc}$ ficariam tal que:
+$T_{prop} \approx 2 \, \mu s$, $T_{sp} \approx 17 \, \mu s$, $26,76 \leqslant
+T_{mc} \leqslant 35,76 \, \mu s$ e $T_{pc} \approx 1.295,8 \, \mu s$.
+ 
+
+\subsection{O protocolo VTPE}
+\label{sec:VTPE}
+
+No protocolo VTPE \cite{Carreiro03}, a circulação do bastão circulante implícito é
+organizado através do uso de contadores locais e de temporizadores. Cada mensagem
+que circula no barramento VTPE gera uma interrupção de \emph{EOF}. Quando observado
+por um processo, esta interrupção provoca o incremento do valor de um contador
+local.  Por outro lado, na ausência de transmissão, o contador é incrementado depois de
+um intervalo de tempo $t_2$ definido em tempo de projeto. O bastão circulante é
+adquirido por uma estação quando o valor do seu identificador $id$ é igual ao valor
+do seu contador. Portanto, o bastão circulante é passado tanto explicitamente pela
+transmissão de mensagem quanto implicitamente pela ausência de transmissão. Depois
+de um período prolongado sem transmissões, um mecanismo baseado em temporizador
+garante que a estação em posse do bastão envia uma mensagem vazia. Desta forma,
+problemas de sincronização devido aos desvios dos relógios locais são prevenidos.
+
+Por exemplo, suponha que a estação $i$ adquire o bastão circulante. Os dois casos de
+passagens do bastão circulante seguintes são possíveis:
+
+\begin{description}
+\item[Passagem implícita] A estação $E_i$ não tem nada para transmitir.  Neste caso,
+  depois de um tempo predefinido $t_2$, as demais estações do barramento monitoram o
+  meio e constatam que este está livre.  Portanto, elas incrementam o seus
+  contadores locais. Conseqüentemente, a estação $E_{i+1}$, sucessora de $E_i$, adquire o
+  bastão circulante.
+\item[Passagem explícita] A estação $E_i$ transmite uma mensagem. A interrupção gerada
+  por esta mensagem provoca o incremento do contador de todas as estações do
+  barramento, e portanto, o bastão circulante passa para a estação sucessora da estação
+  $E_i$.
+\end{description}
+
+Neste segundo caso, antes de poder emitir, a estação que adquire o bastão deve
+esperar um tempo $t_1$ correspondente ao tempo necessário para que a mensagem
+transmitida pela estação $i$ seja processada por todas as estações do barramento.
+
+Quando a rede for dedicada exclusivamente à comunicação de tempo real, as mensagens
+têm um tamanho máximo de $\delta$. Adotando as mesmas definições de $t_{pc}$ e
+$t_{mc}$ usadas na seção anterior, calculamos que, no melhor caso:
+
+\[
+t_{mc} = \delta + t_1 + \sum_{i = 1}^{N-2} t_2 = \delta + T_1 + (N-1) \, t_2
+\]
+
+enquanto que, no pior caso, este tempo é dado por:
+
+\[
+t_{pc} = \sum_{i = 1}^{ N} (t_1 + \delta) = N \, (t_1 + \delta)
+\]
+
+Apesar da variabilidade entre pior e melhor caso, esta abordagem apresenta as
+seguintes vantagens:
+\begin{itemize}
+\item A sobrecarga devido aos temporizadores é menor que a sobrecarga causada pela
+  existência de uma mensagem explícita para gerenciar a passagem do bastão circulante;
+\item A flexibilidade do controle do bastão circulante permite tolerar falhas (não há
+  diferença entre uma estação silenciosa e uma estação falha);
+\item A estrutura totalmente descentralizada do protocolo não apresenta ponto único
+  de falha.
+\end{itemize}
+
+Considerando o mesmo exemplo da seção anterior e utilizando os valores de $t_2 =
+25 \, \mu s$ e $t_1 = 111 \mu s$ de acordo com \cite{Carreiro03}, deduzimos os
+seguintes valores: $T_{mc} \approx 341,76 \, \mu s$ e $T_{pc} \approx 1.167,6 \, \mu
+s$.
+
+\section{Conclusão}
+\label{sec:sisHibrid}
+
+Neste capítulo, diversas soluções para aumentar a previsibilidade da comunicação
+baseada em Ethernet compartilhada foram apresentadas.  Distinguiram-se notadamente
+duas soluções particulares,TEMPRA e VTPE, pois estas foram as principais fontes de
+inspiração deste trabalho.  Estas duas soluções permitem resolver o não-determinismo
+do algoritmo BEB do CSMA/CD. No entanto, a utilização destes dois protocolos para
+sistemas híbridos é limitada pela variabilidade significativa dos tempos de rotação
+do bastão circulante entre melhor e pior caso.  Entende-se aqui por sistemas
+híbridos, os sistemas compostos de aplicações com requisitos temporais variados,
+críticos e não-críticos.
+
+Para completar a análise dos sistemas híbridos, temos que considerar os requisitos
+específicos das redes industriais. Neste contexto, alguns dos dispositivos que têm
+requisitos temporais críticos são dispositivos eletrônicos que dispõem de
+capacidades de processamento menores que os computadores de uso geral. Tipicamente, a
+velocidade do processador destes dispositivos pode ser de duas a três ordens de
+grandeza menor que a velocidade dos processadores de computadores. Conseqüentemente,
+o tempo de processamento máximo de uma mensagem de tempo real de 64 bytes pode ser bem
+maior que o tempo necessário para a sua transmissão. Por exemplo, no protocolo
+VTPE~\cite{Carreiro03}, os autores utilizam um tempo de processamento máximo de $111
+\, \mu s$ para micro-controladores do tipo 8051 com processador de 12MHz.
+
+Para impedir a emissão de uma mensagem de tempo real antes do fim do processamento
+da última mensagem que foi transmitida, o protocolo VTPE utiliza o temporizador
+$t_1$. Este parâmetro deve ser maior do que o tempo de processamento do processador
+mais lento do barramento.  Depois de uma interrupção de EOF causada por uma mensagem
+crítica $m$, a nova estação em posse do bastão circulante espera o tempo $t_1$ antes de
+poder transmitir. Desta forma, ela tem certeza que todos os dispositivos conectados
+no barramento terminaram de processar a mensagem $m$.
+
+No entanto, durante todo este tempo, o meio físico permanece livre.  Isto porque o
+tempo de transmissão da mensagem crítica $m$ (aqui $\delta = 5,12 \, \mu s$) pode
+ser muito mais curto que o tempo do seu processamento. Neste caso, o canal de
+comunicação fica disponível para a comunicação não-crítica durante o tempo $t_1 -
+\delta$.
+
+Esta constatação motivou o nosso esforço para desenvolver um protocolo sem
+modificação ou adição de hardware que possa integrar os serviços críticos e não-críticos num
+mesmo barramento Ethernet, otimizando o compartilhamento da banda entre estes dois
+serviços e oferecendo garantias temporais deterministas e constantes para o
+serviço de tempo real.  Esta possibilidade baseia-se na existência de memórias
+internas na interface de rede, que permitem a recepção e a emissão assíncrona das
+mensagens, e, portanto, a liberação rápida do meio físico.  Esta tecnologia
+encontra-se, por exemplo, nos micro-controladores de redes MC9S12NE64, DS80C410 e
+DS80C411 \cite{MC9S12NE64, DS80C410}.
+
+É importante observar que soluções que permitem o controle de acesso ao meio
+compartilhado não são incompatíveis com o uso de comutadores. De fato, o mecanismo
+de controle de acesso ao meio permite evitar sobrecargas no comutador, e por
+conseguinte, prevenir perdas de mensagens. Apesar de a solução proposta neste trabalho
+se concentrar no acesso ao meio Ethernet compartilhada, ela é compatível com o uso
+de comutador, sendo, portanto, adequada a infraestruturas de redes em uso
+atualmente.
+
+\begin{comment}
+
+\item Ser implementado por todas as interfaces de rede conectadas no barramento. A
+  presença de estações não compatíveis - que executam um outro protocolo - não é
+  possível.
+
+  De acordo com a classificação introduzida por Decotignie \cite{Decotignie05}, este
+  ultimo ponto significa que o protocolo \doris{} não é compatível.  Apesar deste
+  fato, um roteador executando o \doris{} e servindo de passarela com o mundo
+  Ethernet CSMA/CD pode ser utilizado para permitir a conexão de um barramento
+  \doris{} na Internet.
+
+\end{comment}
+
+% mudar mensagem para quadro IFG -> IPG
+

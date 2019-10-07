@@ -1,0 +1,273 @@
+rm: *.ps: No such file or directory
+rm: *.ps: No such file or directory
+sigops.tex
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4)
+entering extended mode
+(./sigops.tex
+LaTeX2e <2003/12/01>
+Babel <v3.8d> and hyphenation patterns for american, french, german, ngerman, b
+ahasa, basque, bulgarian, catalan, croatian, czech, danish, dutch, esperanto, e
+stonian, finnish, greek, icelandic, irish, italian, latin, magyar, norsk, polis
+h, portuges, romanian, russian, serbian, slovak, slovene, spanish, swedish, tur
+kish, ukrainian, nohyphenation, loaded.
+(./acm_proc_article-sp.cls
+(/opt/local/share/texmf-dist/tex/latex/graphics/epsfig.sty
+(/opt/local/share/texmf-dist/tex/latex/graphics/graphicx.sty
+(/opt/local/share/texmf-dist/tex/latex/graphics/keyval.sty)
+(/opt/local/share/texmf-dist/tex/latex/graphics/graphics.sty
+(/opt/local/share/texmf-dist/tex/latex/graphics/trig.sty)
+(/opt/local/share/texmf-dist/tex/latex/graphics/graphics.cfg)
+(/opt/local/share/texmf-dist/tex/latex/graphics/dvips.def))))
+(/opt/local/share/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/opt/local/share/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/opt/local/share/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/opt/local/share/texmf-dist/tex/latex/amsmath/amstext.sty
+(/opt/local/share/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/opt/local/share/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/opt/local/share/texmf-dist/tex/latex/amsmath/amsopn.sty))
+Document Class 'acm_proc_article-sp' <7th. June '07>. Modified by G.K.M. Tobin
+Based in part upon document Style `acmconf' <22 May 89>. Hacked 4/91 by
+shivers@cs.cmu.edu, 4/93 by theobald@cs.mcgill.ca
+Excerpts were taken from (Journal Style) 'esub2acm.cls'.
+****** Bugs/comments/suggestions to Gerry Murray -- murray@hq.acm.org ******
+Document Class: acm_proc_article-sp 2007/06/07 - V3.1SP - based on esub2acm.sty
+ <23 April 96>
+(/opt/local/share/texmf-dist/tex/latex/base/latexsym.sty)
+Using 'Abbrev' bibliography style
+(/opt/local/share/texmf-dist/tex/latex/base/fontenc.sty
+(/opt/local/share/texmf-dist/tex/latex/base/t1enc.def)
+(/opt/local/share/texmf-dist/tex/latex/ae/t1aer.fd)))
+(/opt/local/share/texmf-dist/tex/latex/multirow/multirow.sty)
+(/opt/local/share/texmf-dist/tex/latex/rotating/rotating.sty
+(/opt/local/share/texmf-dist/tex/latex/base/ifthen.sty))
+(/opt/local/share/texmf-dist/tex/latex/graphics/color.sty
+(/opt/local/share/texmf-dist/tex/latex/graphics/color.cfg)
+(/opt/local/share/texmf-dist/tex/latex/graphics/dvipsnam.def))
+(./my_caption.sty) (./my_subfig.sty) (./sigops.aux)
+(/opt/local/share/texmf-dist/tex/latex/ms/ragged2e.sty
+(/opt/local/share/texmf-dist/tex/latex/ms/everysel.sty))
+(/opt/local/share/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/opt/local/share/texmf-dist/tex/latex/amsfonts/umsb.fd)
+(/opt/local/share/texmf-dist/tex/latex/base/ulasy.fd) [1]
+(/opt/local/share/texmf-dist/tex/latex/ae/t1aett.fd)
+Underfull \hbox (badness 10000) in paragraph at lines 193--200
+
+(./fig/dispExp.pstex_t <fig/dispExp.pstex>
+
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+
+LaTeX Font Warning: Font shape `OML/cmm/m/it' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+
+LaTeX Font Warning: Font shape `OMS/cmsy/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+
+LaTeX Font Warning: Font shape `OT1/cmr/bx/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+
+LaTeX Font Warning: Font shape `U/msa/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+
+LaTeX Font Warning: Font shape `U/msb/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+
+LaTeX Font Warning: Font shape `U/lasy/m/n' in size <5.5> not available
+(Font)              size <5> substituted on input line 28.
+
+)
+Underfull \hbox (badness 10000) in paragraph at lines 241--241
+ []| \T1/aer/m/n/9 1: In-ter-rupt and ac-ti-va-tion la-ten-cies at sta-tion $\O
+ML/cmm/m/it/9 E[]$ \T1/aer/m/n/9 for the first ex-per-i-ment 
+
+Underfull \hbox (badness 10000) in paragraph at lines 255--262
+
+[2] (./fig/config.pstex_t <fig/config.pstex>)
+Underfull \hbox (badness 4699) in paragraph at lines 276--276
+ []| \T1/aer/m/n/9 2: First ex-per-i-ment setup 
+(./fig/dispExp2.pstex_t <fig/dispExp2.pstex>)
+Underfull \hbox (badness 4341) in paragraph at lines 313--313
+ []| \T1/aer/m/n/9 3: In-ter-rupt and ac-ti-va-tion la-ten-cies mea-sure-ment a
+t sta-tion $\OML/cmm/m/it/9 E[]$ \T1/aer/m/n/9 for the sec-ond ex-per-i-ment 
+(./fig/config2.pstex_t <fig/config2.pstex>)
+Underfull \hbox (badness 2961) in paragraph at lines 337--337
+ []| \T1/aer/m/n/9 4: Sec-ond ex-per-i-men-tal set-up 
+[3] [4]
+Overfull \hbox (2.02184pt too wide) in paragraph at lines 461--472
+\T1/aer/m/n/9 Linux$[]$ cor-re-sponds to set-ting the op-tion  \T1/aett/m/n/9 I
+RQF_NODELAY
+
+Underfull \hbox (badness 10000) in paragraph at lines 486--491
+
+(./fig/ker23Sem.tex <fig/ker23Sem.eps>)
+Underfull \hbox (badness 2809) in paragraph at lines 515--515
+ []\T1/aer/m/n/8 M: 8.9, SD: 0.3, Mn: 8.7, Mx: 18.4 
+(./fig/ker23Tot.tex <fig/ker23Tot.eps>)
+Underfull \hbox (badness 2503) in paragraph at lines 519--519
+ []\T1/aer/m/n/8 M: 10.4, SD: 1.9, Mn: 8.8, Mx: 67.7 
+(./fig/ker23SemSched.tex <fig/ker23SemSched.eps>)
+Underfull \hbox (badness 2809) in paragraph at lines 524--524
+ []\T1/aer/m/n/8 M: 4.6, SD: 0.4, Mn: 4.4, Mx: 16.2 
+(./fig/ker23TotSched.tex <fig/ker23TotSched.eps>)
+Underfull \hbox (badness 1960) in paragraph at lines 528--528
+ []\T1/aer/m/n/8 M: 37.3, SD: 48.2, Mn: 4.6, Mx: 617.5 
+
+Underfull \hbox (badness 1163) in paragraph at lines 531--531
+ []| \T1/aer/m/n/9 5: Linux$[]$ la-ten-cies. The $\OML/cmm/m/it/9 eth[]$ \T1/ae
+r/m/n/9 in-ter-rupt han-dler is trig-gered by pack-ets ar-riv-ing at a $\OT1/cm
+r/m/n/9 20\OML/cmm/m/it/9 Hz$ \T1/aer/m/n/9 fre-quency. 
+(./fig/preSem.tex <fig/preSem.eps>)
+Underfull \hbox (badness 3954) in paragraph at lines 563--563
+ []|\T1/aer/m/n/9 (a) \T1/aer/bx/n/8 Linux$[]$ - with-out load 
+
+Underfull \hbox (badness 2221) in paragraph at lines 563--563
+ []\T1/aer/m/n/8 M: 21.5, SD: 1.7, Mn: 20.3, Mx: 45.1 
+(./fig/preTot.tex <fig/preTot.eps>)
+Underfull \hbox (badness 5374) in paragraph at lines 567--567
+ []|\T1/aer/m/n/9 (b) \T1/aer/bx/n/8 Linux$[]$ - with load 
+
+Underfull \hbox (badness 1715) in paragraph at lines 567--567
+ []\T1/aer/m/n/8 M: 58.5, SD: 26.4, Mn: 17.2, Mx: 245.9 
+(./fig/preSemND.tex <fig/preSemND.eps>)
+
+LaTeX Font Warning: Font shape `T1/aett/bx/n' undefined
+(Font)              using `T1/aett/m/n' instead on input line 573.
+
+
+Underfull \hbox (badness 2809) in paragraph at lines 573--573
+ []\T1/aer/m/n/8 M: 8.9, SD: 0.2, Mn: 8.8, Mx: 16.7 
+(./fig/preTotND.tex <fig/preTotND.eps>)
+Underfull \hbox (badness 2503) in paragraph at lines 578--578
+ []\T1/aer/m/n/8 M: 10.6, SD: 1.6, Mn: 8.9, Mx: 35.8 
+(./fig/xenSem.tex <fig/xenSem.eps>)
+Underfull \hbox (badness 3780) in paragraph at lines 583--583
+ []|\T1/aer/m/n/9 (e) \T1/aer/bx/n/8 Linux$[]$ - with-out load 
+
+Underfull \hbox (badness 2809) in paragraph at lines 583--583
+ []\T1/aer/m/n/8 M: 9.0, SD: 0.1, Mn: 8.8, Mx: 11.1 
+(./fig/xenTot.tex <fig/xenTot.eps>)
+Underfull \hbox (badness 5302) in paragraph at lines 587--587
+ []|\T1/aer/m/n/9 (f) \T1/aer/bx/n/8 Linux$[]$ - with load 
+
+Underfull \hbox (badness 2503) in paragraph at lines 587--587
+ []\T1/aer/m/n/8 M: 10.2, SD: 0.1, Mn: 8.8, Mx: 20.8 
+
+Underfull \hbox (badness 1132) in paragraph at lines 590--590
+ []| \T1/aer/m/n/9 6: In-ter-rupt la-ten-cies. The $\OML/cmm/m/it/9 eth[]$ \T1/
+aer/m/n/9 in-ter-rupt han-dler is trig-gered by pack-ets ar-riv-ing at a $\OT1/
+cmr/m/n/9 20\OML/cmm/m/it/9 Hz$ \T1/aer/m/n/9 fre-quency. 
+(./fig/preSemSched.tex <fig/preSemSched.eps>)
+Underfull \hbox (badness 3954) in paragraph at lines 610--610
+ []|\T1/aer/m/n/9 (a) \T1/aer/bx/n/8 Linux$[]$ - with-out load 
+
+Underfull \hbox (badness 3138) in paragraph at lines 610--610
+ []\T1/aer/m/n/8 M: 2.1, SD: 0.2, Mn: 1.2, Mx: 9.4 
+(./fig/preTotSched.tex <fig/preTotSched.eps>)
+Underfull \hbox (badness 5374) in paragraph at lines 614--614
+ []|\T1/aer/m/n/9 (b) \T1/aer/bx/n/8 Linux$[]$ - with load 
+
+Underfull \hbox (badness 2809) in paragraph at lines 614--614
+ []\T1/aer/m/n/8 M: 3.8, SD: 2.8, Mn: 1.1, Mx: 27.4 
+(./fig/preSemSchedND.tex <fig/preSemSchedND.eps>)
+Underfull \hbox (badness 2809) in paragraph at lines 620--620
+ []\T1/aer/m/n/8 M: 5.3, SD: 0.3, Mn: 5.0, Mx: 13.1 
+(./fig/preTotSchedND.tex <fig/preTotSchedND.eps>)
+Underfull \hbox (badness 2809) in paragraph at lines 625--625
+ []\T1/aer/m/n/8 M: 8.0, SD: 2.0, Mn: 5.2, Mx: 31.0 
+(./fig/xenSemSched.tex <fig/xenSemSched.eps>)
+Underfull \hbox (badness 3780) in paragraph at lines 630--630
+ []|\T1/aer/m/n/9 (e) \T1/aer/bx/n/8 Linux$[]$ - with-out load 
+
+Underfull \hbox (badness 3138) in paragraph at lines 630--630
+ []\T1/aer/m/n/8 M: 2.1, SD: 0.5, Mn: 1.8, Mx: 8.4 
+(./fig/xenTotSched.tex <fig/xenTotSched.eps>)
+Underfull \hbox (badness 5302) in paragraph at lines 634--634
+ []|\T1/aer/m/n/9 (f) \T1/aer/bx/n/8 Linux$[]$ - with load 
+
+Underfull \hbox (badness 2809) in paragraph at lines 634--634
+ []\T1/aer/m/n/8 M: 8.7, SD: 0.3, Mn: 1.8, Mx: 18.7 
+
+Overfull \hbox (3.69437pt too wide) in paragraph at lines 650--655
+[]\T1/aer/m/n/9 By an-a-lyz-ing the val-ues of ac-ti-va-tion la-ten-cies of Lin
+ux$[]$,
+[5] [6]
+
+LaTeX Warning: Text page \thepage  contains only floats.
+
+
+Overfull \vbox (19.91583pt too high) has occurred while \output is active
+
+LaTeX Warning: Text page \thepage  contains only floats.
+
+
+Overfull \vbox (19.91583pt too high) has occurred while \output is active
+Overfull \vbox (5.91583pt too high) has occurred while \output is active
+[7]
+
+LaTeX Warning: Text page \thepage  contains only floats.
+
+
+Overfull \vbox (19.91583pt too high) has occurred while \output is active
+
+LaTeX Warning: Text page \thepage  contains only floats.
+
+
+Overfull \vbox (19.91583pt too high) has occurred while \output is active
+Overfull \vbox (5.91583pt too high) has occurred while \output is active
+[8] (./fig2/xenSem.tex <fig2/xenSem.eps>)
+Underfull \hbox (badness 2809) in paragraph at lines 843--843
+ []\T1/aer/m/n/8 M: 9.1, SD: 0.3, Mn: 9.8, Mx: 13.4 
+(./fig2/xenTot.tex <fig2/xenTot.eps>)
+Underfull \hbox (badness 2503) in paragraph at lines 847--847
+ []\T1/aer/m/n/8 M: 11.3, SD: 1.2, Mn: 9.0, Mx: 19.7 
+(./fig2/xenSemSched.tex <fig2/xenSemSched.eps>)
+Underfull \hbox (badness 3138) in paragraph at lines 852--852
+ []\T1/aer/m/n/8 M: 4.0, SD: 0.3, Mn: 0.3, Mx: 9.6 
+(./fig2/xenTotSched.tex <fig2/xenTotSched.eps>)
+Underfull \hbox (badness 2809) in paragraph at lines 856--856
+ []\T1/aer/m/n/8 M: 9.8, SD: 2.0, Mn: 2.7, Mx: 20.8 
+
+Underfull \hbox (badness 4660) in paragraph at lines 859--859
+ []| \T1/aer/m/n/9 8: Linux$[]$ la-ten-cies. In-ter-rupt re-quests at $\OML/cmm
+/m/it/9 E[]$ \T1/aer/m/n/9 are trig-gered at a $\OT1/cmr/m/n/9 20\OML/cmm/m/it/
+9 Hz$ \T1/aer/m/n/9 fre-quency by $\OML/cmm/m/it/9 E[]$\T1/aer/m/n/9 . 
+
+Overfull \hbox (2.54538pt too wide) in paragraph at lines 898--904
+\T1/aer/m/n/9 This char-ac-ter-is-tic is of paramount im-por-tance when it come
+s
+(./fig/histo.tex <fig/histo.eps>) [9]
+Overfull \hbox (1.54027pt too wide) in paragraph at lines 929--941
+\T1/aer/m/n/9 Some ex-per-i-men-tal re-sults com-par-ing Linux$[]$ and Linux$[]
+$
+[10] (./sigops.bbl) [11] (./sigops.aux)
+
+LaTeX Font Warning: Size substitutions with differences
+(Font)              up to 0.5pt have occurred.
+
+
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+
+ )
+(see the transcript file for additional information)
+Output written on sigops.dvi (11 pages, 90064 bytes).
+Transcript written on sigops.log.
+This is dvips(k) 5.95a Copyright 2005 Radical Eye Software (www.radicaleye.com)
+' TeX output 2008.06.21:2127' -> sigops.eps
+<tex.pro><8r.enc><texps.pro><special.pro><color.pro>. <cmtt8.pfb><cmbx8.pfb>
+<cmr5.pfb><cmr8.pfb><cmmi8.pfb><cmmi10.pfb><cmr6.pfb><cmmi6.pfb><cmtt9.pfb>
+<cmti9.pfb><cmbxti10.pfb><cmbx9.pfb><cmbx6.pfb><cmsy9.pfb><cmmi9.pfb>
+<cmr9.pfb>[1] [2] [3<fig/dispExp.pstex><fig/config.pstex><fig/config2.pstex>] 
+[4<fig/dispExp2.pstex>] [5] [6<fig/ker23Sem.eps><fig/ker23Tot.eps>
+<fig/ker23SemSched.eps><fig/ker23TotSched.eps>] [7<fig/preSem.eps>
+<fig/preTot.eps><fig/preSemND.eps><fig/preTotND.eps><fig/xenSem.eps>
+<fig/xenTot.eps>] [8<fig/preSemSched.eps><fig/preTotSched.eps>
+<fig/preSemSchedND.eps><fig/preTotSchedND.eps><fig/xenSemSched.eps>
+<fig/xenTotSched.eps>] [9<fig/histo.eps>] [10<fig2/xenSem.eps>
+<fig2/xenTot.eps><fig2/xenSemSched.eps><fig2/xenTotSched.eps>] [11] 

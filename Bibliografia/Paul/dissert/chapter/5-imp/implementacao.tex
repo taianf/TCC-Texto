@@ -1,0 +1,1116 @@
+\chapter{Ambiente de implementação e configuração de \doris}
+\label{cap:implementacao}
+
+\section{Introdução}
+\label{sec:introImp}
+
+Neste capítulo, a implementação do protocolo de código aberto \doriss é apresentada.
+A plataforma de tempo real escolhida foi o sistema operacional de propósito geral
+Linux, versão 2.6.19.7, dotado do \ing{patch} Xenomai, versão 2.4-rc5 e do
+\nanokernell Adeos correspondente. Esta plataforma será simplesmente chamada
+``Xenomai'' daqui para frente.  Como foi visto no capítulo \ref{cap:platOp}, Xenomai
+oferece garantias temporais da ordem de dezenas de micro-segundos (nos equipamentos
+utilizados no nosso laboratório), suficiente para a implementação de \doris.  Além
+destas garantias temporais, a escolha do Xenomai apresenta duas vantagens
+significativas. Em primeiro lugar, Xenomai oferece uma interface de programação
+chamada RTDM (\ing{Real Time Driver Model}) cujo objetivo é unificar as interfaces
+disponíveis para programar controladores de dispositivos em plataformas de tempo
+real baseadas em Linux~\cite{Kiszka05a}. O uso da interface RTDM garante, portanto, a
+portabilidade do protocolo nestes outros ambientes de tempo real. Em segundo lugar,
+Xenomai já dispõe de um serviço de comunicação Ethernet, baseado na interface
+RTDM. Esta camada, chamada RTnet \cite{Kiszka05b}, disponibiliza controladores de
+placas de rede portados para o Xenomai, assim como um protocolo de comunicação
+Ethernet baseado em TDMA. Portanto, o trabalho de implementação do protocolo \doriss
+pôde aproveitar estes componentes e as suas implementações, possibilitando a concentração
+de esforços no desenvolvimento dos componentes específicos de \doris.
+
+O presente capítulo é organizado da seguinte maneira.  Inicialmente, uma descrição
+da pilha de rede do Linux é apresentada na seção \ref{sec:redeLinux}.  Em seguida, a
+camada de rede RTnet e sua interface RTDM com a plataforma Xenomai são descritos na
+seção \ref{sec:xenoRTnet}.  A seção \ref{sec:dorisDisc} é dedicada à apresentação da
+implementação de \doriss e da sua integração na camada RTnet do Xenomai. No final
+desta mesma seção, alguns resultados são apresentados. Por fim, algumas
+conclusões são discutidas na seção~\ref{sec:impConc}.
+
+
+\section{As camadas de rede e enlace do Linux}
+\label{sec:redeLinux}
+
+Esta seção apresenta apenas alguns elementos da implementação, pelo \kernell Linux,
+dos protocolos IP na camada de rede e Ethernet 802.3 na camada de enlace, pois
+somente estas duas camadas são utilizadas pela implementação de \doris.  Estas duas
+camadas utiliza principalmente duas estruturas para armazenar os dados necessários à
+transmissão e recepção de pacotes. A primeira, chamada \netdev, é associada ao
+dispositivo da placa de rede. Esta estrutura utiliza apontadores de funções para
+definir a interface entre o \kernell e as aplicações. Vale mencionar, por exemplo,
+as funções de acesso à memória circular definida na zona DMA (\ing{Direct Memory
+  Access}) utilizadas pelo controlador da placa de rede para armazenar os pacotes
+sendo transmitidos e recebidos.  A implementação das funções da estrutura \netdevv
+pelos controladores de dispositivos é necessária para que o \kernell possa
+disponibilizar os serviços associados a um \ing{hardware} específico.
+
+A segunda estrutura, chamada \skbb (de \ing{socket buffer}), contém as informações
+associadas a um pacote de dados que são necessárias ao seu encaminhamento nas
+diferentes camadas do \kernel. Dentre as principais informações, podem ser citadas a
+área da memória onde os dados estão armazenados, as eventuais informações de
+fragmentação, e os diferentes cabeçalhos do pacote.
+
+Quando um pacote é recebido na memória local da placa de rede, o dispositivo copia
+o pacote na memória DMA prevista para este efeito. Para fins de otimização, o
+dispositivo pode ser configurado para operar com vários pacotes, ao invés de apenas
+um.  Tal procedimento não muda o modo de operação, pois tratar vários pacotes de uma
+vez é equivalente a tratar um pacote de tamanho maior. Portanto, ilustra-se-á
+aqui o processo de recepção de apenas um pacote.  Logo que o pacote se torna
+disponível na memória DMA, o \kernell precisa ser informado da sua presença e da
+necessidade de processá-lo.  Para este efeito, duas abordagens principais devem ser
+mencionadas.
+
+A primeira é baseada em interrupções do processador. Assim que o controlador da
+placa de rede termina a operação de DMA, o dispositivo da placa de rede interrompe o
+processador para informá-lo da presença do pacote a ser recebido. No tratador desta
+interrupção, o \kernell armazena as informações relevantes para localizar o pacote e
+cria um \cod{softirq} (ver seção \ref{sec:interrupt}) para executar as demais
+operações necessárias. Antes de retornar, o tratador habilita as interrupções
+novamente para permitir a recepção de um novo pacote. Na ausência de uma nova
+interrupção, o \cod{softirq} é escalonado imediatamente e executa basicamente as
+seguintes operações: (i) alocação dinâmica do espaço de memória de um \skb; (ii)
+cópia do pacote armazenado na memória DMA neste \skb; e (iii) encaminhamento do
+\skbb (via apontadores) para a camada IP.  Esta abordagem tem a seguinte
+limitação. Quando a taxa de chegadas de pacotes alcança um certo patamar, a chegada
+de um novo pacote acontece antes que o tratador do pacote anterior termine de
+executar. À medida que este cenário se repete, a fila de interrupção em espera
+aumenta, resultando num situação de \ing{livelock}, pois o tratamento das
+interrupções tem a maior prioridade no sistema. O processador fica, então,
+monopolizado sem que haja possibilidade alguma de executar os \cod{softirqs}
+escalonados ou qualquer outro processo.  Em algum momento, a memória DMA fica cheia
+e novos pacotes são descartados.
+ 
+A segunda abordagem, que resolve o problema do \ing{livelock}, é o método chamado de
+consulta (\ing{polling}), no qual o \kernell consulta periodicamente o dispositivo
+da placa de rede para saber se há algum pacote em espera para ser recebido. Se
+este for o caso, o \kernell processa parte ou todos dos pacotes que estiverem
+esperando.  Este segundo método tem a vantagem de suprimir as interrupções do
+processador pela placa de rede. No entanto, a sua utilização introduz uma sobrecarga
+do processador quando não há pacote chegando na placa de rede. Além disso, este
+método introduz uma certa latência para o tratamento dos pacotes. No pior caso, um
+pacote chega logo depois da consulta da placa de rede pelo processador. Neste caso,
+o pacote só será processado depois de um período de consulta.
+
+Para evitar os defeitos e aproveitar as vantagens de ambos os métodos, o
+\kernell utiliza uma solução híbrida proposta por \cite{Salim01}. Esta solução,
+chamada NAPI (Nova API), utiliza a possibilidade que o \kernell tem de desabilitar
+as interrupções de maneira seletiva, isto é, referentes a apenas um dispositivo específico. Na
+chegada de um pacote, a seguinte seqüência de eventos é executada:
+
+\begin{enumerate}
+\item o dispositivo copia o pacote na memória circular DMA. Na ausência de
+  espaço nesta memória, o pacote pode ser tanto descartado quanto copiado no lugar
+  do mais velho pacote já presente na memória local.;
+\item se as interrupções da placa de rede forem habilitadas, o dispositivo
+  interrompe o processador para informá-lo que há pacote em espera na memória
+  DMA. Senão, o dispositivo continua a receber pacote e transferi-los para a memória
+  DMA, sem interromper o processador;
+\item na ocorrência de uma interrupção da placa de rede, o tratador começa por
+  desabilitar as interrupções provenientes deste dispositivo, antes de agendar um
+  \cod{softirq} para consultar a placa de rede;
+\item em algum momento futuro, o \kernell escalona o \cod{softirq} de consulta da
+  placa de rede e processa parte ou todos os pacotes esperando na memória DMA. Se o
+  número de pacotes para serem processados é maior que o limite configurado, o
+  \cod{softirq} agenda-se para processá-los posteriormente. Em seguida, o \kernell
+  executa outros \cod{softirqs} que estão eventualmente em espera, antes de
+  escalonar o \cod{softirq} de consulta da placa de rede novamente;
+\item quando a memória DMA não contém mais nenhum pacote, quer seja porque eles foram
+  processados ou porque foram silenciosamente descartados, o \cod{softirq} habilita
+  as interrupções da placa de rede novamente antes de retornar.
+\end{enumerate}
+
+Como pode ser constatado, esta solução impede o cenário de \ing{livelock} graças à
+desabilitação seletiva das interrupções. Por outro lado, a consulta da placa de rede
+só acontece quando pelo menos um pacote chegou, evitando portanto a sobrecarga
+desnecessária do processador.
+
+Do ponto da visto das latências, esta solução tem os seguintes defeitos. O
+\cod{softirq} de consulta pode ser escalonado depois de um tempo não previsível, na
+ocorrência de outras interrupções causadas por qualquer outro dispositivo. Durante a
+sua execução, este \cod{softirq} deve alocar dinamicamente os espaços de memórias
+necessários (\skb) para armazenar os pacotes. Esta alocação pode também levar um
+tempo imprevisível, pois a chamada de sistema \cod{malloc} pode falhar, na ausência
+de memória disponível.
+
+As seções a seguir mostram como estes problemas são resolvidos pela camada RTnet
+da plataforma Xenomai.
+
+
+\section{A camada de rede do Xenomai: RTnet}
+\label{sec:xenoRTnet}
+
+\subsection{RTDM}
+\label{sec:RTDM}
+
+Antes de apresentar o projeto RTnet em detalhes, precisa-se descrever brevemente a
+interface de programação na qual ele se baseia, isto é a interface RTDM (\ing{Real
+  Time Driver Model}) \cite{Kiszka05a}, que vem sendo desenvolvida pelo próprio Jan
+Kiszka, principal autor do RTnet.
+
+A API \ing{Real Time Driver Model} tem por objetivo oferecer uma interface de
+programação unificada para sistemas operacionais de tempo real baseados em Linux. O
+RTDM constitui uma camada de software que estende os controladores de dispositivos e
+a camada de abstração do \ing{hardware} (HAL) para disponibilizar serviços à camada de
+aplicação, conforme representado na figura \ref{fig:rtdm}.  O RTDM foi inicialmente
+especificado e desenvolvido na plataforma Xenomai. No entanto, em vista dos
+benefícios trazidos por esta API, ela também foi adotada pelo RTAI.
+
+\begin{figure}[bt]
+  \vspace{0.5cm} \centering \input{fig/rtdm.pstex_t}
+  \caption{A interface do RTDM (reproduzida de \cite{Kiszka05a})}
+  \label{fig:rtdm}
+\end{figure}
+
+A interface do RTDM oferecida para as aplicações pode ser dividida em dois conjuntos
+de funções. O primeiro conjunto é constituído das funções que dão suporte aos
+dispositivos de entrada e saída e aos dispositivos associados à serviços. O segundo
+conjunto é constituído das funções associadas aos serviços de tempo real básicos,
+independentes do hardware.
+
+\begin{itemize}
+\item[] \act{Serviços de entrada e saída e troca de mensagens} Para este conjunto de
+  funções, o RTDM segue o modelo de entrada e saída e o padrão de comunicação via
+  \ing{socket} do padrão POSIX 1003.1~\cite{POSIX04}.  Os dispositivos de entrada e
+  saída, também chamados de dispositivos nomeados, disponibilizam as suas
+  funcionalidades através de um arquivo especial no diretório \cod{/dev}. Os
+  dispositivos associados a protocolos, dedicados à troca de mensagens, registram os
+  seus serviços através da implementação de um conjunto de funções definidas pelo
+  RTDM na estrutura \cod{rtdm\_device}. Exemplos de algumas destas funções são
+  \cod{socket, bind, connect, send\_mesg, recv\_msg}. Para diferenciar tal função
+  das funções usuais do \kernel, o sufixo \cod{\_rt} ou \cod{\_nrt} é adicionado ao
+  seu nome. Do ponto de vista das aplicações, a API do RTDM utiliza os nomes do
+  padrão POSIX com o prefixo \cod{rt\_dev\_}. Desta forma, a correspondência entre
+  uma chamada e a função para ser executada é realizada pelo Xenomai, de acordo com
+  o contexto no qual a função é chamada. Por exemplo, se o contexto for de tempo
+  real, a chamada \cod{rt\_dev\_sendmsg} levará a execução da função
+  \cod{sendmsg\_rt}. Caso contrário, a função \cod{sendmsg\_nrt} será executada.
+\item[] \act{Serviços do \ing{nanokernel}} Este segundo conjunto de funções diz
+  respeito à abstração dos serviços do \nanokernell de tempo real. Elas contemplam
+  notadamente os serviços de relógios de alta precisão e dos temporizadores
+  associados, as operações associadas ao gerenciamento de tarefas, os serviços de
+  sincronização e de gerenciamento das linhas de interrupções, e um serviço de
+  sinalização para permitir a comunicação entre os diferentes domínios registrados
+  no \ing{ipipe}. Além destes serviços principais, vários outros utilitários são
+  disponibilizados, tais como, a alocação dinâmica de memória e o acesso seguro ao
+  espaço de memória usuário.
+\end{itemize}
+
+Deve ser observado que a API do RTDM tende a crescer rapidamente. Numa consulta ao
+projeto Xenomai \cite{Xenomai} realizada em dezembro de 2007, enumerou-se um pouco
+mais de 100 funções definidas por esta API. Desta forma, o uso do RTDM para a
+implementação de \doriss apareceu como uma escolha interessante. Além disso,
+o RTDM também é disponível na plataforma RTAI, permitindo o uso dos produtos
+de \ing{software} baseados nesta interface, tanto na plataforma Xenomai quanto no RTAI.
+
+
+\subsection {A arquitetura do RTnet}
+\label{sec:RTnet}
+
+O projeto de código aberto RTnet \cite{Kiszka05b} foi fundado em 2001 na
+Universidade de Hannover com o objetivo de prover uma infraestrutura flexível e
+independente do \ing{hardware} para serviços de comunicação de tempo real baseados em
+Ethernet.  Desenvolvido inicialmente na plataforma de tempo real RTAI, este
+projeto é também disponível na plataforma Xenomai.
+
+\begin{figure}[bt]
+  \centering \input{fig/rtdmRTnet.pstex_t}
+  \caption{Localização do RTnet.}
+  \label{fig:rtdmRTnet}
+\end{figure}
+
+A localização do RTnet e das suas relações com as demais camadas do Xenomai é
+representada na figura \ref{fig:rtdmRTnet}. Como pode ser observado, RTnet utiliza
+os dispositivos de \ing{hardware} existentes e introduz uma camada de software para
+aumentar o determinismo dos serviços de comunicação. Do ponto de vista da sua
+interface com as aplicações, RTnet utiliza o RTDM (\ing{Real Time Driver Model})
+\cite{Kiszka05a}.  Em relação ao hardware, RTnet utiliza tanto a camada HAL, provida
+pelo Xenomai, quanto controladores de dispositivos próprios. Para a implementação de
+tais controladores, capazes de prover garantias temporais, o código original dos
+controladores de dispositivos do Linux é modificado, conforme a descrição disponível
+na documentação do RTnet \cite{RTnet}.  O objetivo principal destas modificações é
+remover do código do dispositivo qualquer chamada às funções bloqueantes do \kernell
+Linux.
+
+O detalhe dos componentes da pilha RTnet é apresentado na figura \ref{fig:RTnet}.
+Como pode ser observado, RTnet se inspira na organização em camada da pilha de rede
+do Linux. No entanto, a implementação atual do RTnet só oferece serviços de
+comunicação baseados em UDP/IP e não fornece suporte ao protocolo TCP/IP.
+
+\begin{figure}[bt]
+  \vspace{0.5cm} \centering \input{fig/RTnet.pstex_t}
+  \caption{Estrutura em camada do RTnet.}
+  \label{fig:RTnet}
+\end{figure}
+
+Acompanhando a figura \ref{fig:RTnet} de cima para baixo, pode-se ver que os
+serviços oferecidos pelo RTnet utilizam a interface do RTDM para disponibilizar as
+suas funcionalidades às aplicações. Uma interface específica de configuração,
+através de funções \cod{ioctl}, é utilizada para as operações de
+gerenciamento. Encaixados na interface abaixo do RTDM, os componentes da camada de
+rede provêem implementações específicas dos protocolos UDP, ICMP, e ARP. A seção
+\ref{sec:UDPIP} mostra algumas das soluções adotadas para aumentar o determinismo
+dos protocolos UDP e ARP. O protocolo ICMP, baseado no protocolo IP, é dedicado às
+funções de controle e gerenciamento da rede. A sua implementação é bastante
+específica e de pouca relevância para este trabalho, e portanto, não será
+apresentada aqui.
+
+Os componentes principais do RTnet são localizados abaixo da camada de rede e acima
+dos controladores de dispositivos e da camada HAL. Eles constituem a camada RTmac e
+o núcleo RTnet ilustrados na figura \ref{fig:RTnet}. O núcleo contém os serviços de
+emissão e recepção dos pacotes, baseados na modificação dos controladores de
+dispositivos. Detalhes desta implementação serão descritos na seção
+\ref{sec:princComp}.  Em relação ao RTmac, ele constitui uma caixa pronta na qual as
+disciplinas de acesso ao meio são embutidas. Através da estrutura \cod{rtmac\_disc},
+a interface RTmac indica as funções cuja implementação é necessária para definir
+uma política de acesso ao meio. Na versão atual do RTnet, as duas disciplinas TDMA e
+NoMAC são disponíveis. Elas serão brevemente apresentadas, assim como a interface
+RTmac, na seção \ref{sec:discRTnet}.  O presente trabalho de implementação teve por
+resultado a criação de uma nova disciplina de acesso ao meio, \doris, além das duas
+disciplinas já existentes.  Uma descrição detalhada da implementação de \doriss será
+realizada na seção \ref{sec:dorisDisc}.
+
+Além destes componentes principais, Rtnet providencia também serviços de
+configuração (\texttt{RTcfg}) e de monitoramento (\texttt{RTcap}). Os primeiros
+servem tanto para configurar a rede em tempo de projeto, quanto para modificar a
+composição dos membros da rede de tempo real em tempo de execução. Os segundos
+permitem coletar dados temporais sobre os pacotes transmitidos. Estes serviços são
+opcionais, e não serão descritos aqui.
+
+Ao lado da pilha RTnet, aplicações que utilizam os serviços de melhor esforço da
+pilha de rede do Linux podem fazê-lo através de interfaces virtuais, cujo mecanismo
+será apresentado na seção \ref{sec:princComp}, juntamente com a descrição do
+formato dos pacotes RTnet.
+
+\subsection{RTnet: principais componentes}
+\label{sec:princComp}
+
+\subsubsection{Gerenciamento de memória}
+
+Foi visto na seção \ref{sec:redeLinux} que a camada de rede do Linux aloca
+dinamicamente um espaço de memória \skbb para armazenar um pacote durante a sua
+existência na pilha de rede. Devido ao gerenciamento virtual da memória, este pedido
+de alocação de memória pode resultar numa falta de página. Neste caso, o processo
+pedindo memória é suspenso e o \kernell escalona o \ing{thread} responsável pelo
+gerenciamento da memória virtual para que ele libere algumas páginas não utilizadas
+no momento. Este procedimento pode levar um tempo imprevisível, ou mesmo falhar em
+alguma situação específica.
+
+Para evitar esta fonte de latência não determinística, RTnet utiliza um mecanismo de
+alocação estática da memória em tempo de configuração. Nesta fase inicial, cada um
+dos componentes da pilha, relativos aos processos de emissão ou recepção, deve criar
+uma reserva de estruturas \rtskb. Tal estrutura, similar à estrutura \skbb do Linux
+padrão, é utilizada para armazenar as informações e os dados de um pacote, desde sua
+chegada na memória DMA de recepção, até sua entrega à aplicação destino. Cada
+\rtskbb tem um tamanho fixo, suficiente para armazenar um pacote de tamanho
+máximo. Como o tamanho de cada reserva de estruturas \rtskbb é fixo, um mecanismo de
+troca é utilizado. Em outras palavras, para poder adquirir um \rtskbb de um
+componente $A$, um componente $B$ deve dispor de um \rtskbb livre para dar em
+troca. Observa-se que, como as estruturas são passadas por referências, tais
+operações de troca são quase instantâneas em comparação ao tempo que levaria a cópia
+do conteúdo destas estruturas.
+ 
+
+\subsubsection{Emissão e Recepção de pacotes}
+\label{sec:envRec}
+
+A emissão de um pacote é uma operação que acontece no contexto da execução
+seqüencial de um processo. Portanto, é um evento síncrono e as operações
+subseqüentes são realizadas com a prioridade da tarefa que executa a operação de
+emissão. Conseqüentemente, as garantias temporais associadas a uma emissão dependem
+exclusivamente da plataforma operacional e da utilização correta dos seus serviços.
+
+No caso da operação de recepção de uma mensagem, a situação é diferente, pois esta
+operação é um evento assíncrono. Em particular, não se sabe, no início do
+procedimento de recepção, qual é a prioridade da aplicação de destino do
+pacote. Conseqüentemente, a tarefa de recepção de pacote chamada ``gerente da
+pilha'' (\ing{stack manager}) tem a maior prioridade no sistema. Desta forma,
+garante-se que se o pacote for destinado a uma tarefa crítica, ele será encaminhado o
+mais rapidamente possível. O início do processo de recepção é parecido com este do
+Linux (ver seção \ref{sec:redeLinux}). Após ter copiado um pacote na memória DMA de
+recepção, a placa de rede interrompe o processador. Em seguida, o tratador da
+interrupção armazena o pacote numa estrutura \rtskbb da reserva do dispositivo e
+coloca este \rtskbb numa fila de recepção, antes de acordar o ``gerente da
+pilha''. Este \ing{thread}, que começa a executar imediatamente, pois tem a maior
+prioridade do sistema, determina se o pacote é de tempo real ou não. Se for de tempo
+real, ele efetua as operações de recepção necessárias até entregar o pacote para a
+aplicação de destino. Caso contrário, o ``gerente'' coloca o pacote na fila dos
+pacotes de melhor esforço para serem recebidos, acorda o processo de baixa
+prioridade dedicado ao processamento desta fila e retorna.
+
+
+\subsubsection{A camada de rede}
+\label{sec:UDPIP}
+
+Os principais problemas de latência para serem resolvidos na camada de rede são
+devido ao uso do protocolo ARP (\ing{Address Resolution Protocol}) e aos mecanismos
+de fragmentação de pacote do protocolo UDP/IP.
+
+Em relação à fragmentação de pacote, o RTnet oferece uma opção de configuração que
+permite transmitir pacotes de tamanho superior ao MTU de 1500 bytes do Ethernet
+padrão. As garantias de previsibilidade desta implementação são obtidas usando:
+\begin{itemize}
+\item reservas específicas de estruturas \rtskbb para coletar os fragmentos de um
+  mesmo pacote;
+\item temporizadores associados a cada coletor para garantir o
+  descarte de cadeias incompletas, antes que o conjunto de coletores
+  se esgote. De fato, a perda de um pacote impede a compleição da
+  cadeia associada e impossibilita a liberação da memória utilizada
+  por esta cadeia.
+\end{itemize}
+
+Além disso, esta implementação requer que os fragmentos de um mesmo pacote sejam
+recebidos em ordem ascendente. Esta exigência limita o uso da fragmentação às redes
+locais, nas quais a reordenação de pacotes raramente acontece.
+
+Em relação ao protocolo ARP, os protocolos de redes convencionais o utilizam
+dinamicamente para construir a tabela ARP que associa os números IP e os endereços
+de roteamento Ethernet \cite{Kurose05}. Para determinar o endereço Ethernet
+correspondente a um endereço IP, uma estação envia um pacote ARP usando o endereço
+um-para-todos \linebreak(\cod{FF:FF:FF:FF:FF:FF}) do padrão Ethernet, perguntando
+quem detém a rota para este IP. Se a máquina de destino estiver no mesmo segmento
+Ethernet, ela manda uma resposta informando o seu endereço Ethernet. Caso contrário,
+o roteador encarregado da sub-rede associada àquele IP informa do seu endereço
+Ethernet.  Quando a resposta chega, a tabela ARP da estação de origem é
+atualizada. Para permitir a reconfiguração automática da rede, cada entrada desta
+tabela é apagada periodicamente.
+  
+Este procedimento introduz uma fonte de latência no estabelecimento de uma
+comunicação entre duas estações, pois o tempo de resposta não é determinístico, nem
+a freqüência na qual a tabela ARP deverá ser atualizada. No caso do RTnet, este
+procedimento foi trocado por uma configuração estática da tabela ARP, realizada em
+tempo de configuração.
+ 
+
+\subsubsection{Os pacotes RTnet}
+\label{sec:pacoteRTnet}
+
+Para manter a compatibilidade com os dispositivos de hardware, RTnet utiliza o
+formato dos quadros Ethernet padrão, com o cabeçalho de 14 bytes, incluindo os
+endereços de destino e origem e o campo \ing{type} de 2 bytes. Em função do
+protocolo utilizado, o tipo da mensagem é alterado. Por exemplo, mensagens IP
+utilizam o valor padrão \cod{0x8000}, enquanto mensagens de gerenciamento,
+associadas à camada RTmac utilizam o valor diferente \cod{0x9021}.  Além de
+distinguir tipos de quadros pelo campo \ing{type}, RTnet define um cabeçalho de 4
+\ing{bytes}, embutido no segmento de dados. Observa-se que a presença deste
+cabeçalho é necessária para que a comunicação RTnet se estabeleça. Portanto, num
+dado segmento, todas as estações devem utilizar a pilha RTnet para que as
+propriedades temporais da rede sejam garantidas.
+
+O cabeçalho específico do RTnet comporta os campos \cod{RTmac}, \cod{version} e
+\cod{flag}, como mostrado na figura \ref{fig:RTnetFrame}. Estes campos são
+utilizados quando o valor do campo \ing{type} do cabeçalho Ethernet (\cod{0x9021})
+indica que o pacote é destinado à camada RTmac. Isto acontece, por exemplo, quando
+se trata de um pacote de configuração, ou quando o campo \cod{flag} tiver o valor 1,
+indicando que se trata de um pacote de melhor esforço encapsulado num quadro RTmac.
+Neste caso, o valor do campo \cod{RTmac} é utilizado para armazenar o tipo do pacote
+Ethernet, pois este valor é sobrescrito com o valor \cod{0x9021} no momento do
+encapsulamento. Desta forma, a camada RTmac consegue determinar qual é a aplicação
+para a qual deve ser encaminhado um pacote de melhor esforço encapsulado.
+
+\begin{figure}[bt]
+  \vspace{0.5cm} \index{figuras!ethernetFrame}%
+  \centering \framebox[\textwidth]{\input{fig/RTnetFrame.pstex_t}}
+  \caption{Cabeçalhos do RTnet.}
+  \label{fig:RTnetFrame}
+\end{figure}
+
+A integração da comunicação de melhor esforço de processos do Linux com os serviços
+RTnet de tempo real para as tarefas Xenomai é realizada através de uma interface
+virtual, chamada VNIC (\ing{Virtual NIC}). Esta interface é configurada com o
+comando \cod{ifconfig} usual do Linux. Pacotes de melhor esforço enviados pela
+\cod{VNIC} são então encapsuladas no formato dos pacotes RTnet.
+
+Os diferentes componentes descritos nesta seção, incluindo as estruturas \rtskb, as
+funções de emissão e recepção, a implementação da fragmentação, das tabelas ARP
+estáticas e o formato dos pacotes, formam o esqueleto do RTnet. Isto é, uma pilha de
+rede determinística que pode ser utilizada diretamente pelas aplicações para
+organizar as suas comunicações de tempo real. No entanto, esta estrutura pode ser
+completada por uma disciplina opcional de acesso ao meio que preenche a tarefa de
+organizar a comunicação no lugar das aplicações.
+
+
+\subsection{RTnet: As disciplinas TDMA e NoMAC}
+\label{sec:discRTnet}
+
+Apesar de ser opcional, o uso de alguma disciplina de acesso ao meio pode ser
+necessário para prover determinismo, em particular, quando o meio tem uma política
+de acesso probabilística, como é o caso de Ethernet (ver seção \ref{sec:CSMACD}).
+Fiel ao seu modelo modular e hierárquico de desenvolvimento, RTnet fornece a
+interface RTmac para prover uma disciplina de acesso ao meio. Esta
+interface define os quatro serviços seguintes que uma disciplina deve
+imperativamente garantir:
+
+\begin{itemize}
+\item Os mecanismos de sincronização dos participantes da comunicação;
+\item A recepção e emissão de pacotes e o encaminhamento de cada pacote para o seu
+  respectivo tratador;
+\item As funções e ferramentas necessárias para configurar a disciplina;
+\item O encapsulamento dos pacotes de melhor esforço através das interface VNIC.
+\end{itemize}
+
+Na versão atual do RTnet (0.9.10), a disciplina TDMA (\ing{Time Division Multiple
+  Access}) é a única disciplina de acesso ao meio disponível.  A sua implementação
+utiliza uma arquitetura centralizada do tipo mestre / escravo. Em tempo de
+configuração, os diferentes clientes se registram no mestre, que pode ser replicado
+por motivos de tolerância a falhas. Cada escravo reserva uma ou várias janelas de
+tempo, de acordo com as suas necessidades de banda.  A verificação da capacidade da
+rede em atender as diferentes aplicações requisitando banda deve ser efetuada em
+tempo de projeto pelos desenvolvedores do sistema.
+
+Num segmento RTnet regido pela disciplina TDMA, o relógio do mestre é utilizado como
+relógio global. Para organizar a comunicação, o mestre envia periodicamente uma
+mensagem de sincronização que define os ciclos fundamentais de transmissão. Quando
+um escravo quer começar a comunicar, a sua primeira tarefa consiste em se
+sincronizar com o mestre usando um protocolo de calibração. Após esta fase de
+configuração, um escravo pode utilizar as janelas que ele reservou em tempo de
+configuração para enviar as suas mensagens.
+
+Para dar suporte a aplicações com requisitos temporais diferentes numa mesma
+estação, RTnet define 31 níveis de prioridades para as mensagens. Numa janela TDMA,
+os pacotes são enviados de acordo com esta prioridade. A mais baixa prioridade (32)
+é reservada para o encapsulamento dos pacotes de melhor esforço provenientes das
+aplicações executadas no \kernell Linux via interface VNIC .
+
+A disciplina NoMAC, como seu nome indica, não é uma disciplina de fato.  Quando
+carregada, esta disciplina simplesmente disponibiliza os serviços da pilha RTnet sem
+definir nenhuma política específica de acesso ao meio.  No entanto, este esqueleto
+de implementação é disponibilizado para facilitar o desenvolvimento de novas
+disciplinas de acesso ao meio.
+
+
+\section{DoRiS: uma nova disciplina do RTnet}
+\label{sec:dorisDisc}
+
+A implementação do protocolo \doriss na pilha de rede RTnet da plataforma Xenomai
+consistiu em criar uma nova disciplina de acesso ao meio de acordo com a interface
+RTmac.  Para isto, adotou-se a seguinte metodologia. Usou-se como base de
+desenvolvimento a disciplina NoMAC e aproveitaram-se os exemplos de implementação
+mais elaborados encontrados no código da disciplina TDMA. De maneira geral,
+concentraram-se todas as novas funcionalidades necessárias na disciplina \doris. Desta
+forma, \doriss pôde seguir as regras de instalação do RTnet.
+
+Nesta fase de produção de um protótipo do protocolo \doris, utilizou-se um
+procedimento de configuração integrado à fase de comunicação, que garante
+tolerância a falhas, tanto de estações críticas quanto não-críticas. Para este
+efeito, as seguintes restrições foram adotadas.:
+ 
+\begin{enumerate}
+\item a composição do grupo de estações que participam do segmento \doriss é
+  configurada em tempo de projeto.;
+\item cada estação do segmento hospeda um único servidor \doris. Portanto, o número
+  de estações do segmento é igual ao número de servidores, denotado $nServ$, valor
+  conhecido por todos os servidores;
+\item para fins de simplificação, os identificadores dos servidores são regularmente alocados,
+  indo de $1$ a $nServ$.
+% \item Cada estação hospeda uma tarefa, um processo ou os dois simultaneamente.  Não
+%   se considerou, por exemplo, situações nas quais várias tarefas são presentes numa
+%   mesma estação. Portanto, tem-se $\; nTask \leqslant nServ\;$ e $\;nProc \leqslant nServ$.
+% \item Uma tarefa ou um processo é identificado pelo identificador do seu servidor.
+\end{enumerate}
+
+A primeira restrição poderia ser relaxada com o uso de um protocolo independente de
+configuração dinâmica em tempo de execução na fase $M-Rd$ da figura
+\ref{fig:dorisStruct}. Esta figura, apresentada no capítulo \ref{cap:doris}, é
+reproduzida aqui com o objetivo de facilitar a leitura desta seção.
+
+\begin{figure}[tb]
+  \centering \input{fig/dorisStruct.pstex_t}
+  \caption{O esquema de divisão temporal de \doris{}}
+  \label{fig:dorisStruct2}
+\end{figure}
+
+É importante ressaltar que, para permitir a produção do protótipo de \doriss no
+prazo deste trabalho, escolheu-se uma implementação sem o mecanismo de reserva. No
+entanto, as estruturas necessárias foram previstas e a implementação deste mecanismo
+deverá ocorrer num futuro próximo.
+
+Vale também observar que a constante $nTask$, utilizada na especificação de \doris,
+apresentada no capítulo \ref{cap:doris}, corresponde ao número de servidores
+$nServ$. Isto é devido ao fato que a especificação inicial foi escrita considerando que 
+uma tarefa correspondia a um servidor.
+
+Além da própria disciplina \doris, cujos detalhes da implementação serão descritos
+na seção \ref{sec:dorisImp}, os mecanismos de configuração e sincronização
+utilizados serão apresentados nas seções \ref{sec:confCrit}, \ref {sec:dorisMed} e
+\ref{sec:confNaoCrit}.  Antes de descrever estes mecanismos, a implementação do
+modelo de comunicação um-para-todos será brevemente descrita na seção
+\ref{sec:comUPT}
+
+
+\subsection{Comunicação um-para-todos}
+\label{sec:comUPT}
+
+Uma das diferenças entre o protocolo \doriss e o protocolo TDMA utilizado pelo RTnet é o
+modelo de comunicação. Ao invés de usar o modo de comunicação ponto-a-ponto dos
+\ing{sockets}, \doriss utiliza, para a implementação do anel crítico, o modo de
+comunicação um-para-todos. Neste modo, os pacotes são enviados com o endereço
+Ethernet \cod{FF:FF:FF:FF:FF:FF} e recebidos por todos os participantes da
+comunicação.
+
+No entanto, a interface do RTDM utilizada para abrir canais de comunicações segue o
+padrão de comunicação ponto-a-ponto dos \ing{sockets}. Portanto, precisou-se
+identificar as mensagens com o identificador do servidor emissor. Para tal efeito,
+considerou-se aqui que um \ing{byte} era suficiente, pois os cenários de comunicação
+projetados para o protocolo \doriss (e também para a pilha RTnet) envolvem no máximo
+algumas dezenas de participantes. Utilizou-se, portanto, o último \ing{byte} do
+endereço IP de cada estação.
+
+Mais explicitamente, o número IP (\ing{Internet Protocol}) de uma estação $E$ é
+configurado em tempo de projeto de tal forma que o seu último \ing{byte} coincide
+com o identificador único do servidor \doriss de $E$. Esta implementação permitiu
+aproveitar os códigos baseados em IP do RTnet, deixando a possibilidade de se ter até
+255 participantes num segmento \doris.
+
+No caso dos pacotes de melhor esforço enviados com cabeçalhos RTmac, utilizou-se o
+cabeçalho IP do pacote encapsulado para obter os endereços IP de destino e de
+origem.
+
+
+\subsection{Configuração e sincronização do anel crítico}
+\label{sec:confCrit}
+
+Na fase inicial, quando um servidor quer se inserir num segmento de comunicação
+\doris, ele começa por observar a comunicação já existente durante três
+ciclos. Vale lembrar que um ciclo dura exatamente $nServ * \DDC$. Depois destes três
+ciclos de comunicação, se o servidor não percebe nenhuma mensagem, ele deduz que
+ninguém está enviando mensagens ainda e escolhe qualquer instante para transmitir
+uma mensagem elementar.  Para evitar que duas estações decidam simultaneamente
+enviar suas primeiras mensagens elementares, provocando eventualmente uma colisão,
+espera-se um tempo para dar início a uma nova estação depois da primeira. Desta forma,
+a segunda estação tem a possibilidade de observar as mensagens da primeira e pode
+assim se sincronizar.
+
+Após o início de um servidor $S_i$ de identificador $i$, um outro servidor $S_j$ que
+queira participar da comunicação deve observar três mensagens elementares enviadas
+por $S_i$ durante três ciclos consecutivos de observação. $S_j$ pode então deduzir o
+seu instante de transmissão $t_j$, utilizando o identificador carregado pela
+mensagem elementar enviada por $S_i$ e o instante $t$ da chegada desta mensagem:
+
+\begin{equation} \label{eq:nextChip}
+t_j = t + (( nTask + j - i ) \,\%\,  nTask) * \DDC - \DES 
+\end{equation}
+
+Nesta equação, a quantidade $( nTask + j - i ) \, \% \, nTask$ representa o número
+de \ing{chip} entre o \ing{chip} corrente e o \ing{chip} no qual $S_j$ deve emitir. A
+subtração do termo \DES{} é devido ao fato de $t$ ser o instante de recepção da
+mensagem. Portanto, o tempo \DES{} do \ing{slot} elementar precisa ser subtraído.
+
+A única informação desconhecida na formula (\ref{eq:nextChip}) é justamente esta
+duração \DES{} de um \ing{slot} elementar.  Esta duração é a resultante de várias
+latências de diferentes naturezas:
+
+\begin{enumerate}
+\item a latência na estação emissora, que, por sua vez, pode ser decomposta em três
+  termos: o tratamento da interrupção do temporizador de disparo da mensagem, o
+  processamento da rotina de emissão de mensagens e a latência da placa de rede;
+\item a latência devido à transmissão e à propagação da mensagem no meio físico,
+  cujos valores dependem da taxa da banda e do comprimento do cabo conectando os
+  nós;
+\item a latência na estação recebedora, que pode, também, ser decomposta em dois
+  termos: a latência de recepção correspondente ao tempo necessário para copiar o
+  pacote na memória DMA de recepção e a latência de interrupção, já amplamente
+  discutida no capítulo \ref{cap:platOp}.
+\end{enumerate}
+
+Observa-se que estas diferentes fontes de latências têm uma variabilidade associada,
+pelo menos no que diz respeito aos itens (i) e (iii).  A estimativa de cada uma
+destas fontes de latência é possível em tempo de projeto. No entanto, no caso da
+implementação de \doris, uma solução específica foi desenvolvida para estimar o valor
+total de \DES usando medidas realizadas durante a execução do protocolo.
+
+
+\subsection{Medidas de \DES}
+\label{sec:dorisMed}
+
+O procedimento adotado para a determinação do valor de \DES utiliza as propriedades
+das redes baseadas em comunicação um-para-todos \cite{Verissimo97}.  Basicamente,
+considera-se que, quando uma estação emite uma mensagem, o instante de recepção desta
+mensagem por todas as outras estações é o mesmo. Ou seja, considera-se que as
+latências de propagações e de recepções de uma mensagem são as mesmas para todas as
+estações.  Esta hipótese pode ser resumida pelas duas suposições seguintes:
+
+\begin{enumerate}
+\item As diferenças dos tempos de propagação entre quaisquer duas estações são desprezíveis.
+\item As diferenças entre as latências nas estações recebedoras são desprezíveis.
+\end{enumerate}
+
+Observa-se que a latência de emissão não interfere neste procedimento, pois só o
+instante de recepção é aproveitado para sincronizar a rede.
+
+Em relação à primeira suposição, sabe-se que a velocidade de propagação das
+mensagens na rede é um pouco inferior à velocidade da luz no vácuo. Pode-se assumir,
+para fins de estimativa, o valor de $2.5 10^8 m/s$, o qual é próximo da velocidade da
+luz num meio material. Deduz-se que, para duas estações separadas de $25 m$, o tempo
+de propagação é de $0.1 \mu s$, enquanto que, para duas estações separadas de $250
+m$, este tempo é de $1 \mu s$.  Percebe-se, portanto, que estes valores são de uma
+ordem de grandeza menor que os demais tempos de latência (ver seção
+\ref{sec:experimentos}).
+
+A segunda suposição estabelece que, em todas as estações, os tempos entre a chegada
+do pacote na placa de rede e o tratamento da interrupção decorrente do processador
+sejam iguais.  Esta hipótese pode ser garantida usando dispositivos de \ing{harware}
+com o mesmo comportamento temporal e uma plataforma operacional determinista. No
+caso de existirem diferenças significativas entre os dispositivos de \ing{harware} do
+segmento, o segundo ponto pode ser relaxado, por mais que o comportamento dos
+dispositivos seja determinista. Neste caso, fatores corretivos devem ser estimados
+em tempo de projeto para compensar o efeito da disparidade dos dispositivos, e
+permitir assim a integração de nós lentos e rápidos num mesmo segmento \doris.
+
+No dispositivo experimental utilizado neste trabalho, fatores corretivos não foram
+necessários, pois os três participantes do segmento tinham o mesmo dispositivo de
+\ing{hardware} (placa de rede RealTek 8139) e utilizavam a mesma plataforma
+operacional.
+
+Portanto, as suposições (i) e (ii) foram consideradas válidas e as propriedades da
+comunicação um-para-todos foram utilizadas para calcular o valor da latência
+\DES. Para ilustrar este procedimento, consideram-se três estações $A$, $B$ e $C$ e o
+cenário de trocas de mensagens representadas na figura \ref{fig:sync_diff}.
+
+\begin{figure}[ht]
+  \vspace {0.5cm} \index{fig!dorisStruct} \centering \input{fig/sync_diff.pstex_t}
+  \caption{Cálculo de \DES 
+    \label{fig:sync_diff}}
+\end{figure}
+
+No instante $t_0$, a estação $A$ envia uma mensagem elementar (de tamanho $64$
+bytes) recebida por $B$ e $C$ num mesmo instante $t_1$. $B$ espera então um tempo
+$\Delta_C$, conhecido por C, para enviar a sua mensagem
+elementar. Devido ao determinismo da plataforma operacional, os desvios devido às
+latências internas são menores que $10 \mu s$, valor muito menor que $\Delta$ que é
+superior a $500 \mu s$. Portanto, este desvios não são representados aqui. Quando
+$C$ recebe esta nova mensagem, no instante $t_3$, $C$ pode deduzir o valor de \DES,
+pois conhece os valores de $t_1$ e $t_3$ medidos localmente. Tem-se portanto:
+\[
+\DES = t_3 - t_1 - \Delta_C
+\]
+
+Este procedimento foi utilizado por todas as estações de tal forma que, a cada
+recepção de duas mensagens elementares consecutivas, cada estação pôde calcular o
+valor de \DES.  O valor médio deduzido destas observações pôde ser então aproveitado
+para configurar \doriss em tempo de projeto.
+
+
+\subsection{Configuração do anel não-crítico}
+\label{sec:confNaoCrit}
+
+No decorrer da implementação do anel não-crítico, tal como especificado no capítulo
+\ref{cap:doris}, percebeu-se que o protocolo \doriss poderia ser melhorado em relação
+ao seguinte aspecto: quando uma estação não tem mensagens não-críticas
+para enviar, o servidor \doris, quando adquire o bastão, deve obrigatoriamente
+emitir uma mensagem de tamanho mínimo para que o bastão possa circular. Suponha
+então que não haja nenhum processo querendo comunicar, todos os servidores enviam
+mensagens obrigatórias, na taxa máxima da banda, provocando uma sobrecarga
+significativa em todas as estações do segmento.
+
+Para evitar tal sobrecarga, um mecanismo de configuração dinâmica do anel não-crítico
+foi desenvolvido, aproveitando o determinismo da comunicação crítica. Para tanto, utilizou-se
+o campo $type$ do quadro Ethernet para carregar o pedido de participação de um servidor
+no anel não-crítico. A convenção adotada usa quatro tipos diferentes, permitindo caracterizar:
+\begin{itemize}
+\item Se a mensagem elementar é obrigatória, ou se ela foi enviada no
+  contexto de uma aplicação. No primeiro caso, os três primeiros
+  dígitos do $type$, expresso em formato hexa-decimal, valem $902$, e, no
+  segundo caso, $901$.
+\item Se o emissor da mensagem participa do anel não-crítico. Neste caso, o último
+  dígito tem o valor 2. Caso contrário, ele vale 1.
+\end{itemize}
+Em cada instante, a composição do anel não-crítico é armazenada por cada servidor
+numa estrutura de dados, chamada $proc$, de dimensão $nServ$. Cada elemento $i$
+desta estrutura contém as informações sobre o servidor $S_i$: se $S_i$ participa ou não
+do anel não-crítico, e, se ele participa, quem são seu sucessor e seu predecessor no
+anel.
+ 
+A fim de ilustrar o mecanismo de configuração dinâmica, considere o caso de um
+servidor $S_i$ que ainda não participava do anel não-crítico e que queira se inserir
+neste anel. $S_i$ começa por observar a comunicação ocorrendo durante as janelas
+\SW{}. No final de uma janela vazia, isto é, uma janela \SW{} durante a qual $S_i$
+não recebe nenhuma mensagem, $S_i$ redefine o anel não-crítico, retirando qualquer
+participante presente na estrutura $proc$. Quando a sua vez de enviar uma mensagem
+elementar chega, no \ing{chip} $i$, $S_i$ se insere na estrutura $proc$, e usa um
+dos tipos \cod{0x9012} ou \cod{0x9022} para indicar que, depois desta mensagem, ele
+deve ser considerado membro do anel não-crítico. Quando este mesmo servidor não quer
+mais participar do anel não-crítico, ele volta a utilizar os dois tipos \cod{0x9011}
+ou \cod{0x9021} no cabeçalho Ethernet da suas mensagens elementares.
+
+Quando um servidor $S_j$ recebe uma mensagem elementar enviada por um outro servidor
+$S_i$, ele efetua as ações seguintes:
+\begin{itemize}
+\item Ele atualiza o valor de $proc$ de acordo com o tipo da mensagem recebida. Se
+este valor termina com $2$, ele insere $S_i$ na estrutura $proc$. Caso contrário, $S_j$
+retira $S_i$ do conjunto $proc$.
+\item Ele define o instante de início da próxima janela \SW{} e de fim desta mesma. 
+\item Ele redefine o contador de mensagens não-críticas para $0$. 
+\end{itemize}
+
+Observar que se o anel não-crítico estiver vazio, um servidor $S_i$ só pode começar a
+enviar mensagens não-críticas durante o \ing{chip} $i$. Desta forma, se dois
+servidores $S_i$ e $S_j$ estiverem em fase de inserção simultaneamente, aquele cujo o
+\ing{chip} acontecerá antes do outro, suponha $i$, irá se inserir primeiro. Em
+seguida, $S_j$ receberá a mensagem elementar de $S_i$, ainda durante o \ing{chip}
+$i$, informando que $S_i$ é membro do anel crítico. Conseqüentemente, $S_j$ deverá
+inserir $S_i$ no anel não-crítico.
+
+Considere agora o mecanismo de inserção de um servidor $S_j$ no anel
+não-crítico, quando este anel tiver pelo menos um participante. Neste
+caso, $S_j$ deve esperar até receber uma mensagem não-crítica $m$.
+Quando isto ocorre, $S_j$ determina o valor do bastão circulante a
+partir do identificador $m$. A cada recepção de mensagens
+não-críticas, $S_j$ atualiza o valor do bastão. Finalmente, quando o
+seu \ing{chip} chega, $S_j$ envia uma mensagem elementar informando
+que ele entra no anel não-crítico. Em algum momento futuro, o bastão
+chegará a $S_j$ que poderá então começar a enviar mensagens
+não-críticas.
+
+Para completar a definição deste mecanismo de configuração dinâmica, considerou-se
+os dois cenários de falhas seguintes. O primeiro corresponde à possibilidade de
+um servidor com o bastão não enviar mensagem alguma, ou porque ele falhou, ou porque
+ele perdeu o bastão. O segundo corresponde a perdas eventuais de mensagens
+elementares.
+
+No primeiro cenário, quando o bastão se perde, o mecanismo apresentado aqui garante
+que o bastão será redefinido em algum momento futuro. Efetivamente, se o bastão não
+circula mais, as janelas \SW{} ficam vazias.  Porém, como foi visto acima, na
+ocorrência de uma janela \SW{} vazia de mensagens, todos os servidores 
+redefinem o anel crítico para o conjunto vazio. Portanto, a geração de um novo 
+bastão se torna possível, permitindo a recuperação da falha.
+
+Para tolerar o segundo cenário de falhas, isto é, falha de omissões de mensagens
+elementares, um servidor $S_i$ utiliza o contador $cons$ definido na seção
+\ref{sec:consVar}. Lembrar que este contador é incrementado a cada mensagem
+elementar recebida e redefinido para $0$ pelo servidor $S_i$ em cada \ing{chip}
+$i$. Portanto, se este contador não vale $nServ$ quando o \ing{chip} $i$ começa,
+isto significa que $S_i$ perdeu alguma mensagem elementar. Nesta caso, $S_i$ deve
+esperar o próximo ciclo para poder se inserir no anel não-crítico.
+
+Observar que este mecanismo é baseado na seguinte suposição. Um servidor de uma
+estação hospedando processos nunca deixa de perceber a ausência de mensagem
+não-críticas numa janela \SW.  Dito de forma positiva, um servidor de tarefas e
+processos sempre percebe a presença de uma mensagem não-crítica numa janela \SW. No
+caso de uma estação hospedando apenas tarefas, como dispositivos de sensoriamento ou
+atuação, o servidor não precisa observar a comunicação não-crítica, portanto, esta
+restrição não se aplica. Por outro lado, as estações que hospedam processos têm
+capacidade de processamento suficiente para que esta suposição seja considerada
+verdadeira.
+
+A especificação formal e a verificação automática da correção deste
+mecanismo de configuração dinâmica foram realizados e se encontram 
+no apêndice \ref{ap:dorisSpec2}.
+
+
+\subsection{A implementação da disciplina \doris}
+\label{sec:dorisImp}
+
+Em cada estação, a disciplina \doriss utiliza três tarefas de tempo real para
+organizar o acesso ao meio Ethernet. A primeira tarefa cuida da recepção das
+mensagens, a segunda é destinada à emissão das mensagens críticas e a terceira
+é responsável pela emissão de mensagens não-críticas.
+
+A tarefa que cuida da recepção assíncrona de mensagens corresponde ao gerente da
+pilha (\ing{stack manager}) do RTnet, descrito na seção \ref{sec:envRec}. Ela tem a
+maior prioridade do sistema.  As duas tarefas de tempo real encarregadas de
+gerenciar as operações de emissão de mensagens de um servidor $S_i$ são denotadas
+$CE_i$ (\ing{Critical Emission}) e $SE_i$ (\ing{Soft Emission}). A tarefa $CT_i$ é
+associada ao anel crítico e a tarefa $SE_i$ é responsável pela transmissão de
+mensagens em \SW. Além do caráter seqüencial das operações de emissões nos dois
+anéis, a prioridade de $CE_i$ é maior que a de $SE_i$, o que garante que a
+comunicação não-crítica não interfira na emissão de mensagens de tempo real crítico.
+
+\subsubsection{Recepção}
+\label{sec:dorisRecep}
+
+A principal modificação da tarefa de recepção foi relacionada à utilização das
+informações temporais e lógicas associadas aos eventos de recepção de mensagens.
+
+Para tal efeito, um código de gerenciamento das variáveis de \doriss foi
+inserido no tratamento da interrupção de recepção do pacote. A execução destas
+operações no tratador de interrupção permitiu descartar os pacotes que não são
+destinados à estação antes de acordar o ``gerente da pilha''.
+
+As principais operações de gerenciamento realizadas por um servidor $S_i$ são:
+\begin{itemize}
+\item Num evento de recepção de uma mensagem elementar:
+  \begin{itemize}
+  \item Atualizar o valor do instante de emissão da próxima mensagem elementar de
+    $S_i$;
+  \item Atualizar o valor do próximo instante de emissão de uma mensagem elementar;
+  \item Atualizar os contadores $chipCount$ e $cons$;
+  \item Atualizar a estrutura de dados $proc$, de acordo com as ações apresentadas
+    na seção \ref{sec:confNaoCrit}.
+  \item Quando em posse do bastão do anel não-crítico, acordar a tarefa de emissão
+    das mensagens não-críticas.
+  \end{itemize}
+
+\item Num evento de recepção de uma mensagem não-crítica:
+  \begin{itemize}
+  \item Atualizar o valor do bastão do anel não-crítico, de acordo com 
+    as informações contidas na estrutura $proc$.
+  \item Atualizar o contador de mensagens não-críticas utilizado para detecção de
+    janelas \SW vazias;
+  \item Quando em posse do bastão, acordar a tarefa de emissão das mensagens
+    não-críticas.
+  \end{itemize}
+\end{itemize}
+
+Em ambos os casos, a coerência dos dados locais com as informações carregadas pela
+mensagem é verificada e os dados necessários para a análise temporal do protocolo
+podem eventualmente ser armazenados.
+
+Depois destas operações de gerenciamento do protocolo \doris, dentro do próprio
+tratamento da interrupção de chegada de um pacote, o servidor descarta a mensagem se
+ela não for destinada a alguma aplicação que ele hospeda. Caso contrário, o servidor
+coloca o pacote na fila de recepção do gerente da pilha, antes de acordá-lo. Assim
+que ele acorda, o gerente determina a aplicação que está esperando pelo pacote,
+entregando-o. Ou ele o faz chamando a função de recepção do próprio Linux, se
+mensagem for não-crítica, ou chamando a função de recepção definida por \doris, se
+ela for crítica. Neste caso, a mensagem é encaminhada para o \ing{socket} de tempo
+real, previamente aberto por alguma aplicação de tempo real com a interface RTDM.
+
+Percebe-se que o gerente da pilha deve ter a maior prioridade do sistema para garantir
+que uma mensagem de tempo real seja entregue com a latência mínima possível.
+
+
+\subsubsection{Emissão de mensagens críticas}
+\label{sec:dorisEmisC}
+
+Para controlar as operações de emissão, os servidores utilizam temporizadores e
+condições lógicas, assim como foi visto na apresentação de \doriss no capítulo
+\ref{cap:doris}. No caso do anel crítico, um servidor $S_i$ deve conhecer, com a
+melhor precisão possível, o instante $t_i$ do início do próximo \ing{chip} $i$ no
+qual a tarefa $CE_i$ deve enviar uma mensagem elementar.  Considere, por
+exemplo, o servidor $S_1$. Suponha que o início do \ing{chip} $1$ acontecerá no
+instante $t_1$. Quando este instante chega, o temporizador $\tau_1$ de $S_1$ acorda
+$CE_1$ que: (i) envia uma mensagem elementar; e (ii) define o instante $t_1'$ de
+começo do próximo \ing{chip} $1$ para o valor:
+
+\begin{equation}
+t_1' = t_1 + nTask * \DDC
+\end{equation}
+
+Suponha agora que, logo em seguida, $S_1$ programa o temporizador $\tau_1$ com este
+valor de $t_1'$. Entre o instante desta programação, que é quase igual a $t_1$ e
+$t_1'$, várias mensagens elementares irão chegar, e, a cada chegada, $S_1$ irá
+atualizar o valor de $t_1'$, utilizando a equação (\ref{eq:nextChip}). A última destas
+atualizações de $t_1'$ acontecerá, na ausência de falha, na chegada da mensagem
+elementar enviada pelo servidor de identificador $nServ$.  Portanto, utilizar esta última
+atualização de $t_1'$ para programar $\tau_1$ permite: (i) minimizar o impacto do
+desvio local do relógio da estação $1$; e (ii) compensar eventuais desvios
+acumulados nas transmissões anteriores das mensagens elementares.
+
+Porém, este valor de $t_1'$ não é conhecido no instante $t_1$, pois só será
+conhecido durante o \ing{chip} anterior a $t_1'$. Para contornar esta dificuldade,
+no instante $t_1$, o servidor $S_1$ programa $\tau_1$ para acordar $CE_1$ no meio
+do \ing{chip} que precede $t_1'$, sendo o valor deste instante $t_1''$ estimado pela 
+seguinte formula:
+\begin{equation}
+t_1'' = t_1 + \left(  nTask - \frac{1}{2}  \right) * \DDC
+\end{equation}
+
+Quando a tarefa $CE_1$ acorda, ela programa $\tau_1$ novamente, utilizando a
+mais recente atualização de $t_1'$.  Neste instante $t_1'$, $\tau_1$ finalmente
+acorda a tarefa $CE_1$ uma segunda vez, no início exato do seu \ing{slot}
+elementar.
+
+Observar que quando a fila de mensagens críticas para serem enviadas for vazia,
+mensagens obrigatórias são criadas e enviadas conforme a especificação de
+\doris. Nesta implementação, prioridades não são definidas para as mensagens
+críticas.
+
+\subsubsection{Emissão de mensagens não-críticas}
+\label{sec:dorisEmisNC}
+
+As emissões de mensagens não-críticas são regidas pela circulação do bastão e por
+uma condição temporal que garante que estas mensagens sejam enviadas durante uma
+janela \SW. Foi visto na seção \ref{sec:dorisRecep} que o contador \txtla{token} é
+incrementado a cada recepção de mensagens não-críticas e que a tarefa $SE_j$ é
+acordada quando o servidor $S_j$ adquire o bastão circulante, isto é, quando $token =
+j$. Nesta ocorrência, $SE_j$ estima o tempo ainda disponível na janela $\SW$. Se
+este tempo for maior que o tamanho da mensagem em espera, $SE_j$ a envia. Caso
+contrário, $SE_j$ programa um temporizador para esperar até o início da próxima
+janela \SW. Tanto a expiração deste temporizador quanto um sinal disparado na
+chegada de uma mensagem crítica podem então dar início a próxima janela \SW.
+
+Do ponto de vista das aplicações, o uso dos anéis de comunicação de \doriss utiliza
+as funções usuais do Linux para comunicação não-crítica, enquanto a interface do
+RTDM é utilizada para as aplicações críticas.
+
+\subsection{Resultados experimentais}
+
+O objetivo desta seção é apresentar resultados experimentais obtidos com o protótipo
+de \doriss desenvolvido. Os cenários de comunicação utilizados foram
+simples, pois só utilizaram três computadores idênticos. Apesar disto, estes
+experimentos permitiram testar o protótipo de \doriss e mostrar a sua capacidade
+em garantir entrega de mensagens com garantias temporais da ordem de alguns
+micro-segundos. 
+
+A configuração dos experimentos envolveu três computadores Pentium IV ($nServ =
+3$), com processadores de 2.4 Ghz e 512 MB de memória. A rede utilizada foi
+constituída de um comutador Ethernet 100Mbps dedicado e de cabos de comprimentos
+menores que $5m$.  O valor de $\Delta_C$ foi definido para $500 \mu s$.
+
+Inicialmente, verificou-se que os serviços do anel crítico garantiam trocas de
+mensagens entre duas aplicações de tempo real $T_1$ e $T_2$, escritas com a
+interface RTDM, utilizada em modo usuário. Este cenário permitiu medir o valor de
+$\Delta_E$, seguindo a metodologia apresentada na seção \ref{sec:dorisMed}.
+Constatou-se que este valor alcançava $25 \mu s$ em média e que os desvios máximos
+deste valor foram de $3 \mu s$, na ausência de sobrecarga dos processadores. Apesar
+de o tempo de transmissão de uma mensagem de 64 bytes ser um pouco menor que $6 \mu s$
+num barramento 100Mbps, as latências da plataforma Xenomai, da ordem de $10 \mu s$,
+assim como foi visto no capítulo \ref{cap:platOp}, e de transmissão do comutador
+explicam este valor observado de $25 \mu s$. Este primeiro experimento confirmou que
+\doriss pode oferecer uma taxa de transmissão de $8*64*2000 = 1Mbps$ para as
+tarefas de tempo real. Além disso, a variabilidade observada ficou abaixo de $1.2\%$
+em valor relativo ($6 \mu s$ de desvio máximo para um período de
+
+Em seguida, realizou-se o mesmo experimento, instalando-se em paralelo uma
+comunicação não-crítica entre o servidor de $T_1$, e o terceiro servidor ainda não
+envolvido na comunicação (mas obviamente executando \doris). Constatou-se que:
+
+\begin{itemize}
+\item a comunicação crítica entre $T_1$ e $T_2$ não sofreu nenhuma alteração devida
+  à atividade na rede. Em particular, os intervalos de tempo entre a chegada
+  de mensagens críticas em $T_1$ e $T_2$ não apresentaram diferenças observáveis
+  com os resultados do experimento anterior, sem comunicação não-crítica;
+\item a taxa de transferência da comunicação não-crítica alcançou um pouco menos de
+  um terço da taxa da banda, ou seja, aproximadamente $46Mbps$. Mais precisamente,
+  $10.000$ mensagens de tamanho $1496$ bytes levaram em média $2.6 s$ para
+  serem transmitidas. Não se observou nenhuma perda de mensagem não-crítica,
+  em mais de 500.000 enviadas.
+\end{itemize}
+
+Em experimentos similares, realizados com a camada RTnet, carregando simplesmente a
+política NoMAC, apresentada na seção \ref{sec:discRTnet}, obtiveram-se os seguintes
+resultados. No caso do primeiro experimento, na ausência de comunicação não-crítica,
+a comunicação crítica de período de $500 \mu s$, não sofreu atrasos
+observáveis. Assim como no experimento com \doris, os intervalos de tempo entre as
+chegadas de mensagens críticas foram constantes, apresentando uma
+variabilidade menor que $3 \mu s$, ou seja, abaixo de $1.2\%$ em valor
+relativo. Isto era esperado, pois o serviço de comunicação RTnet oferece
+garantias temporais críticas em situações na qual o controle de acesso ao meio não é
+necessário.
+
+O segundo experimento, no entanto, apresentou resultados significativamente diferentes de
+\doris, pois a ausência de disciplina resultou numa variabilidade de $160 \mu s$ nos
+intervalos de tempos entre chegadas de mensagens críticas, ou seja, mais de $10
+\%$ em valor relativo. Em relação à comunicação não-crítica, a taxa de transmissão
+da comunicação não-crítica se aproximou de 75Mbps. Porém, observaram-se perdas de
+ mensagens esporádicas, variando de 0 a 10 em cada 10.000 mensagens enviadas.
+
+Estes resultados confirmaram a capacidade deste protótipo de \doriss  organizar o
+acesso ao meio de comunicação Ethernet, para suportar várias aplicações com requisitos
+temporais críticos e não-críticos, de forma concorrente e determinista. No entanto,
+experimentos e testes mais complexos deverão ainda ser realizados no contexto do
+desenvolvimento de uma versão de produção do protocolo \doris.
+
+\section{Conclusão}
+\label{sec:impConc}
+
+Neste capítulo, a implementação do protocolo \doriss foi apresentada em detalhes.
+Descre\-veu-se, em particular, o grau de integração deste protocolo com a camada RTnet
+da plataforma de tempo real Xenomai / Linux. Apesar dos testes e experimentos
+realizados, o protótipo de \doriss está ainda em fase de desenvolvimento. No
+entanto, as mais de duas mil linhas de código já escritas permitiram confirmar a
+validade da proposta do protocolo \doris.
+
+A implementação de código em modo \kernell representou um grande desafio que não
+poderia ter sido alcançado se não fossem os inúmeros exemplos de programas fornecidos,
+tanto pelos desenvolvedores de Xenomai como pelos de RTnet. Deve ser observado,
+notadamente, que a arquitetura modular do RTnet facilitou significativamente a
+implementação da disciplina \doris. 
+
+Do ponto de visto do trabalho de implementação, a especificação formal serviu de
+referência para guiar este trabalho.  No entanto, o fato de integrar \doriss
+como uma disciplina da camada RTnet já existente impediu um desenvolvimento
+completamente baseado na especificação. Ainda assim, constatou-se que a fase de
+especificação se revelou um passo importante na compreensão do protocolo e de suas
+propriedades. Este conhecimento profundo facilitou o presente trabalho, em
+particular quando se tratou de modificar algum mecanismo.
+
+Por ter sido desenvolvido durante a fase final deste trabalho, a especificação
+formal do mecanismo de configuração dinâmico do anel não-crítico não foi apresentada
+no capítulo \ref{cap:doris}. No entanto, a sua especificação em TLA+ e sua
+verificação com TLC foram realizadas com sucesso e serviram de base para a
+implementação. O apêndice \ref{ap:dorisSpec2} apresenta esta nova versão da
+especificação.
+
+\begin{comment}
+
+
+  \section{Inicialização}
+  \label{sec:init}
+
+  \subsection{O Módulo}% \dorisModuleC}
+
+  O serviço de comunicação de tempo real \rtnet implementa a pilha UDP/IP em cima da
+  plataforma operacional \xenomai.
+
+  No arquivo \dorisModuleC, o módulo \doris{} é inicializado.  A estrutura
+  \rtmacDisc{} é instanciada para definir a disciplina \dorisDisc. Esta estrutura é
+  um ``framework'' fornecido pela camada \rtmac{} do \rtnet{} define os nomes das
+  funções que a disciplina deve implementar.
+
+  As duas funções \dorisAttach{} e \dorisDetach{} são definidas servem a ativar e
+  desativar \doris{} uma vez o dispositivo da placa de rede carregado.  Elas são
+  definidas neste mesmo arquivo.  Isto será visto mais a frente ???
+
+  As funções de transmissão e recepção, chamadas \dorisPacketRx, \dorisRtPacketTx{}
+  e \dorisNrtPacketTx, são definidas no arquivo \dorisProtoC.
+
+
+  O processo de inicialização executa duas rotinas: \dorisProtoInit{} e
+  \rtmacDiscRegister{} e retorna.
+
+
+  \begin{itemize}
+  \item[] \act{\dorisProtoInit} Esta função é definida no arquivo \dorisProtoC{} e
+    realiza as operações seguintes:
+    \begin{itemize}
+    \item Inicializa a fila \nrtRtskbQueue{} de memórias do tipo \rtskb{}
+      para a comunicação de melhor esforço.
+    \item Inicializa um canal de eventos \wakeupSem.
+    \item Inicializa a tarefa de tempo real \wrapperTask, com a menor prioridade,
+      que executa a função \nrtXmitTask.
+    \end{itemize}
+  \end{itemize}
+
+
+  A função \nrtXmitTask{} é constituída de um laço \while sem fim que é habilitado
+  quando um evento é sinalizado através da variável \wakeupSem. Nesta ocorrência, a
+  função transmite os pacotes (\rtskb) enfileirados na fila \nrtRtskbQueue, usando a
+  função \rtmacXmit, quando estiver em possessão do \lockXmitMutex.  A função
+  \rtmacXmit{} instância a estrutura \rtnetDevice{} referenciada pelo pacote
+  (\rtskb) e utiliza a função \hardStartXmit{} definida por um campo desta estrutura
+  para transmitir o pacote. Esta função depende do \ing{hardware} e é definida no
+  controlador da placa de rede.
+
+  \begin{itemize}
+  \item[] \act{\rtmacDiscRegister} Esta função, definida no arquivo \rtmacDisc,
+    registra a disciplina, isto é:
+    \begin{itemize}
+    \item Verifique que os elementos necessários são definidos.
+    \item Registra as funções \ioctls{} que implementam a interface de controle
+      disponibilizada para os usuários.
+    \end{itemize}
+  \end{itemize}
+
+  O campo \ioctls{} da estrutura \dorisDisc{} recebe o nome da função de interface
+  \dorisIoctl{} que serve de wrapper para acessar as funções de controle definidas
+  no arquivo \dorisIoctl.
+
+
+
+  A estrutura \dorisPriv{} contem dois campos principais:
+  \begin{itemize}
+  \item Uma estrutura \rtnetDevice{} que corresponde ao dispositivo de controle da
+    placa de rede (\rteth)
+  \item Uma estrutura \rtdmDevice{} que contem as funções que a disciplina \doris{}
+    oferece como API aos usuários.
+  \end{itemize}
+
+
+
+\end{comment}

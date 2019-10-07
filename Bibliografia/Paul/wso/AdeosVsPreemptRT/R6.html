@@ -1,0 +1,67 @@
+<html><head>
+ <meta http-equiv="Content-Type" content="text/html "><title>'Re: PREEMPT_RT and I-PIPE: the numbers, part 4' - MARC</title></head><body bgcolor="#ffffff" link="#0000c0" text="#000000" vlink="#800080">
+<pre><b>[<a href="http://marc.info/?l=linux-kernel&amp;m=112105832625681&amp;w=2">prev in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112105981216490&amp;w=2">next in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112095209108445&amp;w=2">prev in thread</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112106580930810&amp;w=2">next in thread</a>] </b>
+<b><font size="+1">
+List:       <a href="http://marc.info/?l=linux-kernel&amp;r=1&amp;w=2">linux-kernel</a>
+Subject:    <a href="http://marc.info/?t=112086457900001&amp;r=1&amp;w=2">Re: PREEMPT_RT and I-PIPE: the numbers, part 4</a>
+From:       <a href="http://marc.info/?a=95737891800003&amp;r=1&amp;w=2">Ingo Molnar &lt;mingo () elte ! hu&gt;</a>
+Date:       <a href="http://marc.info/?l=linux-kernel&amp;r=1&amp;w=2&amp;b=200507">2005-07-11 5:24:13</a>
+Message-ID: <a href="http://marc.info/?i=20050711052413.GA13293%20%28%29%20elte%20%21%20hu">20050711052413.GA13293 () elte ! hu</a></font>
+[<a href="http://marc.info/?l=linux-kernel&amp;m=112105964111551&amp;q=raw">Download message RAW</a>]</b>
+
+
+* Kristian Benoit &lt;kbenoit@opersys.com&gt; wrote:
+
+[...]
+&gt; "plain" run:
+&gt; 
+&gt; Measurements   |   Vanilla   |  preempt_rt    |   ipipe
+&gt; ---------------+-------------+----------------+-------------
+&gt; fork           |      97us   |   91us (-6%)   |  101us (+4%)
+&gt; mmap           |     776us   |  629us (-19%)  |  794us (+2%)
+
+some of you have wondered how it's possible that the PREEMPT_RT kernel 
+is _faster_ than the vanilla kernel in these two metrics.
+
+I've done some more profiling, and one reason is kmap_atomic(). As i 
+pointed out in an earlier mail, in your tests you not only had HIGHMEM64 
+enabled, but also HIGHPTE, which is a heavy kmap_atomic() user. [and 
+which is an option meant for systems with 8GB or more RAM, not the 
+typical embedded target.]
+
+kmap_atomic() is a pretty preemption-unfriendly per-CPU construct, which 
+under PREEMPT_RT had to be changed and was mapped into kmap(). The 
+performance advantage comes from the caching built into kmap() and not 
+having to do per-page invlpg calls. (which can be pretty slow, 
+expecially on highmem64) The 'mapping kmap_atomic into kmap' technique 
+is perfectly fine under PREEMPT_RT because all kernel code is 
+preemptible, but it's not really possible in the vanilla kernel due to 
+the fundamental non-preemptability of interrupts, the preempt-off-ness 
+of the mmu_gather mechanism, the atomicity of the -&gt;page_table_lock 
+spinlock, etc.
+
+so this is a case of 'fully preemptible beats non-preemptible due to 
+flexibility', but it should be more of an exception than the rule, 
+because generally the fully preemptible kernel tries to be 1:1 identical 
+to the vanilla kernel. But it's an interesting phenomenon from a 
+conceptual angle nevertheless.
+
+	Ingo
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  <a href="http://vger.kernel.org/majordomo-info.html">http://vger.kernel.org/majordomo-info.html</a>
+Please read the FAQ at  <a href="http://www.tux.org/lkml/">http://www.tux.org/lkml/</a>
+<b>[<a href="http://marc.info/?l=linux-kernel&amp;m=112105832625681&amp;w=2">prev in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112105981216490&amp;w=2">next in list</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112095209108445&amp;w=2">prev in thread</a>] [<a href="http://marc.info/?l=linux-kernel&amp;m=112106580930810&amp;w=2">next in thread</a>] </b>
+</pre>
+  <br><center>
+    <a href="http://marc.info/?q=configure">Configure</a> | 
+
+    <a href="http://marc.info/?q=about">About</a> |
+    <a href="http://marc.info/?q=news">News</a> |
+    <a href="http://marc.info/?q=about#Begware">Donate</a> |
+    <a href="mailto:webguy@theaimsgroup.com?subject=Add%20a%20list%20to%20MARC">Add&nbsp;a&nbsp;list</a> |
+    Sponsors:&nbsp;<a href="http://www.10east.com/">10East</a>,&nbsp;<a href="http://www.korelogic.com/">KoreLogic</a>,&nbsp;<a href="http://www.terra-intl.com/">Terra-International</a>
+</center>
+
+</body></html>

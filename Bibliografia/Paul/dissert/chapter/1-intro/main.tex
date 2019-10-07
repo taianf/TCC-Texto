@@ -1,0 +1,43 @@
+\documentclass[msc]{mestrado}
+
+\usepackage{master}
+
+%% Inicio do documento
+\begin{document}
+\mainmatter
+
+\headsep=40pt
+\oddsidemargin=15pt
+\begin{spacing}{1.4}
+\parskip=6pt
+
+\include{introducao}
+
+\label{cap:motivacao}
+
+\label{cap:doris}
+
+\label{cap:platOp}
+\label{cap:implementacao}
+
+\label{sec:conclusao}
+\end{spacing}
+
+%%
+%% Parte pós-textual
+%%
+\backmatter
+
+% Bibliografia
+% É aconselhável utilizar o BibTeX a partir de um arquivo, digamos "biblio.bib".
+% Para ajuda na criação do arquivo .bib e utilização do BibTeX, recorra ao
+% BibTeXpress em www.cin.ufpe.br/~paguso/bibtexpress
+\renewcommand{\bibname}{REFERÊNCIAS}
+%\nocite{*}
+%\bibliographystyle{authordate2}
+%\bibliographystyle{abnt-alf}
+
+\bibliography{../../bib}
+
+%% Fim do documento
+\end{document}

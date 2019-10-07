@@ -1,0 +1,106 @@
+\documentclass[msc]{mestrado}
+
+%%\usepackage{fullpage, epic, eepic}
+\usepackage{master}
+
+%% Inicio do documento
+\begin{document}
+\mainmatter
+
+\headsep=40pt
+\oddsidemargin=15pt
+\begin{spacing}{1.4}
+\parskip=6pt
+
+
+\begin{figure}%
+%\begin{sidewaysfigure}
+  \centering
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Interrupção} \newline \vskip
+  1mm VM: 8.6, DP: 1.5, Min: 8.8, Max: 15.6 ]{%
+    \label{fig:ker23Sem}%
+    {\scalebox{0.58}{\input{fig/ker23Sem}}}} \hspace{4pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Ativação} \newline \vskip
+  1mm VM: 13.4, DP: 2.6, Min: 13.2, Max: 24.4]{%
+    \label{fig:ker23SemSched}%
+    {\scalebox{0.58}{\input{fig/ker23SemSched}}}}
+
+
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Interrupção} \newline \vskip 1mm VM:
+  10.3, DP: 2.9, Min: 9.2, Max: 52.4]{%
+    \label{fig:ker23Tot}%
+    {\scalebox{0.58}{\input{fig/ker23Tot}}}} \hspace{4pt}%
+  \subfloat[\textbf{Linux$^{\mathbf{Std}}$ - Ativação}\newline\vskip 1mm VM: 287.1,
+  DP: 783.3, Min: 45.1, Max: 14281.3]{%
+    \label{fig:ker23TotSched}%
+    {\scalebox{0.58}{\input{fig/ker23TotSched}}}}
+
+  \caption[]{Latência
+    de interrupção e de ativação do \kernell Linux, versão 2.6.23.9, opção
+    \ing{Low-Latency}. As figuras \subref{fig:ker23Sem} e \subref{fig:ker23SemSched}
+    representam uma execução sem estresse. As figuras \subref{fig:ker23Udp} e
+    \subref{fig:ker23UdpSched} representam uma execução com estresse de comunicação
+    UDP.  As figuras \subref{fig:ker23Tot} e \subref{fig:ker23TotSched} representam
+    uma execução com estresse de comunicação UDP e uma carga extra do processador. A
+    freqüência de escrita na porta paralela é de $20 Hz$.}
+  \label{fig:ker2619}%
+\end{figure}
+
+
+\end{spacing}
+
+%% Fim do documento
+\end{document}
+
+\begin{figure}[!hbt]
+  %\hfill
+  %\vspace{0.2in}
+  \begin{minipage}[!t]{\textwidth}
+    \begin{center}  
+      \centerline{\resizebox{0.5\linewidth}{!}{\input{fig/klight1}}}
+      \caption{Latência de interrupção do \kernell Linux}
+      \label{fig:irqKern}
+    \end{center}
+  \end{minipage}
+  %\hfill
+  \\
+  \vspace{.4in}
+  \begin{minipage}[!t]{\textwidth}
+    \begin{center}  
+      \centerline{\resizebox{0.5\linewidth}{!}{\input{fig/klight2}}}
+      \caption{Latência de interrupção do \kernell Linux (média sobre 10 valores)}
+      \label{fig:irqKernMean}
+    \end{center}
+  \end{minipage}
+  %\hfill
+  \\
+  \vspace{.4in}
+  \begin{minipage}[!t]{\textwidth}
+    \begin{center}  
+      \centerline{\resizebox{0.5\linewidth}{!}{\input{fig/klight2}}}
+      \caption{Latência de interrupção do \kernell Linux (média sobre 10 valores)}
+      \label{fig:irqKernMean}
+    \end{center}
+  \end{minipage}
+  %\hfill
+\end{figure}
+
+
+% \begin{figure}
+%   \begin{center}
+%     \input{fig/klight1}
+%   \end{center}
+% \end{figure}
+
+% \begin{figure}
+%   \begin{center}
+%     \input{fig/klight2}
+%   \end{center}
+% \end{figure}
+
+% \begin{figure}
+%   \begin{center}
+%     \input{fig/klight3}
+%   \end{center}
+% \end{figure}
+

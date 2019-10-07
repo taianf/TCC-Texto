@@ -1,0 +1,180 @@
+\ProvidesPackage{master}
+%\usepackage[pdftex]{graphicx, color}
+%\usepackage{graphicx, color}
+
+\usepackage[T1]{fontenc}
+
+%%% caracteres acentuados em ISO-8859-1
+\usepackage[latin1]{inputenc}
+
+%%% Suporte para gerar o documento em Português e Inglês
+\usepackage[brazil]{babel}
+
+%%% indenta primeiro parágrafo, estilo brasileiro.
+%\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{calc}
+\usepackage{xspace}
+
+%\usepackage{latex8}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{color}
+
+\usepackage{rotating}
+\usepackage{epsfig}
+\usepackage[font=normalsize, justification=Centering, singlelinecheck=false]{caption}
+\usepackage[captionskip=10pt]{subfig}
+%\captionsetup[subfloat]{font=normalsize, }
+
+\usepackage[alf]{abntcite}
+
+\usepackage{amssymb, bm}
+%\usepackage{verbatim}
+\usepackage{fancyvrb}
+\usepackage{multicol}
+%%%% \usepackage{underscore}
+
+\usepackage{savesym}
+%\usepackage{mytlatex}
+\usepackage{tlatex}
+\savesymbol{implies}
+\usepackage{amsmath}
+%\restoresymbol{TXF}{implies}
+
+%\usepackage{makeidx}
+
+
+
+\newcommand{\col}[1]{\textbf{\textcolor{red}{#1}}}
+\newenvironment{paul}{\color{black}}{\color{black}}
+\newcommand{\colr}[1]{\textcolor{black}{#1}}
+\newenvironment{paulr}{\color{black}}{\color{black}}
+
+\newcommand{\parspace}{\par \vspace{0.3cm}}
+\newcommand{\spaceTab}{\vspace{0.1cm} \\}
+\newcommand{\iniTabSpc}{\vspace{0.2cm} \begin{center}
+                        \begin{itshape} \begin{spacing}{1.}}
+\newcommand{\fimTabSpc}{\end{spacing} \end{itshape}
+                        \end{center} \vspace{-0.2cm} }
+
+
+\newcommand{\contLeftDash}%
+   {\hspace*{-\boxsep}%
+     \raisebox{-.5\boxlineht}[0pt][0pt]{\rule[.5ex]{\boxrulewd
+               }{\boxlineht}}%
+    \boxrule\hspace*{.4em }}
+
+\newcommand{\contRightDash}%
+    {\hspace*{.4em}\boxrule
+    \raisebox{-.5\boxlineht}[0pt][0pt]{\rule[.5ex]{\boxrulewd
+               }{\boxlineht}}\hspace{-\boxsep}}%\vspace{.2em}
+
+\newenvironment{tlafor}
+{ \vspace{0.3cm}  \setstretch{0.} \begin{minipage}{\textwidth} \begin{center} }
+{ \end{center} \end{minipage} \par \vspace{0.2cm}  \setstretch{1.4}}
+
+\newcommand{\tlacapvar}{}
+\newcommand{\tlacaption}[1]{\renewcommand{\tlacapvar}{#1}}
+
+\newenvironment{tlafig}{%
+  \smallskip 
+  \begin{figure}[hbt]
+    \raisebox{-1.3mm}{\rule{\textwidth}{.1pt}}
+    \raisebox{3mm}{\rule{\textwidth}{.1pt}}
+    \par\setstretch{1.2}}
+{ \par\setstretch{0.74}%
+  \raisebox{-2mm}{\rule{\textwidth}{.1pt}}
+  \raisebox{1mm}{\rule{\textwidth}{.1pt}}
+  \raisebox{0mm}{ \parbox{\textwidth}{ \caption{\tlacapvar} } }
+\end{figure}
+}  
+
+\newcommand{\vbar}{\rule{0pt}{5mm}}
+\newcommand{\vspc}{\\[1.6mm]}
+
+\newcommand{\@xxx}[1]{\mbox{$\mbox{}#1$}}  
+ 
+\newcommand{\txtla}[1]{%
+%\mbox{
+  \begin{tlatex}$\.{#1}$\end{tlatex}}  %\small}
+
+\newcommand{\cmtla}[1]{%}
+%\mbox{%
+  \begin{tlatex}($#1$)\end{tlatex}}  %}%\small}
+%\newcommand{\etla}{\end{tla}}%\normalsize}
+
+
+\newcommand{\act}[1]{\vspace{0.10cm} $\bullet \,$ \textbf{\emph{#1}} $\, -$}
+\newcommand{\cod}[1]{\hspace{0.1cm}\texttt{#1}}
+\newcommand{\ing}[1]{\emph{#1}}
+\newcommand{\chip}{\ing{chip}}
+\newcommand{\kernel}{\ing{kernel}}
+\newcommand{\kernell}{\ing{kernel} }
+\newcommand{\nanokernel}{\ing{nanokernel}}
+\newcommand{\nanokernell}{\ing{nanokernel} }
+\newcommand{\preempt}{{PREEMPT-RT}}
+\newcommand{\preemptt}{{PREEMPT-RT }}
+\newcommand{\doris}{\emph{DoRiS}}
+\newcommand{\doriss}{\emph{DoRiS }}
+
+\newcommand{\DS}{DS}
+\newcommand{\SOS}{SOS}
+\newcommand{\RTS}{RTS}
+
+\newcommand{\HW}{\ensuremath{\mathcal{W}_H\,}}
+\newcommand{\ES}{\ensuremath{\mathcal{S}_E\,}}
+\newcommand{\RS}{\ensuremath{\mathcal{S}_R\,}}
+\newcommand{\SW}{\ensuremath{\mathcal{W}_S\,}}
+\newcommand{\DDC}{\ensuremath{\Delta_C\,}}
+\newcommand{\DHW}{\ensuremath{\Delta_H\,}}
+\newcommand{\DSW}{\ensuremath{\Delta_S\,}}
+\newcommand{\DES}{\ensuremath{\Delta_E\,}}
+\newcommand{\DRS}{\ensuremath{\Delta_R\,}}
+
+
+\newcommand{\netdev}{\texttt{net\_device}}
+\newcommand{\netdevv}{\texttt{net\_device }}
+\newcommand{\skb}{\texttt{sk\_buff}}
+\newcommand{\skbb}{\texttt{sk\_buff }}
+\newcommand{\rtskb}{\texttt{rtskb}}
+\newcommand{\rtskbb}{\texttt{rtskb }}
+
+\newcommand{\rtnet}{\texttt{rtnet}}
+\newcommand{\xenomai}{\texttt{Xenomai}}
+
+\newcommand{\dorisModuleC}{\texttt{doris\_module.c}}
+\newcommand{\dorisProtoC}{\texttt{doris\_proto.c}}
+\newcommand{\dorisIoctlC}{\texttt{doris\_ioctl.c}}
+\newcommand{\dorisDevC}{\texttt{doris\_dev.c}}
+
+\newcommand{\rtmacDiscC}{\texttt{rtmac\_disc.c}}
+\newcommand{\rtmac}{\texttt{rtmac}}
+\newcommand{\rtmacDisc}{\texttt{rtmac\_disc}}
+\newcommand{\dorisDisc}{\texttt{doris\_disc}}
+\newcommand{\rtmacXmit}{\texttt{rtmac\_xmit}}
+
+\newcommand{\dorisAttach}{\texttt{\texttt{doris\_attach}}}
+\newcommand{\dorisDetach}{\texttt{\texttt{doris\_detach}}}
+
+\newcommand{\dorisPacketRx}{\texttt{doris\_packet\_rx}}
+\newcommand{\dorisRtPacketTx}{\texttt{doris\_rt\_packet\_tx}}
+\newcommand{\dorisNrtPacketTx}{\texttt{doris\_nrt\_packet\_tx}}
+
+\newcommand{\dorisProtoInit}{\texttt{doris\_proto\_init}} 
+\newcommand{\rtmacDiscRegister}{\texttt{rtmac\_disc\_register}}
+\newcommand{\nrtRtskbQueue}{\texttt{nrt\_rtskb\_queue}}
+
+\newcommand{\wakeupSem}{\texttt{wakeup\_sem}}
+\newcommand{\wrapperTask}{\texttt{wrapper\_task}}
+\newcommand{\nrtXmitTask}{\texttt{nrt\_xmit\_task}}
+\newcommand{\while}{\texttt{while}}
+\newcommand{\lockXmitMutex}{\texttt{lock xmit\_mutex}}
+\newcommand{\rtnetDevice}{\texttt{rtnet\_device}}
+\newcommand{\rtdmDevice}{\texttt{rtdm\_device}}
+\newcommand{\hardStartXmit}{\texttt{hard\_start\_xmit}}
+\newcommand{\ioctls}{\texttt{ioctls}}
+\newcommand{\dorisIoctl}{\texttt{doris\_ioctl}}
+\newcommand{\dorisPriv}{\texttt{doris\_priv}}
+\newcommand{\rteth}{\texttt{rteth0}}

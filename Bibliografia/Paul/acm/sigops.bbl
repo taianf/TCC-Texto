@@ -1,0 +1,126 @@
+\begin{thebibliography}{10}
+
+\bibitem{Abeni02}
+L.~Abeni, A.~Goel, C.~Krasic, J.~Snow, and J.~Walpole.
+\newblock A measurement-based analysis of the real-time performance of the
+  linux kernel.
+\newblock In {\em Proc. of the Real-Time Technology and Applications Symposium
+  (RTAS02)}, pages 1--4, 2002.
+
+\bibitem{Barabanov97}
+M.~Barabanov.
+\newblock A {L}inux based real-time operating system.
+\newblock Master's thesis, New Mexico Institution of Mining and Technology,
+  1997.
+
+\bibitem{Benoit05}
+K.~Benoit and K.~Yaghmour.
+\newblock {Preempt-RT} and {I}-pipe: the numbers.
+\newblock http://marc.info/?l=linux-kernel\&m=112086443319815\&w=2, 2005.
+\newblock Last access 03/08.
+
+\bibitem{Calandrino06}
+J.~Calandrino, H.~Leontyev, A.~Block, U.~Devi, and J.~Anderson.
+\newblock Litmus$^{RT}$: A testbed for empirically comparing real-time
+  multiprocessor schedulers.
+\newblock In {\em Proceedings of the 27th {IEEE} Real-Time Systems Symposium},
+  pages 111--126, 2006.
+
+\bibitem{Bovet05}
+M.~C. D.~P.~Bovet.
+\newblock {\em Understanding the Linux Kernel}.
+\newblock O'Reilly, 3rd edition, 2005.
+
+\bibitem{Dozio03}
+L.~Dozio and P.~Mantegazza.
+\newblock Linux real time application interface ({RTAI}) in low cost high
+  performance motion control.
+\newblock In {\em Proceedings of the conference of ANIPLA, Associazione
+  Nazionale Italiana per l'Automazione}, 2003.
+
+\bibitem{Fry07}
+G.~Fry and R.~West.
+\newblock On the integration of real-time asynchronous event handling
+  mechanisms with existing operating system services.
+\newblock In {\em Proceedings of the International Conference on Embedded
+  Systems and Applications (ESA'07)}, 2007.
+
+\bibitem{PreemptRT}
+{I. Molnar et al.}
+\newblock {PreemptRT}.
+\newblock {http://rt.wiki.kernel.org - Last access jan. 08}, 2008.
+
+\bibitem{Kernel}
+{L. Torvalds et al.}
+\newblock {Kernel}.
+\newblock {http://www.kernel.org - Last access jan. 08}, 2008.
+
+\bibitem{Liu00}
+J.~W.~S. Liu.
+\newblock {\em {Real-Time Systems}}.
+\newblock Prentice-Hall, 2000.
+
+\bibitem{Marchesotti06}
+M.~Marchesotti, M.~Migliardi, and R.~Podestà.
+\newblock A measurement-based analysis of the responsiveness of the {Linux}
+  kernel.
+\newblock In {\em Proc. of the 13th Int. Symposium and Workshop on Engineering
+  of Computer Based Systems}, volume~0, pages 397--408. {IEEE} Computer
+  Society, June 2006.
+
+\bibitem{McKenney05}
+P.~McKenney.
+\newblock A realtime preemption overview.
+\newblock http://lwn.net/Articles/146861/ - Last access jun. 08, 2005.
+
+\bibitem{McVoy96}
+L.~W. McVoy and C.~Staelin.
+\newblock lmbench: Portable tools for performance analysis.
+\newblock In {\em {USENIX} Annual Technical Conference}, pages 279--294, 1996.
+
+\bibitem{Xenomai}
+{P. Gerum et al.}
+\newblock {Xenomai}.
+\newblock {http://www.xenomai.org - Last access jan. 08}, 2008.
+
+\bibitem{Pratt04}
+S.~L. Pratt and D.~A. Heger.
+\newblock Workload dependent performance evaluation of the linux 2.6 i/o
+  schedulers.
+\newblock In {\em Proceedings of the Linux Symposium}, pages 425--448, 2004.
+
+\bibitem{Regnier08c}
+P.~Regnier.
+\newblock Especificação formal, verificação e implementação de um protocolo de
+  comunicação determinista, baseado em ethernet.
+\newblock Master's thesis, Universidade Federal da Bahia, 2008.
+
+\bibitem{Rostedt07}
+S.~Rostedt and D.~V. Hart.
+\newblock Internals of the rt patch.
+\newblock In {\em Proceedings of the Linux Symposium}, pages 161--172, 2007.
+
+\bibitem{Sha90}
+L.~Sha, R.~Rajkumar, and J.~P. Lehoczky.
+\newblock {P}riority {I}nheritance {P}rotocols: {A}n approach to real-time
+  synchronisation.
+\newblock {\em IEEE Transaction on Computers}, 39(9):1175--1185, 1990.
+
+\bibitem{Siro07}
+A.~Siro, C.~Emde, and N.~McGuire.
+\newblock Assessment of the realtime preemption patches ({RT-Preempt}) and
+  their impact on the general purpose performance of the system.
+\newblock In {\em Proceedings of the 9th Real-Time Linux Workshop}, 2007.
+
+\bibitem{Stodolsky93}
+D.~Stodolsky, J.~Chen, and B.~Bershad.
+\newblock Fast interrupt priority management in operating systems.
+\newblock In {\em Proc. of the USENIX Symposium on Microkernels and Other
+  Kernel Architectures}, pages 105--110, Sept. 1993.
+
+\bibitem{Yaghmour01}
+K.~Yaghmour.
+\newblock The real-time application interface.
+\newblock In {\em Proceedings of the Linux Symposium}, July 2001.
+
+\end{thebibliography}

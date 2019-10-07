@@ -1,0 +1,11 @@
+#!/bin/bash
+rm *.dvi *.ps *.aux $1.tex  *.log $1.pdf
+file="$1".tla
+if [ -f $file ]; then
+  echo  $file
+  java tlatex.TLA -hoffset 0 -textwidth 400 -textheight 600 -ptSize 12 $file
+  pdflatex $1.tex
+  open $1.pdf
+else
+  echo $file "n'existe pas"
+fi

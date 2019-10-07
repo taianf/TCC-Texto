@@ -1,0 +1,65 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx,url}
+
+%\usepackage[brazil]{babel}   
+\usepackage[latin1]{inputenc}  
+\usepackage{articleLoc}
+
+\begin{document} 
+
+\begin{tla}
+NextChip ==
+    /\ Shared.medium = {} /\ Shared.chipTimer = deltaChip
+    /\ LET Overflow == \E j \in Shared.proc : Len( ProcState[j].list ) > 14
+           TimeCircle == Shared.cycleCount = horiz
+           NextCycle == Shared.chipCount = nServ
+       IN  /\ Shared' = [ Shared EXCEPT !.macTimer = 0, 
+               !.chipCount = (@  %  nServ ) + 1,
+               !.chipTimer = IF Overflow THEN -1 ELSE 0,
+               !.cycleCount = IF TimeCircle THEN 1
+                              ELSE IF NextCycle THEN @ + 1 ELSE @ ]
+           /\ ProcState' = [ j \in (Proc \ Shared.proc) |-> ProcState[j] ] @@ 
+                           [ j \in Shared.proc |-> [ ProcState[j] EXCEPT !.count = 0,
+               !.token = IF ProcState[j].count = 0 THEN  (@  %  nServ ) + 1 ELSE @,
+               !.list = IF NextCycle THEN @ \o list(j, Shared.cycleCount) ELSE @ ] ]
+           /\ IF NextCycle THEN History' = [ elem |-> 0, rese |-> 0 ]
+              ELSE UNCHANGED History
+    /\ UNCHANGED TaskState
+\end{tla}
+\begin{tlatex}
+\@x{ NextChip \.{\defeq}}%
+ \@x{\@s{16.4} \.{\land} Shared . medium \.{=} \{ \} \.{\land} Shared .
+ chipTimer \.{=} deltaChip}%
+ \@x{\@s{16.4} \.{\land} \.{\LET} Overflow \.{\defeq} \E\, j \.{\in} Shared .
+ proc \.{:} Len ( ProcState [ j ] . list ) \.{>} 14}%
+\@x{\@s{54.02} TimeCircle \.{\defeq} Shared . cycleCount \.{=} horiz}%
+\@x{\@s{54.02} NextCycle \.{\defeq} Shared . chipCount \.{=} nServ}%
+ \@x{\@s{30.69} \.{\IN}\@s{4.1} \.{\land} Shared \.{'} \.{=} [ Shared
+ {\EXCEPT} ! . macTimer \.{=} 0 ,\,}%
+ \@x{\@s{76.51} ! . chipCount\@s{0.89} \.{=} ( @\@s{4.1} \.{\%}\@s{4.1} nServ
+ ) \.{+} 1 ,\,}%
+ \@x{\@s{76.51} ! . chipTimer \.{=} {\IF} Overflow \.{\THEN} \.{-} 1 \.{\ELSE}
+ 0 ,\,}%
+\@x{\@s{76.51} ! . cycleCount \.{=} {\IF} TimeCircle \.{\THEN} 1}%
+\@x{\@s{157.03} \.{\ELSE} {\IF} NextCycle \.{\THEN} @ \.{+} 1 \.{\ELSE} @ ]}%
+ \@x{\@s{58.12} \.{\land} ProcState \.{'} \.{=} [ j \.{\in} ( Proc
+ \.{\,\backslash\,} Shared . proc ) \.{\mapsto} ProcState [ j ] ] \.{\,@@\,}}%
+ \@x{\@s{142.74} [ j \.{\in} Shared . proc \.{\mapsto} [ ProcState [ j ]
+ {\EXCEPT} ! . count \.{=} 0 ,\,}%
+ \@x{\@s{76.51} ! . token \.{=} {\IF} ProcState [ j ] . count \.{=} 0
+ \.{\THEN}\@s{4.1} ( @\@s{4.1} \.{\%}\@s{4.1} nServ ) \.{+} 1 \.{\ELSE} @
+ ,\,}%
+ \@x{\@s{76.51} ! . list \.{=} {\IF} NextCycle \.{\THEN} @ \.{\circ} list ( j
+ ,\, Shared . cycleCount ) \.{\ELSE} @ ] ]}%
+ \@x{\@s{58.12} \.{\land} {\IF} NextCycle \.{\THEN} History \.{'} \.{=} [ elem
+ \.{\mapsto} 0 ,\, rese \.{\mapsto} 0 ]}%
+\@x{\@s{72.41} \.{\ELSE} {\UNCHANGED} History}%
+\@x{\@s{16.4} \.{\land} {\UNCHANGED} TaskState}%
+\end{tlatex}
+
+
+\bibliographystyle{sbc}
+\bibliography{bib}
+
+\end{document}

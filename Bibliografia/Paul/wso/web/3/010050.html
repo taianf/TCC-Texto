@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html><head><title>: Re: Re: Re:: Performance comparison legacy-patch vs. hal7 (adeos)</title>
+
+ 
+   
+   <link rel="Index" href="https://mail.rtai.org/pipermail/rtai/2005-January/index.html">
+   <link rel="made" href="mailto:rtai%40rtai.org?Subject=%3A%20Re%3A%20Re%3A%20Re%3A%3A%20Performance%20comparison%20legacy-patch%20vs.%20hal7%20%28adeos%29&amp;In-Reply-To=1106643508.708.18.camel%40localhost">
+   <meta name="robots" content="index,nofollow">
+   <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <link rel="Previous" href="https://mail.rtai.org/pipermail/rtai/2005-January/010041.html">
+   <link rel="Next" href="https://mail.rtai.org/pipermail/rtai/2005-January/010055.html"></head><body bgcolor="#ffffff">
+   <h1>: Re: Re: Re:: Performance comparison legacy-patch vs. hal7 (adeos)</h1>
+    <b>M. Koehrer</b> 
+    <a href="mailto:rtai%40rtai.org?Subject=%3A%20Re%3A%20Re%3A%20Re%3A%3A%20Performance%20comparison%20legacy-patch%20vs.%20hal7%20%28adeos%29&amp;In-Reply-To=1106643508.708.18.camel%40localhost" title=": Re: Re: Re:: Performance comparison legacy-patch vs. hal7 (adeos)">mathias_koehrer at arcor.de
+       </a><br>
+    <i>Tue Jan 25 12:58:26 CET 2005</i>
+    <p></p><ul>
+        <li>Previous message: <a href="https://mail.rtai.org/pipermail/rtai/2005-January/010041.html">: Performance comparison legacy-patch vs. hal7 (adeos)
+</a></li>
+        <li>Next message: <a href="https://mail.rtai.org/pipermail/rtai/2005-January/010055.html">: Re: Re: Re:: Performance comparison legacy-patch vs. hal7	(adeos)
+</a></li>
+         <li> <b>Messages sorted by:</b> 
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/date.html#10050">[ date ]</a>
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/thread.html#10050">[ thread ]</a>
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/subject.html#10050">[ subject ]</a>
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/author.html#10050">[ author ]</a>
+         </li>
+       </ul>
+    <hr>  
+<!--beginarticle-->
+<pre> Hello Philippe,
+
+o.k., I have now done a test running adeos r9rc2 with the 2.6.9 kernel (rtai-3.2-test1) and a parallel stress 
+program (about 95-98% CPU load according to "top", 76 MB RAM usage), no HDD accesses, little network traffic for starting and monitoring the tests.
+However, I tested only a couple (5-8) of minutes, not hours...
+
+The results are now:
+user/switches:
+SUSP/RES SWITCHES    legacy:  661ns    hal9: 1038ns
+SEM SIG/WAIT         legacy:  781ns    hal9: 1188ns 
+  
+user/latency:
+legacy: min: 927 max: 7080: average: 1869    
+hal9   : min: -784, max: 13854, average: 1983
+  
+user/preempt:
+legacy: min: 0 max: 19  average: 1 fastjit: 24 slowjit: 26      
+hal9: min: 0   max: 18   average: 1  fastjit: 22 slowjit: 23
+
+That means, that adeos r9rc2 is slightly better with the user/preempt test, but with the other tests, 
+the legacy version shows still a slightly better performance...
+
+Regards
+
+Mathias
+&gt;<i> &gt; I used now the adeos patch r8 for the kernel 2.6.7 to do another RTAI
+</i>&gt;<i> performance comparison.
+</i>&gt;<i> &gt; I have now a comparison (using the  testsuite tests) of the legacy-patch
+</i>&gt;<i> &gt; (rtai 3.0r4 on a kernel 2.4.x)
+</i>&gt;<i> &gt; versus rtai 3.2-test1 using the adeos patch r8 for kernel 2.6.7 on the
+</i>&gt;<i> same P4
+</i>&gt;<i> &gt;  (2.53 GHz, UP) PC.
+</i>&gt;<i> &gt; The results are now:
+</i>&gt;<i> &gt;  
+</i>&gt;<i> &gt; user/switches:
+</i>&gt;<i> &gt; SUSP/RES SWITCHES    legacy:  661ns    hal8: 1066ns
+</i>&gt;<i> &gt; SEM SIG/WAIT         legacy:  781ns    hal8: 1217ns 
+</i>&gt;<i> &gt;  
+</i>&gt;<i> &gt; user/latency:
+</i>&gt;<i> &gt; legacy: min: 1000 max: 6960: average: 1850     hal8: min: -815, max:
+</i>&gt;<i> 12115, average: 1935
+</i>&gt;<i> &gt;  
+</i>&gt;<i> &gt; user/preempt:
+</i>&gt;<i> &gt; legacy: min: 0 max: 12 : average: 1       hal8: min: 0, max:12 average: 1
+</i>&gt;<i> &gt;  
+</i>&gt;<i> &gt; Also with this version of adeos, the performance of the 
+</i>&gt;<i> &gt; legacy patch is still faster.
+</i>&gt;<i> &gt; Again, the tests ran about 30 seconds, there was no load on the PC.
+</i>&gt;<i> &gt; 
+</i>&gt;<i> 
+</i>&gt;<i> Ok, I won't insist on your use of r8 instead of r9c2 (I sent you by mail
+</i>&gt;<i> btw), but if you want to have figures that mean something valuable from
+</i>&gt;<i> a RT POV, you should definitely put some load on your box, and measure
+</i>&gt;<i> the latencies obtained after a few hours of runtime.
+</i>&gt;<i> 
+</i>&gt;<i> Measuring an idle system for a short period of time does not give you
+</i>&gt;<i> any valuable information about the degree of determinism you could
+</i>&gt;<i> expect. Would you choose to get the proper numbers eventually - which
+</i>&gt;<i> may or may not confirm your first tests, that's not the point - please
+</i>&gt;<i> use r9c2. Oh, sorry, I've insisted...
+</i>
+
+-- 
+Mathias Koehrer
+<a href="http://mail.rtai.org/cgi-bin/mailman/listinfo/rtai">mathias_koehrer at arcor.de</a>
+
+
+Arcor-DSL: die echte Flatrate für alle Bandbreiten. Jetzt ohne Einrichtungspreis
+einsteigen oder wechseln. Arcor-DSL ist in vielen Anschlussgebieten verfügbar.
+<a href="http://www.arcor.de/home/redir.php/emf-dsl-1">http://www.arcor.de/home/redir.php/emf-dsl-1</a>
+
+
+
+</pre>
+
+<!--endarticle-->
+    <hr>
+    <p></p><ul>
+        <!--threads-->
+	<li>Previous message: <a href="https://mail.rtai.org/pipermail/rtai/2005-January/010041.html">: Performance comparison legacy-patch vs. hal7 (adeos)
+</a></li>
+	<li>Next message: <a href="https://mail.rtai.org/pipermail/rtai/2005-January/010055.html">: Re: Re: Re:: Performance comparison legacy-patch vs. hal7	(adeos)
+</a></li>
+         <li> <b>Messages sorted by:</b> 
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/date.html#10050">[ date ]</a>
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/thread.html#10050">[ thread ]</a>
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/subject.html#10050">[ subject ]</a>
+              <a href="https://mail.rtai.org/pipermail/rtai/2005-January/author.html#10050">[ author ]</a>
+         </li>
+       </ul>
+
+<hr>
+<a href="http://mail.rtai.org/cgi-bin/mailman/listinfo/rtai">More information about the Rtai
+mailing list</a><br>
+
+</body></html>

@@ -1,0 +1,667 @@
+\documentclass[msc]{mestrado}
+
+\usepackage{master}
+%\usepackage{tlatex}
+
+%% Inicio do documento
+\begin{document}
+
+
+\begin{notla}
+Task == 1..nTask
+\end{notla}
+
+\begin{notla}
+Proc == 1..nProc
+\end{notla}
+
+\begin{notla}
+TaskSet == { T[i]: i \in Task }
+\end{notla}
+
+\begin{notla}
+ProcSet == { P[j]: j \in Proc }
+\end{notla}
+
+\begin{notla}
+T == [ i \in Task |-> << "T", i >> ] 
+\end{notla}
+\begin{tlatex}
+ \@x{ T \.{\defeq} [ i \.{\in} Task \.{\mapsto} {\langle}\@w{T} ,\, i
+ {\rangle} ]}%
+\end{tlatex}
+
+\begin{tla}
+[ i \in C |-> << "V", i >> ] @@ [ i \in D |-> << ''V'', i >> ] == [ i \in C \cup D |-> << ''V'', i >> ]
+\end{tla}
+\begin{tlatex}
+ \@x{ [ i \.{\in} D \.{\mapsto} {\langle}\@w{V} ,\, i {\rangle} ] \.{\,@@\,} [
+ i \.{\in} C \.{\,\backslash\,} D \.{\mapsto} {\langle} \.{'} \.{'} V \.{'}
+ \.{'} ,\, i {\rangle} ] \.{\defeq} [ i \.{\in} C \.{\mapsto} {\langle} \.{'}
+ \.{'} V \.{'} \.{'} ,\, i {\rangle} ]}%
+\end{tlatex}
+
+\begin{notla}
+P == [ j \in Proc |-> << "P", j >> ]
+\end{notla}
+\begin{tlatex}
+ \@x{ P \.{\defeq} [ j \.{\in} Proc \.{\mapsto} {\langle}\@w{P} ,\, j
+ {\rangle} ]}%
+\end{tlatex}
+
+\begin{notla}
+T == [ i \in Task |-> << "T", i >> ]   /\  P == [ j \in Proc |-> << "P", j >> ]
+\end{notla}
+\begin{tlatex}
+ \@x{ T \.{\defeq} [ i \.{\in} Task \.{\mapsto} {\langle}\@w{T} ,\, i
+ {\rangle} ]\@s{8.2} \.{\land}\@s{4.1} P \.{\defeq} [ j \.{\in} Proc
+ \.{\mapsto} {\langle}\@w{P} ,\, j {\rangle} ]}%
+\end{tlatex}
+
+\begin{notla}
+TaskSet == { T[i]: i \in Task }  /\  ProcSet == { P[j]: j \in Proc }
+\end{notla}
+\begin{tlatex}
+ \@x{ TaskSet \.{\defeq} \{ T [ i ] \.{:} i \.{\in} Task \}\@s{4.1}
+ \.{\land}\@s{4.1} ProcSet \.{\defeq} \{ P [ j ] \.{:} j \.{\in} Proc \}}%
+\end{tlatex}
+
+\begin{notla}
+taskId(t) == CHOOSE i \in Task : t = T[i]  /\  procId(p) == CHOOSE j \in Proc : p = P[j]
+\end{notla}
+\begin{tlatex}
+ \@x{ taskId ( t ) \.{\defeq} {\CHOOSE} i \.{\in} Task \.{:} t \.{=} T [ i
+ ]\@s{4.1} \.{\land}\@s{4.1} procId ( p ) \.{\defeq} {\CHOOSE} j \.{\in} Proc
+ \.{:} p \.{=} P [ j ]}%
+\end{tlatex}
+
+\begin{notla}
+taskId(t) == CHOOSE i \in Task : t = T[i]
+procId(p) == CHOOSE j \in Proc : p = P[j]
+\end{notla}
+\begin{tlatex}
+\@x{ taskId ( t ) \.{\defeq} {\CHOOSE} i \.{\in} Task \.{:} t \.{=} T [ i ]}%
+\@x{ procId ( p ) \.{\defeq} {\CHOOSE} j \.{\in} Proc \.{:} p \.{=} P [ j ]}%
+\end{tlatex}
+
+\begin{verbatim}
+\end{verbatim}
+
+\begin{notla}
+UNCHANGED << v >> == v' = v
+\end{notla}
+\begin{tlatex}
+\@x{ {\UNCHANGED} {\langle} v {\rangle} \.{\defeq} v \.{'} \.{=} v}%
+\end{tlatex}
+
+\begin{notla}
+\E t \in TaskSet : LET i == Ind(t)
+                   IN F(i)
+\end{notla}
+\begin{tlatex}
+\@x{ \E\, t \.{\in} TaskSet \.{:} \.{\LET} i \.{\defeq} taskId ( t )}%
+\@x{\@s{80.17} \.{\IN} F ( i )}%
+\end{tlatex}
+
+\begin{notla}
+i..j == {i, i+1, j}
+\end{notla}
+\begin{tlatex}
+\@x{ i \.{\dotdot} j \.{\defeq} \{ i ,\, i \.{+} 1 ,\, j \}}%
+\end{tlatex}
+
+
+\begin{notla}
+macTimer = 0  => medium = {}
+\end{notla}
+\begin{tlatex}
+\@x{ macTimer \.{=} 0\@s{4.1} \.{\implies} medium \.{=} \{ \}}%
+\end{tlatex}
+
+\begin{notla}
+<> F == \neg [] ( \neg F )  
+\end{notla}
+\begin{tlatex}
+\@x{ {\Diamond} F \.{\defeq} {\neg} {\Box} ( {\neg} F )}%
+\end{tlatex}
+
+
+\begin{notla}
+  Spec == Init /\ [] [ Next \/ Tick ]_vars /\ Liveness
+\end{notla}
+\begin{tlatex}
+ \@x{\@s{8.2} Spec \.{\defeq} Init \.{\land} {\Box} [ Next \.{\lor} Tick ]_{
+ vars} \.{\land} Liveness}%
+\end{tlatex}
+
+\vspace{1cm}
+
+\begin{notla}
+Init ==
+      /\ Shared = [ chipTimer |-> 0, chipCount |-> 1, macTimer |-> 0, medium |-> {} ]
+      /\ TaskState = [ i \in Task |-> [ msg |-> << >>, execTimer |-> Infinity, 
+                                        res |-> [ j \in Task |-> -1 ], cons |-> nTask - i + 1 ] ] 
+      /\ ProcState = [ j \in Proc |-> [ token |-> 1, list |-> list(j), count |-> 0 ] ]
+      /\ History = [ elemSlot |-> 0, reseSlot |-> 0 ]
+\end{notla}
+\begin{tlatex}
+\@x{ Init \.{\defeq}}%
+ \@x{\@s{23.85} \.{\land} Shared \.{=} [ chipTimer \.{\mapsto} 0 ,\, chipCount
+ \.{\mapsto} 1 ,\, macTimer \.{\mapsto} 0 ,\, medium \.{\mapsto} \{ \} ]}%
+ \@x{\@s{23.85} \.{\land} TaskState \.{=} [ i\@s{0.51} \.{\in} Task
+ \.{\mapsto} [ msg \.{\mapsto} {\langle} {\rangle} ,\, execTimer \.{\mapsto}
+ Infinity ,\,}%
+ \@x{\@s{174.68} res\@s{5.30} \.{\mapsto} [ j \.{\in} Task \.{\mapsto} \.{-} 1
+ ] ,\, cons \.{\mapsto} nTask \.{-} i \.{+} 1 ] ]}%
+ \@x{\@s{23.85} \.{\land} ProcState\@s{0.58} \.{=} [ j \.{\in} Proc\@s{1.18}
+ \.{\mapsto} [ token\@s{8.52} \.{\mapsto} 1 ,\, list \.{\mapsto} list ( j )
+ ,\, count \.{\mapsto} 0 ] ]}%
+ \@x{\@s{23.85} \.{\land} History \.{=} [ elemSlot \.{\mapsto} 0 ,\, reseSlot
+ \.{\mapsto} 0 ]}%
+\end{tlatex}
+
+\begin{notla}
+list(j) == CASE j \in { 1 } -> [ i \in 1..4 |-> [ txTime |-> maxTxTime ] ]
+           []   j \in { 2 } -> << >>
+           []   j \in Proc \ { 1, 2 } -> 1 :> [ txTime |-> maxTxTime ]
+\end{notla}
+\begin{tlatex}
+ \@x{ list ( j ) \.{\defeq} {\CASE} j \.{\in} \{ 1 \} \.{\rightarrow} [ i
+ \.{\in} 1 \.{\dotdot} 4 \.{\mapsto} [ txTime \.{\mapsto} maxTxTime ] ]}%
+ \@x{\@s{53.36} {\Box}\@s{8.2} j\@s{12.73} \.{\in} \{ 2 \} \.{\rightarrow}
+ {\langle} {\rangle}}%
+ \@x{\@s{53.36} {\Box}\@s{8.2} j\@s{12.73} \.{\in} Proc \.{\,\backslash\,} \{
+ 1 ,\, 2 \} \.{\rightarrow} 1 \.{\colongt} [ txTime \.{\mapsto} maxTxTime ]}%
+\end{tlatex}
+
+
+\begin{notla}
+Tick  == NextTick \/ NextChip
+\end{notla}
+\begin{tlatex}
+\@x{ Tick\@s{4.1} \.{\defeq} NextTick \.{\lor} NextChip}%
+\end{tlatex}
+
+\begin{notla}
+Next  ==  \/ \E t \in TaskSet : SendElem(t) \/ SendRese(t)
+          \/ \E p \in ProcSet : SendSoft(p)
+          \/ \E msg \in Shared.medium : RecvHard(msg) \/ RecvSoft(msg)
+\end{notla}
+\begin{tlatex}
+ \@x{ Next\@s{4.1} \.{\defeq}\@s{4.1} \.{\lor} \E\, t\@s{1.69} \.{\in} TaskSet
+ \.{:} SendElem ( t ) \.{\lor} SendRese ( t )}%
+\@x{\@s{55.22} \.{\lor} \E\, p \.{\in} ProcSet\@s{0.58} \.{:} SendSoft ( p )}%
+ \@x{\@s{55.22} \.{\lor} \E\, msg \.{\in} Shared . medium \.{:} RecvHard ( msg
+ ) \.{\lor} RecvSoft ( msg )}%
+\end{tlatex}
+
+\begin{notla}
+Liveness ==  []<> Tick             
+\end{notla}
+\begin{tlatex}
+\@x{ Liveness \.{\defeq}\@s{4.1} {\Box} {\Diamond} Tick}%
+\end{tlatex}
+
+\begin{notla}
+reservation(i) ==
+      IF TaskState[i].cons = nTask
+      THEN { j \in Task: TaskState[i].res[j] = -1 }
+      ELSE { ( ( (i - 1) + (nTask - 1) ) % nTask ) + 1 }
+\end{notla}
+\begin{tlatex}
+\@x{ reservation ( i ) \.{\defeq}}%
+\@x{\@s{24.59} {\IF} TaskState [ i ] . cons \.{=} nTask}%
+ \@x{\@s{24.59} \.{\THEN} \{ j \.{\in} Task \.{:} TaskState [ i ] . res [ j ]
+ \.{=} \.{-} 1 \}}%
+ \@x{\@s{24.59} \.{\ELSE} \{ ( ( ( i \.{-} 1 ) \.{+} ( nTask \.{-} 1 ) )
+ \.{\%} nTask ) \.{+} 1 \}}%
+\end{tlatex}
+
+
+\begin{notla}
+SendElem(t) ==
+      /\ Shared.medium = {}
+      /\ Shared.chipTimer = 0
+      /\ LET i == taskId(t)
+         IN /\ Shared.chipCount = i
+            /\ LET resSet == reservation(i) 
+               IN /\ Shared' = [ Shared EXCEPT 
+                         !.macTimer = delta,
+                         !.medium = { [ id |-> i, type |-> "hard", res |-> resSet ] }]
+                  /\ TaskState' = [ TaskState EXCEPT
+                         ![i].res = [ j \in Task |-> IF j \in resSet THEN i ELSE @[j] ],
+                         ![i].cons = 1 ] 
+            /\ History' = [ History EXCEPT !.elemSlot = @ + 1 ]
+            /\ UNCHANGED ProcState
+\end{notla}
+\begin{tlatex}
+\@x{ SendElem ( t ) \.{\defeq}}%
+\@x{\@s{24.59} \.{\land} Shared . medium \.{=} \{ \}}%
+\@x{\@s{24.59} \.{\land} Shared . chipTimer \.{=} 0}%
+\@x{\@s{24.59} \.{\land} \.{\LET} i \.{\defeq} taskId ( t )}%
+\@x{\@s{37.93} \.{\IN} \.{\land} Shared . chipCount \.{=} i}%
+\@x{\@s{60.30} \.{\land} \.{\LET} resSet \.{\defeq} reservation ( i )}%
+\@x{\@s{73.63} \.{\IN} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+\@x{\@s{125.73} ! . macTimer \.{=} delta ,\,}%
+ \@x{\@s{125.73} ! . medium \.{=} \{ [ id \.{\mapsto} i ,\, type
+ \.{\mapsto}\@w{hard} ,\, res \.{\mapsto} resSet ] \} ]}%
+\@x{\@s{96.00} \.{\land} TaskState \.{'} \.{=} [ TaskState {\EXCEPT}}%
+ \@x{\@s{125.73} ! [ i ] . res \.{=} [ j \.{\in} Task \.{\mapsto} {\IF} j
+ \.{\in} resSet \.{\THEN} i \.{\ELSE} @ [ j ] ] ,\,}%
+\@x{\@s{125.73} ! [ i ] . cons \.{=} 1 ]}%
+ \@x{\@s{60.30} \.{\land} History \.{'} \.{=} [ History {\EXCEPT} ! . elemSlot
+ \.{=} @ \.{+} 1 ]}%
+\@x{\@s{60.30} \.{\land} {\UNCHANGED} ProcState}%
+\end{tlatex}
+
+\begin{notla}
+SendRese(t) ==
+      /\ Shared.medium = {}
+      /\ Shared.chipTimer = delta
+      /\ LET i == taskId(t)
+         IN /\ TaskState[i].res[Shared.chipCount] = i
+            /\ Shared' = [ Shared EXCEPT 
+                   !.macTimer = delta, 
+                   !.medium = { [ id |-> i, type |-> "hard", res |-> {-1} ] } ]
+            /\ TaskState' = [ j \in Task |-> [ TaskState[j] EXCEPT 
+                   !.res[Shared.chipCount] = -1 ] ]
+            /\ UNCHANGED << ProcState, History >>               
+\end{notla}
+\begin{tlatex}
+\@x{ SendRese ( t ) \.{\defeq}}%
+\@x{\@s{24.59} \.{\land} Shared . medium \.{=} \{ \}}%
+\@x{\@s{24.59} \.{\land} Shared . chipTimer \.{=} delta}%
+\@x{\@s{24.59} \.{\land} \.{\LET} i \.{\defeq} taskId ( t )}%
+ \@x{\@s{37.93} \.{\IN} \.{\land} TaskState [ i ] . res [ Shared . chipCount ]
+ \.{=} i}%
+\@x{\@s{60.30} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+\@x{\@s{90.03} ! . macTimer \.{=} delta ,\,}%
+ \@x{\@s{90.03} ! . medium \.{=} \{ [ id \.{\mapsto} i ,\, type
+ \.{\mapsto}\@w{hard} ,\, res \.{\mapsto} \{ \.{-} 1 \} ] \} ]}%
+ \@x{\@s{60.30} \.{\land} TaskState \.{'} \.{=} [ j \.{\in} Task \.{\mapsto} [
+ TaskState [ j ] {\EXCEPT}}%
+\@x{\@s{90.03} ! . res [ Shared . chipCount ] \.{=} \.{-} 1 ] ]}%
+ \@x{\@s{60.30} \.{\land} {\UNCHANGED} {\langle} ProcState ,\, History
+ {\rangle}}%
+\end{tlatex}
+
+
+\begin{notla}
+noRecvSet(id) == IF Shared.chipCount = 2 THEN {id, 3} ELSE {id}
+\end{notla}
+\begin{tlatex}
+ \@x{ noRecvSet ( id ) \.{\defeq} {\IF} Shared . chipCount \.{=} 2 \.{\THEN}
+ \{ id ,\, 3 \} \.{\ELSE} \{ id \}}%
+\end{tlatex}
+
+\begin{notla}
+RecvHard( m ) ==
+      /\ m.type = "hard"    
+      /\ Shared.macTimer = 0
+      /\ Shared' = [ Shared EXCEPT !.medium = {} ]
+      /\ LET noRecvSet == IF Shared.chipCount = 2 THEN {m.id, 3} ELSE {m.id}
+         IN TaskState' =
+                [ i \in noRecvSet |-> TaskState[i] ] @@
+                [ i \in Task \ noRecvSet |-> [ TaskState[i] EXCEPT
+                           !.msg = Append( @, m),                            
+                           !.execTimer = IF Len( TaskState[i].msg ) = 0 THEN pi ELSE @,
+                           !.cons = IF m.res # {-1} THEN @ + 1 ELSE @,
+                           !.res = IF m.res = {-1}
+                                   THEN [ j \in Task |-> IF j = m.id THEN -1 ELSE @[j] ]
+                                   ELSE [ j \in Task |-> IF j \in m.res THEN m.id ELSE @[j] ] ] ] 
+      /\ UNCHANGED << ProcState, History >>
+\end{notla}
+\begin{tlatex}
+\@x{ RecvHard ( m ) \.{\defeq}}%
+\@x{\@s{24.59} \.{\land} m . type \.{=}\@w{hard}}%
+\@x{\@s{24.59} \.{\land} Shared . macTimer \.{=} 0}%
+ \@x{\@s{24.59} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT} ! . medium
+ \.{=} \{ \} ]}%
+ \@x{\@s{24.59} \.{\land} \.{\LET} noRecvSet \.{\defeq} {\IF} Shared .
+ chipCount \.{=} 2 \.{\THEN} \{ m . id ,\, 3 \} \.{\ELSE} \{ m . id \}}%
+\@x{\@s{37.93} \.{\IN} TaskState \.{'} \.{=}}%
+ \@x{\@s{76.70} [ i \.{\in} noRecvSet \.{\mapsto} TaskState [ i ] ]
+ \.{\,@@\,}}%
+ \@x{\@s{76.70} [ i \.{\in} Task \.{\,\backslash\,} noRecvSet \.{\mapsto} [
+ TaskState [ i ] {\EXCEPT}}%
+\@x{\@s{112.86} ! . msg \.{=} Append ( @ ,\, m ) ,\,}%
+ \@x{\@s{112.86} ! . execTimer \.{=} {\IF} Len ( TaskState [ i ] . msg ) \.{=}
+ 0 \.{\THEN} pi \.{\ELSE} @ ,\,}%
+ \@x{\@s{112.86} ! . cons \.{=} {\IF} m . res \.{\neq} \{ \.{-} 1 \} \.{\THEN}
+ @ \.{+} 1 \.{\ELSE} @ ,\,}%
+\@x{\@s{112.86} ! . res \.{=} {\IF} m . res\@s{0.52} \.{=} \{ \.{-} 1 \}}%
+ \@x{\@s{150.74} \.{\THEN} [ j \.{\in} Task \.{\mapsto} {\IF} j \.{=} m . id
+ \.{\THEN} \.{-} 1 \.{\ELSE} @ [ j ] ]}%
+ \@x{\@s{150.74} \.{\ELSE} [ j \.{\in} Task \.{\mapsto} {\IF} j \.{\in} m .
+ res \.{\THEN} m . id \.{\ELSE} @ [ j ] ] ] ]}%
+ \@x{\@s{24.59} \.{\land} {\UNCHANGED} {\langle} ProcState ,\, History
+ {\rangle}}%
+\end{tlatex}
+
+
+\begin{notla}
+Failed == CASE Shared.chipCount = 2 -> { 3 }
+	      []  Shared.chipCount \in {3, 4} -> { 3, 5 }
+	      []  Shared.chipCount = 5 -> { 3, 5 }
+	      []  Shared.chipCount \in { 1 } \cup 6..nTask -> { }
+
+lenMsg(i) ==
+      IF ProcState[i].list # << >> THEN Head(ProcState[i].list).txLength ELSE delta
+\end{notla}
+\begin{tlatex}
+ \@x{ Failed \.{\defeq} {\CASE} Shared . chipCount \.{=} 2 \.{\rightarrow} \{
+ 3 \}}%
+ \@x{\@s{70.26} {\Box}\@s{4.1} Shared . chipCount \.{\in} \{ 3 ,\, 4 \}
+ \.{\rightarrow} \{ 3 ,\, 5 \}}%
+ \@x{\@s{70.26} {\Box}\@s{4.1} Shared . chipCount \.{=} 5 \.{\rightarrow} \{ 3
+ ,\, 5 \}}%
+ \@x{\@s{70.26} {\Box}\@s{4.1} Shared . chipCount \.{\in} \{ 1 \} \.{\cup} 6
+ \.{\dotdot} nTask \.{\rightarrow} \{ \}}%
+\par\vspace{8.0pt}%
+\@x{ lenMsg ( i ) \.{\defeq}}%
+ \@x{\@s{36.76} {\IF} ProcState [ i ] . list \.{\neq} {\langle} {\rangle}
+ \.{\THEN} Head ( ProcState [ i ] . list ) . txLength \.{\ELSE} delta}%
+\end{tlatex}
+
+\begin{notla}
+SendSoft(p) ==
+      /\ 2 * delta \leq Shared.chipTimer
+      /\ Shared.chipTimer \leq deltaChip
+      /\ Shared.medium = {}
+      /\ LET i == procId(p)
+             lenTX == lenMsg(i)
+             d == Shared.chipTimer + lenTX
+             NoMsg == i \in Failed \/ d > deltaChip
+         IN /\ i = ProcState[i].token
+            /\ Shared' = [ Shared EXCEPT
+                   !.macTimer = IF NoMsg THEN Infinity ELSE lenTX,
+                   !.medium = IF NoMsg THEN @ ELSE { [ id |-> i, type |-> "soft" ] } ]
+            /\ ProcState' = [ ProcState EXCEPT
+                   ![i].token = IF NoMsg THEN @ ELSE ( @ % nProc) + 1,
+                   ![i].list = IF d > deltaChip \/ @ = << >> THEN @ ELSE Tail(@),
+                   ![i].count = IF NoMsg THEN @ ELSE @ + 1 ]
+            /\ UNCHANGED << TaskState, History >>
+\end{notla}
+\begin{tlatex}
+\@x{ SendSoft ( p ) \.{\defeq}}%
+\@x{\@s{24.59} \.{\land} 2 \.{*} delta \.{\leq} Shared . chipTimer}%
+\@x{\@s{24.59} \.{\land} Shared . chipTimer \.{\leq} deltaChip}%
+\@x{\@s{24.59} \.{\land} Shared . medium \.{=} \{ \}}%
+\@x{\@s{24.59} \.{\land} \.{\LET} i \.{\defeq} procId ( p )}%
+\@x{\@s{60.30} lenTX \.{\defeq} lenMsg ( i )}%
+\@x{\@s{60.30} d \.{\defeq} Shared . chipTimer \.{+} lenTX}%
+\@x{\@s{60.30} NoMsg \.{\defeq} i \.{\in} Failed \.{\lor} d \.{>} deltaChip}%
+\@x{\@s{37.93} \.{\IN} \.{\land} i \.{=} ProcState [ i ] . token}%
+\@x{\@s{60.30} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+ \@x{\@s{90.03} ! . macTimer \.{=} {\IF} NoMsg \.{\THEN} Infinity \.{\ELSE}
+ lenTX ,\,}%
+ \@x{\@s{90.03} ! . medium \.{=} {\IF} NoMsg \.{\THEN} @ \.{\ELSE} \{ [ id
+ \.{\mapsto} i ,\, type \.{\mapsto}\@w{soft} ] \} ]}%
+\@x{\@s{60.30} \.{\land} ProcState \.{'} \.{=} [ ProcState {\EXCEPT}}%
+ \@x{\@s{90.03} ! [ i ] . token \.{=} {\IF} NoMsg \.{\THEN} @ \.{\ELSE} ( @
+ \.{\%} nProc ) \.{+} 1 ,\,}%
+ \@x{\@s{90.03} ! [ i ] . list \.{=} {\IF} d \.{>} deltaChip \.{\lor} @ \.{=}
+ {\langle} {\rangle} \.{\THEN} @ \.{\ELSE} Tail ( @ ) ,\,}%
+ \@x{\@s{90.03} ! [ i ] . count \.{=} {\IF} NoMsg \.{\THEN} @ \.{\ELSE} @
+ \.{+} 1 ]}%
+ \@x{\@s{60.30} \.{\land} {\UNCHANGED} {\langle} TaskState ,\, History
+ {\rangle}}%
+\end{tlatex}
+
+
+\begin{notla}
+RecvSoft( m ) ==
+      /\ m.type = "soft"
+      /\ Shared.macTimer = 0
+      /\ Shared' = [ Shared EXCEPT !.medium = {} ]
+      /\ ProcState' = [ j \in {m.id} |-> ProcState[j] ] @@
+                      [ j \in Proc \ {m.id} |-> [ ProcState[j] EXCEPT
+                                                      !.token = ( @ % nProc) + 1,
+                                                      !.count = @ + 1 ] ]
+      /\ UNCHANGED << TaskState, History >>
+\end{notla}
+\begin{tlatex}
+\@x{ RecvSoft ( m ) \.{\defeq}}%
+\@x{\@s{24.59} \.{\land} m . type \.{=}\@w{soft}}%
+\@x{\@s{24.59} \.{\land} Shared . macTimer \.{=} 0}%
+ \@x{\@s{24.59} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT} ! . medium
+ \.{=} \{ \} ]}%
+ \@x{\@s{24.59} \.{\land} ProcState \.{'} \.{=} [ j \.{\in} \{ m . id \}
+ \.{\mapsto} ProcState [ j ] ] \.{\,@@\,}}%
+ \@x{\@s{106.34} [ j \.{\in} Proc \.{\,\backslash\,} \{ m . id \} \.{\mapsto}
+ [ ProcState [ j ] {\EXCEPT}}%
+\@x{\@s{239.45} ! . token\@s{0.54} \.{=} ( @ \.{\%} nProc ) \.{+} 1 ,\,}%
+\@x{\@s{239.45} ! . count \.{=} @ \.{+} 1 ] ]}%
+ \@x{\@s{24.59} \.{\land} {\UNCHANGED} {\langle} TaskState ,\, History
+ {\rangle}}%
+\end{tlatex}
+                  
+\begin{notla}
+NextTick ==
+      LET noRese == /\ Shared.medium = {}
+                    /\ Shared.chipTimer = delta
+                    /\ \A i \in Task : TaskState[i].res[Shared.chipCount] # i
+          tmp == min( { TaskState[i].execTimer : i \in Task } \cup 
+                      { deltaChip - Shared.chipTimer } )
+          d == IF noRese THEN min( { delta, tmp } ) ELSE min( { Shared.macTimer, tmp } )
+      IN /\ d > 0
+         /\ Shared' = [ Shared EXCEPT
+                !.chipTimer = @ + d,
+                !.macTimer = IF noRese 
+                             THEN @
+                             ELSE IF @ = Infinity THEN Infinity  ELSE @ - d ]
+         /\ TaskState' = [ i \in Task |-> [ TaskState[i] EXCEPT
+                !.msg = IF TaskState[i].execTimer - d = 0  THEN Tail( @ ) ELSE @,
+                !.execTimer = IF @ - d = 0
+                              THEN IF Len( TaskState[i].msg ) > 1 THEN pi ELSE Infinity
+                              ELSE IF @ = Infinity THEN @ ELSE @ - d ] ]
+         /\ UNCHANGED << ProcState, History >>
+\end{notla}
+\begin{tlatex}
+\@x{ NextTick \.{\defeq}}%
+ \@x{\@s{24.59} \.{\LET} noRese \.{\defeq} \.{\land} Shared . medium \.{=} \{
+ \}}%
+\@x{\@s{106.48} \.{\land} Shared . chipTimer \.{=} delta}%
+ \@x{\@s{106.48} \.{\land} \A\, i \.{\in} Task \.{:} TaskState [ i ] . res [
+ Shared . chipCount ] \.{\neq} i}%
+ \@x{\@s{46.96} tmp \.{\defeq} min ( \{ TaskState [ i ] . execTimer \.{:} i
+ \.{\in} Task \} \.{\cup}}%
+\@x{\@s{114.93} \{ deltaChip \.{-} Shared . chipTimer \} )}%
+ \@x{\@s{46.96} d \.{\defeq} {\IF} noRese \.{\THEN} min ( \{ delta ,\, tmp \}
+ ) \.{\ELSE} min ( \{ Shared . macTimer ,\, tmp \} )}%
+\@x{\@s{24.59} \.{\IN} \.{\land} d \.{>} 0}%
+\@x{\@s{46.96} \.{\land} Shared \.{'} \.{=} [ Shared {\EXCEPT}}%
+\@x{\@s{76.70} ! . chipTimer \.{=} @ \.{+} d ,\,}%
+\@x{\@s{76.70} ! . macTimer \.{=} {\IF} noRese}%
+\@x{\@s{153.26} \.{\THEN} @}%
+ \@x{\@s{153.26} \.{\ELSE} {\IF} @ \.{=} Infinity \.{\THEN} Infinity\@s{4.1}
+ \.{\ELSE} @ \.{-} d ]}%
+ \@x{\@s{46.96} \.{\land} TaskState \.{'} \.{=} [ i \.{\in} Task \.{\mapsto} [
+ TaskState [ i ] {\EXCEPT}}%
+ \@x{\@s{76.70} ! . msg \.{=} {\IF} TaskState [ i ] . execTimer \.{-} d \.{=}
+ 0\@s{4.1} \.{\THEN} Tail ( @ ) \.{\ELSE} @ ,\,}%
+\@x{\@s{76.70} ! . execTimer \.{=} {\IF} @ \.{-} d \.{=} 0}%
+ \@x{\@s{153.26} \.{\THEN} {\IF} Len ( TaskState [ i ] . msg ) \.{>} 1
+ \.{\THEN} pi \.{\ELSE} Infinity}%
+ \@x{\@s{153.26} \.{\ELSE} {\IF} @ \.{=} Infinity \.{\THEN} @ \.{\ELSE} @
+ \.{-} d ] ]}%
+ \@x{\@s{46.96} \.{\land} {\UNCHANGED} {\langle} ProcState ,\, History
+ {\rangle}}%
+\end{tlatex}
+
+\begin{notla}
+NextChip ==
+      /\ Shared.medium = {}
+      /\ Shared.chipTimer = deltaChip
+      /\ LET Overflow == \E j \in Proc : Len( ProcState[j].list ) > 14
+             NextCycle == Shared.chipCount' = 1
+         IN  /\ Shared' = [ Shared EXCEPT
+                    !.macTimer = 0, 
+                    !.chipCount = (@  %  nTask) + 1,
+                    !.chipTimer = IF Overflow THEN -1 ELSE 0 ]
+             /\ ProcState' = [ j \in Proc |-> [ ProcState[j] EXCEPT 
+                    !.token = IF ProcState[j].count = 0 THEN  (@  %  nProc ) + 1 ELSE @,
+                    !.count = 0,
+                    !.list = IF NextCycle THEN @ \o list(j) ELSE @ ] ]
+             /\ IF NextCycle
+                THEN History' = [ elem |-> 0, rese |-> 0 ]
+                ELSE UNCHANGED History
+      /\ UNCHANGED TaskState
+\end{notla}
+\begin{tlatex}
+\@x{ NextChip \.{\defeq}}%
+\@x{\@s{24.59} \.{\land}\@s{10.21} Shared . medium \.{=} \{ \}}%
+\@x{\@s{24.59} \.{\land}\@s{10.21} Shared . chipTimer \.{=} deltaChip}%
+ \@x{\@s{24.59} \.{\land}\@s{10.21} \.{\LET} Overflow \.{\defeq} \E\, j
+ \.{\in} Proc \.{:} Len ( ProcState [ j ] . list ) \.{>} 14}%
+\@x{\@s{70.51} NextCycle \.{\defeq} Shared . chipCount \.{'} \.{=} 1}%
+ \@x{\@s{48.14} \.{\IN}\@s{4.1} \.{\land} Shared \.{'} \.{=} [ Shared
+ {\EXCEPT}}%
+\@x{\@s{104.34} ! . macTimer \.{=} 0 ,\,}%
+ \@x{\@s{104.34} ! . chipCount\@s{0.89} \.{=} ( @\@s{4.1} \.{\%}\@s{4.1} nTask
+ ) \.{+} 1 ,\,}%
+ \@x{\@s{104.34} ! . chipTimer \.{=} {\IF} Overflow \.{\THEN} \.{-} 1
+ \.{\ELSE} 0 ]}%
+ \@x{\@s{74.61} \.{\land} ProcState \.{'} \.{=} [ j \.{\in} Proc \.{\mapsto} [
+ ProcState [ j ] {\EXCEPT}}%
+ \@x{\@s{104.34} ! . token\@s{0.54} \.{=} {\IF} ProcState [ j ] . count \.{=}
+ 0 \.{\THEN}\@s{4.1} ( @\@s{4.1} \.{\%}\@s{4.1} nProc ) \.{+} 1 \.{\ELSE} @
+ ,\,}%
+\@x{\@s{104.34} ! . count \.{=} 0 ,\,}%
+ \@x{\@s{104.34} ! . list \.{=} {\IF} NextCycle \.{\THEN} @ \.{\circ} list ( j
+ ) \.{\ELSE} @ ] ]}%
+\@x{\@s{74.61} \.{\land} {\IF} NextCycle}%
+ \@x{\@s{87.94} \.{\THEN} History \.{'} \.{=} [ elem \.{\mapsto} 0 ,\, rese
+ \.{\mapsto} 0 ]}%
+\@x{\@s{87.94} \.{\ELSE} {\UNCHANGED} History}%
+\@x{\@s{24.59} \.{\land}\@s{10.21} {\UNCHANGED} TaskState}%
+\end{tlatex}
+
+\begin{notla}
+Shared.medium = {}  => Shared.macTimer = 0 
+\end{notla}
+\begin{tlatex}
+ \@x{ Shared . medium \.{=} \{ \}\@s{4.1} \.{\implies} Shared . macTimer \.{=}
+ 0}%
+\end{tlatex}
+
+
+\begin{notla}
+HardMsg == Seq( [ id: Task, type: {"hard"}, res: SUBSET( {-1} \cup Task ) ] )
+
+MediumMsg == { m: m \in [ id: Proc, type: {"soft"} ] \cup
+                        [ id: Task, type: {"hard"}, res: SUBSET( {-1} \cup Task ) ] }
+
+TypeInvariance ==
+      /\ Shared.chipCount \in Task
+      /\ Shared.chipTimer \in 0..deltaChip
+      /\ Shared.macTimer \in 0..maxTxTime \cup {Infinity}
+      /\ \A m \in Shared.medium : m \in MediumMsg
+      /\ ProcState \in [ Proc -> [ token : Proc, count : 0..50,
+              list : {<< >>} \cup Seq( [ txTime : 0..maxTxTime ] ) ] ]
+      /\ TaskState \in [ Task -> [ msg : {<< >>} \cup HardMsg, res : [ Task -> {-1} \cup Task  ], 
+                                   execTimer : 0..pi \cup {Infinity}, cons :Task ] ]
+\end{notla}
+\begin{tlatex}
+ \@x{ HardMsg \.{\defeq} Seq ( [ id \.{:} Task ,\, type \.{:} \{\@w{hard} \}
+ ,\, res \.{:} {\SUBSET} ( \{ \.{-} 1 \} \.{\cup} Task ) ] )}%
+\par\vspace{8.0pt}%
+ \@x{ MediumMsg \.{\defeq} \{ m \.{:} m \.{\in} [ id \.{:} Proc ,\,
+ type\@s{1.18} \.{:} \{\@w{soft} \} ] \.{\cup}}%
+ \@x{\@s{137.77} [ id \.{:} Task ,\, type \.{:} \{\@w{hard} \} ,\, res \.{:}
+ {\SUBSET} ( \{ \.{-} 1 \} \.{\cup} Task ) ] \}}%
+\par\vspace{8.0pt}%
+\@x{ TypeInvariance \.{\defeq}}%
+\@x{\@s{24.59} \.{\land} Shared . chipCount\@s{0.89} \.{\in} Task}%
+\@x{\@s{24.59} \.{\land} Shared . chipTimer \.{\in} 0 \.{\dotdot} deltaChip}%
+ \@x{\@s{24.59} \.{\land} Shared . macTimer \.{\in} 0 \.{\dotdot} maxTxTime
+ \.{\cup} \{ Infinity \}}%
+ \@x{\@s{24.59} \.{\land} \A\, m \.{\in} Shared . medium \.{:} m \.{\in}
+ MediumMsg}%
+ \@x{\@s{24.59} \.{\land} ProcState \.{\in} [ Proc \.{\rightarrow} [ token
+ \.{:} Proc ,\, count \.{:} 0 \.{\dotdot} 50 ,\,}%
+ \@x{\@s{58.43} list \.{:} \{ {\langle} {\rangle} \} \.{\cup} Seq ( [ txTime
+ \.{:} 0 \.{\dotdot} maxTxTime ] ) ] ]}%
+ \@x{\@s{24.59} \.{\land} TaskState \.{\in} [ Task \.{\rightarrow} [ msg \.{:}
+ \{ {\langle} {\rangle} \} \.{\cup} HardMsg ,\, res \.{:} [ Task
+ \.{\rightarrow} \{ \.{-} 1 \} \.{\cup} Task\@s{4.1} ] ,\,}%
+ \@x{\@s{154.30} execTimer \.{:} 0 \.{\dotdot} pi \.{\cup} \{ Infinity \} ,\,
+ cons \.{:} Task ] ]}%
+\end{tlatex}
+
+\begin{notla}
+Send(q) == \/ /\ q \in TaskSet 
+              /\ ( ENABLED SendElem(q) \/ ENABLED SendRese(q) )
+           \/ /\ q \in ProcSet
+              /\ ENABLED SendSoft(q)
+
+CollisionAvoidance ==
+      \A p, q \in TaskSet \cup ProcSet: [] ( ENABLED ( Send(p) /\ Send(q) ) => ( p = q ) ) 
+\end{notla}
+\begin{tlatex}
+\@x{ Send ( q ) \.{\defeq} \.{\lor} \.{\land} q \.{\in} TaskSet}%
+ \@x{\@s{77.23} \.{\land} ( {\ENABLED} SendElem ( q ) \.{\lor} {\ENABLED}
+ SendRese ( q ) )}%
+\@x{\@s{63.90} \.{\lor} \.{\land} q \.{\in} ProcSet}%
+\@x{\@s{77.23} \.{\land} {\ENABLED} SendSoft ( q )}%
+\par\vspace{8.0pt}%
+\@x{ CollisionAvoidance \.{\defeq}}%
+ \@x{\@s{24.59} \A\, p ,\, q \.{\in} TaskSet \.{\cup} ProcSet \.{:} {\Box} (
+ {\ENABLED} ( Send ( p ) \.{\land} Send ( q ) ) \.{\implies} ( p \.{=} q ) )}%
+\end{tlatex}
+
+\begin{notla}
+NoCollisionAvoidance ==
+      \E p, q \in TaskSet \cup ProcSet: <> ( ( p # q ) /\ ENABLED ( Send(p) /\ Send(q) ) )
+\end{notla}
+\begin{tlatex}
+\@x{ NoCollisionAvoidance \.{\defeq}}%
+ \@x{\@s{24.59} \E\, p ,\, q \.{\in} TaskSet \.{\cup} ProcSet \.{:} {\Diamond}
+ ( ( p \.{\neq} q ) \.{\land} {\ENABLED} ( Send ( p ) \.{\land} Send ( q ) )
+ )}%
+\end{tlatex}
+
+\begin{notla}
+HardRingCorrectness ==
+      /\ \A t \in TaskSet : [] ( Len( TaskState[taskId(t)].msg ) \leq 3 )
+      /\ [] ( ENABLED NextChip => History.elem = Shared.chipCount )
+\end{notla}
+\begin{tlatex}
+\@x{ HardRingCorrectness \.{\defeq}}%
+ \@x{\@s{24.59} \.{\land} \A\, t \.{\in} TaskSet \.{:} {\Box} ( Len (
+ TaskState [ taskId ( t ) ] . msg ) \.{\leq} 3 )}%
+ \@x{\@s{24.59} \.{\land} {\Box} ( {\ENABLED} NextChip \.{\implies} History .
+ elem \.{=} Shared . chipCount )}%
+\end{tlatex}
+   
+\begin{notla}
+ReservationSafety ==
+      []  \A chip, j \in Task : /\ ENABLED SendRese(T[j])
+                                /\ Shared.chipCount = chip
+          => /\ TaskState[j].res[chip] = j
+             /\ \A i \in Task\{j}: TaskState[i].res[chip] \in { j, -1 }
+\end{notla}
+\begin{tlatex}
+\@x{ ReservationSafety \.{\defeq}}%
+ \@x{\@s{24.59} {\Box}\@s{4.1} \A\, chip ,\, j \.{\in} Task \.{:} \.{\land}
+ {\ENABLED} SendRese ( T [ j ] )}%
+\@x{\@s{131.36} \.{\land} Shared . chipCount \.{=} chip}%
+\@x{\@s{37.66} \.{\implies} \.{\land} TaskState [ j ] . res [ chip ] \.{=} j}%
+ \@x{\@s{70.13} \.{\land} \A\, i \.{\in} Task \.{\,\backslash\,} \{ j \} \.{:}
+ TaskState [ i ] . res [ chip ] \.{\in} \{ j ,\, \.{-} 1 \}}%
+\end{tlatex}
+
+\begin{notla}
+SoftRingFairness == 
+      /\ \A i \in Proc : []<> ( i = ProcState[i].token )
+      /\ []<> ( \A i \in Proc \ Failed : Len(ProcState[i].list) = 0 )
+\end{notla}
+\begin{tlatex}
+\@x{ SoftRingFairness \.{\defeq}}%
+ \@x{\@s{24.59} \.{\land} \A\, i \.{\in} Proc \.{:} {\Box} {\Diamond} ( i
+ \.{=} ProcState [ i ] . token )}%
+ \@x{\@s{24.59} \.{\land} {\Box} {\Diamond} ( \A\, i \.{\in} Proc
+ \.{\,\backslash\,} Failed \.{:} Len ( ProcState [ i ] . list ) \.{=} 0 )}%
+\end{tlatex}
+
+\end{document}

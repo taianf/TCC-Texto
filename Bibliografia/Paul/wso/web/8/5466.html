@@ -1,0 +1,456 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html class="js" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><title>Linux: Realtime Benchmarking | KernelTrap</title>
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="shortcut icon" href="http://kerneltrap.org/sites/default/themes/foundation/favicon.ico" type="image/x-icon">
+<style type="text/css" media="all">@import "/files/css/4ff47ee3445e66ca26c3f0370a0d2a62.css";</style>
+<script type="text/javascript" src="5466_files/jquery.js"></script>
+<script type="text/javascript" src="5466_files/drupal.js"></script>
+<script type="text/javascript" src="5466_files/jstools.js"></script>
+<script type="text/javascript" src="5466_files/activemenu.js"></script>
+<script type="text/javascript">Drupal.extend({ settings: { "jstools": { "cleanurls": true, "basePath": "/" }, "activemenu": { "#block-book-0": "activemenu/book", "#block-menu-1": "activemenu/menu", "#block-menu-62": "activemenu/menu", "#block-menu-166": "activemenu/menu", "#block-user-1": "activemenu/menu" } } });</script>
+<script type="text/javascript"> </script></head><body class="body-right">
+
+<div id="logo">
+    <a href="http://kerneltrap.org/"><img src="5466_files/newlogo.png" alt="" class="logo" height="134" width="287"></a>
+</div>
+
+<div class="header">
+
+  
+  <div id="block-block-11" class="block block-block">
+    <div class="title">login</div>
+  
+  <div class="content"><a href="http://kerneltrap.org/user/login">Login</a> / <a href="http://kerneltrap.org/user/register">Register</a></div>
+</div>
+
+<div id="block-search-0" class="block block-search">
+    <div class="title">Search</div>
+  
+  <div class="content"><form action="/search/node" method="post" id="search-block-form">
+<div><div class="container-inline"><div class="form-item">
+ <input maxlength="128" name="search_block_form_keys" id="edit-search-block-form-keys" size="15" value="" title="Enter the terms you wish to search for." class="form-text" type="text">
+</div>
+<input name="op" id="edit-submit" value="Search" class="form-submit" type="submit">
+<input name="form_id" id="edit-search-block-form" value="search_block_form" type="hidden">
+</div>
+</div></form>
+</div>
+</div>
+
+<div id="block-ad-165" class="block block-ad">
+  
+  <div class="content">
+<div class="advertisement" id="group-165"><!-- No active ads were found in the tids '165'. --></div>
+</div>
+</div>
+
+<div id="block-block-12" class="block block-block">
+    <div class="title">Header Space</div>
+  
+  <div class="content"><p>&nbsp;<br>
+&nbsp;</p>
+</div>
+</div>
+
+</div>
+
+<!-- Navigation Lists -->
+<div id="navcontainer">
+<ul id="navlist">
+<li><a href="http://kerneltrap.org/forum" title="Forums">Forums</a></li>
+<li><a href="http://kerneltrap.org/news" title="News">News</a></li>
+<!--<li><div id="menu-jobs"><a href="/jobs" title="Jobs">Jobs</a></div></li>-->
+<li><a href="http://kerneltrap.org/blogs" title="Blogs">Blogs</a></li>
+<li><a href="http://kerneltrap.org/features" title="Features">Features</a></li>
+<li><a href="http://kerneltrap.org/man" title="Man Pages">Man Pages</a></li>
+<li><a href="http://kerneltrap.org/site" title="Site">Site</a></li>
+</ul>
+</div>
+
+
+<div class="container">
+  
+  <div class="page">
+    <div class="wrapper">
+        <div class="breadcrumb"><div class="breadcrumb"><a href="http://kerneltrap.org/">Home</a></div></div>
+    
+    
+    
+    
+        <h2 class="title">Linux:  Realtime Benchmarking</h2>
+    
+    
+    
+    <div id="node-5466" class="node node-story">
+  
+  
+    <div class="date">July 21, 2005 - 9:37am</div>
+  <!-- <div class="author">Submitted by <a href="/user/1" title="View user profile.">Jeremy</a></div> -->
+  <div class="author">Submitted by <a href="http://kerneltrap.org/user/1" title="View user profile.">Jeremy</a> on July 21, 2005 - 9:37am.</div>
+  
+  <div class="taxonomy_image">
+    <img src="5466_files/K-Linux_0.gif" alt="Linux news" height="75" width="75">  </div>
+
+  <div class="content">
+  <p>Con Kolivas [<a href="http://kerneltrap.org/node/465">interview</a>] used the latest version of <a href="http://interbench.kolivas.org/" target="new">Interbench</a>, his interactivity benchmarking tool [<a href="http://kerneltrap.org/node/5415">story</a>],
+to compare latencies between the plain 2.6.12 kernel, the 2.6.12 kernel
+with kernel preemption enabled, the plan 2.6.10 kernel, and the 2.6.10
+kernel with the PREEMPT_RT realtime preemption option enabled.</p>
+<p>Regarding plain kernel preemption, Con offered the following summary, "<i>with
+these workloads, on this hardware, running these real time simulations
+there is not a convincing argument for CONFIG-PREEMPT. Note that
+running interbench with the non-real time benchmarks also does not show
+a convincing reason for preempt.</i>"  Conversely, the PREEMPT_RT test revealed a noticeable change, about which Con concluded, "<i>interestingly
+the average latencies are slightly higher (in the miniscule &lt;2us
+range), but the maximum latencies are excellently bound to 25us.</i>"  Read on to see the actual test results.</p><div class="autolinks">Submit to: <a href="http://reddit.com/submit?url=http://kerneltrap.org/node/5466&amp;title=Linux:%20%20Realtime%20Benchmarking">Reddit</a>, <a href="http://digg.com/submit?phase=2&amp;url=http://kerneltrap.org/node/5466&amp;title=Linux:%20%20Realtime%20Benchmarking">Digg</a>, <a href="http://slashdot.org/submit.pl?url=http://kerneltrap.org/node/5466&amp;title=Linux:%20%20Realtime%20Benchmarking">Slashdot</a>, <a href="http://del.icio.us/post?url=http://kerneltrap.org/node/5466&amp;title=Linux:%20%20Realtime%20Benchmarking">Del.icio.us</a>, <a href="http://osnews.com/submit.php?url=http://kerneltrap.org/node/5466&amp;title=Linux:%20%20Realtime%20Benchmarking">OSNews</a></div>
+<p></p><hr>
+<pre><b>From: <a href="http://kerneltrap.org/node/view/465">Con Kolivas</a></b> [email blocked]
+To: Ingo Molnar [email blocked]
+Subject: Interbench real time benchmark results
+Date:	Wed, 20 Jul 2005 08:16:11 +1000
+
+Here are results running the real time component with the new version of 
+interbench v0.22 (no formal release announcement yet) available here:
+<a href="http://ck.kolivas.org/apps/interbench/interbench-0.22.tar.bz2" target="new">http://ck.kolivas.org/apps/interbench/interbench-0.22.tar.bz2</a>
+
+Benchmarked on a pentium M 1.7
+
+
+2.6.12 non-preempt kernel:
+--- Benchmarking Audio real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      3 +/- 0.262          5		 100	        100
+Video	      3 +/- 0.949          6		 100	        100
+X	      2 +/- 1.17           6		 100	        100
+Burn	      2 +/- 0.801          5		 100	        100
+Write	      7 +/- 6.05          23		 100	        100
+Read	      7 +/- 2.2           42		 100	        100
+Compile	      6 +/- 4.71          21		 100	        100
+Memload	      6 +/- 4.35          21		 100	        100
+
+--- Benchmarking Video real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      3 +/- 0.145          4		 100	        100
+X	      2 +/- 1.09           6		 100	        100
+Burn	      2 +/- 0.764          5		 100	        100
+Write	      6 +/- 6.26          38		 100	        100
+Read	      4 +/- 1.24          37		 100	        100
+Compile	      5 +/- 5.88         123		 100	        100
+Memload	      6 +/- 7.81         299		 100	        100
+
+Notice pretty good latencies with a max latency of 300us under extreme memory 
+load which is still quite respectable.
+
+
+2.6.12 config-preempt kernel:
+--- Benchmarking Audio real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      3 +/- 0.187          5		 100	        100
+Video	      2 +/- 0.752          4		 100	        100
+X	      2 +/- 0.897          5		 100	        100
+Burn	      2 +/- 0.541          5		 100	        100
+Write	      7 +/- 6.03          22		 100	        100
+Read	      7 +/- 1.58          11		 100	        100
+Compile	      6 +/- 5.84          89		 100	        100
+Memload	      6 +/- 4.09          23		 100	        100
+
+--- Benchmarking Video real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      3 +/- 0.974          5		 100	        100
+X	      2 +/- 1.08           6		 100	        100
+Burn	      2 +/- 0.665          5		 100	        100
+Write	      6 +/- 7.08         174		 100	        100
+Read	      4 +/- 1.23          37		 100	        100
+Compile	      5 +/- 10.1         312		 100	        100
+Memload	      6 +/- 4.27         101		 100	        100
+
+Not entirely what some would expect. Very little difference under low loads, 
+but the maximum latencies exhibited are about the same at 300us. However they 
+hare under different workloads. With these worklods, on this hardware, 
+running these real time simulations there is not a convincing argument for 
+CONFIG-PREEMPT. Note that running interbench with the non-real time 
+benchmarks also does not show a convincing reason for preempt.
+
+As a data point I went back to a 2.6.10 kernel which predates some latency 
+fixes that went into mainline.
+
+
+2.6.10 non-preempt
+--- Benchmarking Audio real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      3 +/- 0.216          6		 100	        100
+Video	      2 +/- 0.811          4		 100	        100
+X	      2 +/- 0.802          6		 100	        100
+Burn	      2 +/- 0.337          5		 100	        100
+Write	      6 +/- 5.62          22		 100	        100
+Read	      6 +/- 1.72          17		 100	        100
+Compile	      6 +/- 5.03          22		 100	        100
+Memload	      8 +/- 4.52          21		 100	        100
+
+--- Benchmarking Video real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      3 +/- 0.724          6		 100	        100
+X	      2 +/- 0.895          5		 100	        100
+Burn	      2 +/- 0.542          4		 100	        100
+Write	      6 +/- 7.81         240		 100	        100
+Read	      4 +/- 0.888         15		 100	        100
+Compile	      5 +/- 5.12          24		 100	        100
+Memload	      6 +/- 6.72         228		 100	        100
+
+This is different again, with similar maximum latencies, but note that read 
+induced latencies were actually lower in this kernel, and write induced 
+latencies were much larger. Interesting.
+
+Finally the latest rt-preempt kernel:
+
+
+2.6.12-RT-V0.7.51-32 with all preempt options and no debugging.
+--- Benchmarking Audio real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      4 +/- 0.737          9		 100	        100
+Video	      4 +/- 1.02           8		 100	        100
+X	      4 +/- 0.98           8		 100	        100
+Burn	      4 +/- 0.995          8		 100	        100
+Write	      7 +/- 5.31          23		 100	        100
+Read	      8 +/- 1.54          12		 100	        100
+Compile	      7 +/- 3.62          21		 100	        100
+Memload	      8 +/- 3.82          24		 100	        100
+
+--- Benchmarking Video real time in the presence of loads ---
+	Latency +/- SD (us)  Max Latency   % Desired CPU  % Deadlines Met
+None	      4 +/- 0.783          7		 100	        100
+X	      4 +/- 0.657          8		 100	        100
+Burn	      4 +/- 0.231          9		 100	        100
+Write	      7 +/- 5.16          24		 100	        100
+Read	      5 +/- 1.32          11		 100	        100
+Compile	      6 +/- 3.86          22		 100	        100
+Memload	      7 +/- 3.83          25		 100	        100
+
+
+Interestingly the average latencies are slightly higher (in the miniscule &lt;2us 
+range), but the maximum latencies are excellently bound to 25us.
+
+The results are quite reproducible.
+
+Food for thought.
+
+Cheers,
+Con
+
+<br>
+<b>From: <a href="http://kerneltrap.org/node/view/517">Ingo Molnar</a></b> [email blocked]
+Subject: Re: Interbench real time benchmark results
+Date:	Wed, 20 Jul 2005 00:32:16 +0200
+
+
+* Con Kolivas [email blocked] wrote:
+
+&gt; Not entirely what some would expect. Very little difference under low 
+&gt; loads, but the maximum latencies exhibited are about the same at 
+&gt; 300us. However they hare under different workloads. With these 
+&gt; worklods, on this hardware, running these real time simulations there 
+&gt; is not a convincing argument for CONFIG-PREEMPT. Note that running 
+&gt; interbench with the non-real time benchmarks also does not show a 
+&gt; convincing reason for preempt.
+
+while i do like the PREEMPT_RT results, i think we need to do two more 
+things to have total confidence in the numbers:
+
+ - i think we'll need to increase the number of sample points, by both
+   increasing the frequency of samples, and by lengthening the
+   test-time - even if just for a single testrun. Some of the worst-case 
+   latencies i care about in PREEMPT_RT trigger only once every couple 
+   of million interrupts (!). For human interactivity we probably dont 
+   care that much though.
+
+ - many of the worst-case latencies relate to some sort of extreme 
+   situation within a particular algorithm. E.g. lots of tasks being 
+   around. Do this for example:
+
+	hackbench 50
+
+   and Ctrl-Z it after a couple of seconds. You'll see a 1msec (or 
+   larger) blip.
+
+   or, fill up swapspace, so that the swap allocation map gets filled
+   up.
+
+ - networking is another frequent source of latencies - it might make 
+   sense to add a workload doing lots of socket IO. (localhost might be 
+   enough, but not for everything)
+
+	Ingo
+</pre><p>
+</p><hr><br>
+<b>Related Links:</b>
+<ul>
+<li><a href="http://kerneltrap.org/mailarchive/1/message/95610/thread">Archive of above thread</a>
+</li><li><a href="http://kerneltrap.org/node/view/465">KernelTrap interview with Con Kolivas</a>
+</li><li><a href="http://kerneltrap.org/node/view/517">KernelTrap interview with Ingo Molnar</a>
+</li></ul>
+    </div>
+
+  <div class="links"><ul class="links inline"><li class="first comment_add"><a href="http://kerneltrap.org/comment/reply/5466#comment-form" title="Share your thoughts and opinions related to this posting." class="comment_add">Add new comment</a></li>
+<li class="last print"><a href="http://kerneltrap.org/node/5466/print" title="Display a printer friendly version of this page." class="print">Printer friendly version</a></li>
+</ul></div>
+</div>
+
+<div id="comments"><a id="comment-130780"></a>
+<div id="comment-130780" class="comment">
+    <h4 class="title">
+    <a href="http://kerneltrap.org/node/5466#comment-130780" class="active">I always wondered how useful</a>      </h4>
+  
+  
+    <div class="date">July 23, 2005 - 5:03pm</div>
+  <div class="author">Anonymous Jacob (not verified)</div>
+  
+  <div class="content"><p>I always wondered how useful it was to preempt the kernel.<br>
+I thought that preempting something important that would just have to
+be tasked switched back to later and increased the latency just to try
+to decrease a latency to a user space program would be bad since all
+programs eventually use the kernel (for system calls, signals, stack
+increasing, etc)....<br>
+Though if they could check the priority of the process to see if it is
+high enough to be worth the extra effort of preempting a kernel, that
+might help in some conditions like maybe the jack server.... though I
+always thought jack might be better itself it were a kernel thread
+instead of real time userspace process... but I'm probably wrong
+somewhere because of my lack of knowledge.</p>
+<p>Anyways, it's good that people are starting to build test suites for
+latencies and other things to make sure they are actually progressing
+the kernel with their development efforts.</p>
+</div>
+
+  <div class="links"><ul class="links"><li class="first last comment_reply"><a href="http://kerneltrap.org/comment/reply/5466/130780" class="comment_reply">reply</a></li>
+</ul></div>
+</div>
+
+<a id="comment-130917"></a>
+<div id="comment-130917" class="comment">
+    <h4 class="title">
+    <a href="http://kerneltrap.org/node/5466#comment-130917" class="active">Realtime improvement</a>      </h4>
+  
+  
+    <div class="date">August 4, 2005 - 2:35am</div>
+  <div class="author">Syed Raihan (not verified)</div>
+  
+  <div class="content"><p>I
+have read that montavista has reduce no of critical section to 100 from
+10,000. It would be nice if some of their work could be merged and
+reduces critical sections ...</p>
+<p>Here is the source of the news ..<br>
+<a href="http://www.linuxdevices.com/news/NS6395401765.html" title="http://www.linuxdevices.com/news/NS6395401765.html">http://www.linuxdevices.com/news/NS6395401765.html</a></p>
+</div>
+
+  <div class="links"><ul class="links"><li class="first last comment_reply"><a href="http://kerneltrap.org/comment/reply/5466/130917" class="comment_reply">reply</a></li>
+</ul></div>
+</div>
+
+<form action="/node/5466" method="post" id="comment-controls">
+<div><div class="box">
+    <h3 class="title">Comment viewing options</h3>
+  
+  <div class="content"><div class="container-inline"><input name="form_id" id="edit-comment-controls" value="comment_controls" type="hidden">
+<div class="form-item">
+ <select name="mode" class="form-select" id="edit-mode"><option value="1">Flat list - collapsed</option><option value="2">Flat list - expanded</option><option value="3">Threaded list - collapsed</option><option value="4" selected="selected">Threaded list - expanded</option></select>
+</div>
+<div class="form-item">
+ <select name="order" class="form-select" id="edit-order"><option value="1">Date - newest first</option><option value="2" selected="selected">Date - oldest first</option></select>
+</div>
+<div class="form-item">
+ <select name="comments_per_page" class="form-select" id="edit-comments-per-page"><option value="10">10 comments per page</option><option value="30">30 comments per page</option><option value="50" selected="selected">50 comments per page</option><option value="70">70 comments per page</option><option value="90">90 comments per page</option><option value="150">150 comments per page</option><option value="200">200 comments per page</option><option value="250">250 comments per page</option><option value="300">300 comments per page</option></select>
+</div>
+<input name="op" id="edit-submit" value="Save settings" class="form-submit" type="submit">
+</div><div class="description">Select your preferred way to display the comments and click "Save settings" to activate your changes.</div></div>
+</div>
+
+</div></form>
+</div>    </div>
+  </div>
+
+    <div class="sidebar sidebar-right"><div id="block-user-1" class="block block-user">
+    <div class="title">Navigation</div>
+  
+  <div class="content">
+<ul class="menu">
+<li class="collapsed activemenu-processed"><a href="http://kerneltrap.org/node/add">Create content</a></li>
+<li class="leaf"><a href="http://kerneltrap.org/mailarchive">Mailing list archives</a></li>
+<li class="leaf"><a href="http://kerneltrap.org/tracker">Recent posts</a></li>
+
+</ul>
+</div>
+</div>
+
+<div id="block-block-14" class="block block-block">
+  
+  <div class="content"><p><!--Ad Bard Image, 175 pixels wide by 125 pixels high --></p>
+<script type="text/javascript" src="5466_files/serve.js"></script><div class="image-advertisement" id="ad-41"><a href="http://adbard.net/ad/redirect/41/e73d04e72743899cf8dc6b81c15e825c" title="Join the Ad Bard Network" target="_blank"><img src="5466_files/FOSSfastfree.png" height="125" width="175"></a></div><a href="http://adbard.net/ad/redirect/9/e73d04e72743899cf8dc6b81c15e825c">Ads by Ad Bard</a><p><!--end--></p>
+</div>
+</div>
+
+<div id="block-forum_addons-0" class="block block-forum_addons">
+    <div class="title">Latest forum posts</div>
+  
+  <div class="content"><table>
+ <thead><tr><th></th><th></th><th></th> </tr></thead>
+<tbody>
+ <tr class="odd"><td><a href="http://kerneltrap.org/node/15809">Performance issues with 2 dual-core Xeon processors</a></td><td>3 hours ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+ <tr class="even"><td><a href="http://kerneltrap.org/node/14995">how to create initrd image for custom kernel</a></td><td>7 hours ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+ <tr class="odd"><td><a href="http://kerneltrap.org/node/15811">Cisco is looking for 2-3 Open Source Software engineers with (BSD/GPL/LGPL license)</a></td><td>7 hours ago</td><td><a href="http://kerneltrap.org/forum/bsd/openbsd">OpenBSD</a></td> </tr>
+ <tr class="even"><td><a href="http://kerneltrap.org/node/15810">Cisco is looking for 2-3 Open source Software Engineer with GPL/BSD/LGPL license experience</a></td><td>7 hours ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+ <tr class="odd"><td><a href="http://kerneltrap.org/node/6918">Resetting the bios password for Toshiba Laptop</a></td><td>14 hours ago</td><td><a href="http://kerneltrap.org/forum/other/hardware">Hardware</a></td> </tr>
+ <tr class="even"><td><a href="http://kerneltrap.org/node/5772">windows folder creation surprise</a></td><td>16 hours ago</td><td><a href="http://kerneltrap.org/forum/other/windows">Windows</a></td> </tr>
+ <tr class="odd"><td><a href="http://kerneltrap.org/node/15805">lkml down?</a></td><td>19 hours ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+ <tr class="even"><td><a href="http://kerneltrap.org/node/15802">problems with ftp server crash</a></td><td>23 hours ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+ <tr class="odd"><td><a href="http://kerneltrap.org/node/14302">Kernel drops ethernet packets every ten minutes...  Ideas?</a></td><td>1 day ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+ <tr class="even"><td><a href="http://kerneltrap.org/node/15778">pata_hpt37x driver and Lite-on DVDRW drive problem.</a></td><td>1 day ago</td><td><a href="http://kerneltrap.org/forum/linux/kernel">Linux kernel</a></td> </tr>
+</tbody></table>
+<div class="more-link"><a href="http://kerneltrap.org/forum" title="Read the latest forum postings.">Show all forums...</a></div></div>
+</div>
+
+<div id="block-tagadelic-7" class="block block-tagadelic">
+    <div class="title">Recent Tags</div>
+  
+  <div class="content"><a href="http://kerneltrap.org/Linux" class="tagadelic level6">Linux</a> 
+<a href="http://kerneltrap.org/-rc" class="tagadelic level1">-rc</a> 
+<a href="http://kerneltrap.org/taxonomy/term/1211" class="tagadelic level1">Matti Aarnio</a> 
+<a href="http://kerneltrap.org/-rc6" class="tagadelic level1">-rc6</a> 
+<a href="http://kerneltrap.org/2.6.25" class="tagadelic level1">2.6.25</a> 
+<a href="http://kerneltrap.org/taxonomy/term/1210" class="tagadelic level1">lkml</a> 
+<a href="http://kerneltrap.org/Linus_Torvalds" class="tagadelic level1">Linus Torvalds</a> 
+<a href="http://kerneltrap.org/quote" class="tagadelic level1">quote</a> 
+<div class="more-link"><a href="http://kerneltrap.org/tags">more tags</a></div></div>
+</div>
+
+<div id="block-block-4" class="block block-block">
+  
+  <div class="content"><center><small>Colocation donated by:</small><br><a href="http://osuosl.org/"><img src="5466_files/thumbnail_small.gif"></a></center></div>
+</div>
+
+<div id="block-user-3" class="block block-user">
+    <div class="title">Who's online</div>
+  
+  <div class="content">There are currently <em>6 users</em> and <em>1655 guests</em> online.<div class="item-list"><h3>Online users</h3><ul><li><a href="http://kerneltrap.org/user/1187" title="View user profile.">krash</a></li><li><a href="http://kerneltrap.org/user/50" title="View user profile.">Mr_Z</a></li><li><a href="http://kerneltrap.org/user/16867" title="View user profile.">nextraztus</a></li><li><a href="http://kerneltrap.org/user/9198" title="View user profile.">andy</a></li><li><a href="http://kerneltrap.org/user/4765" title="View user profile.">zdzichu</a></li><li><a href="http://kerneltrap.org/user/1" title="View user profile.">Jeremy</a></li></ul></div></div>
+</div>
+
+<div id="block-node-0" class="block block-node">
+    <div class="title">Syndicate</div>
+  
+  <div class="content"><a href="http://kerneltrap.org/node/feed" class="feed-icon"><img src="5466_files/feed.png" alt="Syndicate content" title="Syndicate content" height="16" width="16"></a></div>
+</div>
+
+</div>
+  
+  <div style="clear: both;"></div>
+</div>
+
+<div class="footer">
+  <a href="">© 2007 KernelTrap.</a> &nbsp;|&nbsp; Powered by <a href="http://www.drupal.org/">Drupal</a>. &nbsp;|&nbsp; <a href="">Legal statement.</a>
+</div>
+
+<div style="display: none;"><a href="http://kerneltrap.org/forumgroovy.php">speck-geostationary</a></div>
+
+</body></html>

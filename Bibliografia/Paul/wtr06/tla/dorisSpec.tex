@@ -1,0 +1,77 @@
+{\tlatex
+\@x{}\moduleLeftDash\@xx{ {\MODULE} doris}\moduleRightDash\@xx{}%
+\begin{lcom}{0}%
+\begin{cpar}{0}{F}{F}{0}{0}{}%
+This is the list of action that may be enabled
+\end{cpar}%
+\end{lcom}%
+\@x{ SendHardMsg ( id ,\, list ) \.{\defeq}\@s{3.42}}%
+\@y{\@s{0}%
+ Task ``\ensuremath{id}'' sends a slot message with a reservation list
+ ``list''.
+}%
+\@xx{}%
+\@x{ SendHardMsg ( id ) \.{\defeq}}%
+\@y{\@s{0}%
+ Task ``\ensuremath{id}'' sends a slot message (reservation message).
+}%
+\@xx{}%
+\@x{ SendBestMsg ( id ,\, s ) \.{\defeq}}%
+\@y{\@s{0}%
+ Process ``\ensuremath{id}'' sends a best effort message of size \ensuremath{s
+}}%
+\@xx{}%
+\@x{ SendStopMsg ( id ,\, next ) \.{\defeq}}%
+\@y{\@s{0}%
+ Process ``\ensuremath{id}'' sends a STOP message to reserve the token
+}%
+\@xx{}%
+\@x{\@s{141.03}}%
+\@y{\@s{0}%
+ for process ``next''
+}%
+\@xx{}%
+\@x{ Increment ( K\_ \{ id \} ) \.{\defeq}}%
+\@y{\@s{0}%
+ The local counter \ensuremath{K\_\{id\}} is incremented by 1.
+}%
+\@xx{}%
+\@x{ UpdateGamma ( id ) \.{\defeq}}%
+\@x{}\midbar\@xx{}%
+\@x{ Timeout ( id ) \.{\defeq} \.{\land} t\_ \{ id \} \.{=} Delta\_ \{ es \}}%
+\@x{\@s{86.19} \.{\land} Increment ( K\_ \{ id \} )}%
+\par\vspace{8.0pt}%
+ \@x{ ElementaryWindow ( id ) \.{\defeq} \.{\land} 0 \.{\leq} t\_ \{ id \}
+ \.{<} d}%
+\@x{\@s{143.98} \.{\land} K\_ \{ id \} \.{=} id}%
+\@x{\@s{143.98} \.{\land} list \.{\defeq} {\IF} state \.{\THEN}}%
+\@y{\@s{0}%
+ reservation list for the next cycle
+}%
+\@xx{}%
+\@x{\@s{235.71} \.{\ELSE}}%
+\@y{\@s{0}%
+ \ensuremath{\{ \.{-}1 \}
+}}%
+\@xx{}%
+\@x{\@s{143.98} \.{\land} SendHardMsg ( id ,\, list )}%
+\par\vspace{8.0pt}%
+ \@x{ ReservationWindow ( id ) \.{\defeq} \.{\land} delta \.{+} d\@s{4.91}
+ \.{\leq} t\_ \{ id \} \.{<} delta \.{+} 2 \.{*} d}%
+\@x{\@s{145.48} \.{\land} K\_ \{ id \} \.{\in} Gamma [ id ]}%
+\@x{\@s{132.84} \.{\land} list \.{\defeq} {\IF} state \.{\THEN}}%
+\@y{\@s{0}%
+ reservation list for the next cycle
+}%
+\@xx{}%
+\@x{\@s{224.58} \.{\ELSE}}%
+\@y{\@s{0}%
+ \ensuremath{\{ \.{-}1 \}
+}}%
+\@xx{}%
+\@x{\@s{132.84} \.{\land} SendHardMsg ( id ,\, list )}%
+\par\vspace{16.0pt}%
+\@x{}\bottombar\@xx{}%
+\par\vspace{8.0pt}%
+\setboolean{shading}{false}
+}
