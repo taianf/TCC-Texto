@@ -8,10 +8,12 @@ Para que o drone possa executar uma missão automática ou autonomamente, é nec
 
 O Raspberry Pi é um computador do tamanho de um cartão de crédito que pode se conectar a uma TV ou monitor e usar periféricos como mouse e teclado \cite{RPF2019a}. O sistema operacional padrão é o Linux, cuja distribuição principal é a Raspbian, com base na distribuição Debian. A possibilidade de usar o Linux torna o Raspberry uma solução muito mais flexível em comparação com outras soluções de microcontroladores, como o Arduino, por exemplo.
 
-A desvantagem vem do fato de que sistemas como o Arduino podem ser determinísticos, ou seja, sempre respondem dentro de um tempo máximo calculado, enquanto o sistema Linux padrão não tem garantias temporais para responder a um evento externo. No entanto a frequência de operação do processador do Raspberry é muito superior a do Arduino (1200 MHz no modelo utilizado pelo LaSid contra 16 MHz do Arduino Uno, modelo mais comum), o Raspberry quase sempre pode responder mais rápido do que uma solução semelhante no Arduino.
+A desvantagem vem do fato de que sistemas como o Arduino podem ser determinísticos, ou seja, sempre respondem dentro de um tempo máximo calculado, enquanto o sistema Linux padrão não tem garantias temporais para responder a um evento externo. No entanto a frequência de operação do processador do Raspberry é muito superior à do Arduino (1200MHz no modelo utilizado pelo LaSid contra 16 MHz do Arduino Uno, modelo mais comum), o Raspberry quase sempre pode responder mais rápido do que uma solução semelhante no Arduino.
 
 Para a maioria das aplicações, este comportamento pode ser satisfatório. Em aplicações críticas, no entanto, uma única resposta atrasada pode significar uma falha catastrófica. Para lidar com esses cenários em que o tempo máximo de resposta deve ser previsível, foram criados patches para o kernel Linux a fim de torná-lo um Sistema de Tempo Real. A definição de Sistema de Tempo Real é "um sistema de tempo real é aquele que deve satisfazer explicitamente restrições de tempo de resposta podendo ter consequências de risco ou falha não satisfazendo às suas restrições"  \cite{Laplante2004}.
 
 \section{Motivação}
 \section{Objetivos}
 \section{Organização}
+
+
