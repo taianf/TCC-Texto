@@ -1,4 +1,4 @@
-\xchapter{Experimentos}{Opcional}
+\xchapter{Experimentos}{Coleta e análise de dados}
 
 Valores encontrados nas medições.
 
@@ -30,13 +30,13 @@ Foi medido o tempo de resposta do linux comum para servir de referência e depoi
 \item Sobrecarga (256 processos)
 \end{itemize}
 
-\section{Resultados esperados - remover}
+\section{Expectativas}
 
 Preempt-RT mais lento na médio, melhor pior caso, menos variação.
 
 Na figura \ref{tableau} temos uma figura.
 
-\section{Resultados obtidos}
+\section{Resultados}
 
 A primeira letra representa o kernel testado: (r)aspberry padrão ou (p)reempt-RT.
 A segunda letra é o tipo de interrupção testado: (s)oftirq, (t)asklet, (w)orkqueue.
@@ -44,7 +44,11 @@ O terceiro caracter é a carga na cpu: 0 thread, 1 thread, (m)any threads (256).
 
 \begin{figure}[!htb]
     \centering
-    \includegraphics{graficos/tableau.png}
+    \includegraphics{graficos/Tabeladedados.png}
     \caption{Medições de latência}
     \label{tableau}
 \end{figure}
+
+\subsection{Comparativo por kernel}
+\subsection{Comparativo por tipo de interrupção}
+\subsection{Comparativo por carga de trabalho}

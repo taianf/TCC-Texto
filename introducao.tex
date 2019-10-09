@@ -1,4 +1,4 @@
-\xchapter{Introdução}{Opcional}
+\xchapter{Introdução}{Apresentação do trabalho}
 
  % A história dos drones pode parecer recente diante dos avanços tecnológicos que baratearam as tecnologias envolvidas nos modelos mais conhecidos, mas, ao buscar sua origem, percebemos que estamos usando drones há mais de um século. No livro \textit{The Future of Drone Use: Opportunities and Threats from Ethical and Legal Perspectives} \cite{Custers2016}, considera-se que o primeiro uso de um drone registrado ocorreu em julho de 1849, quando as forças austríacas tentaram lançar balões incendiários com explosivos e uma bomba relógio para fazer os mesmo caírem sobre a cidade de Veneza. O drone como é conhecido hoje foi concebido por Abe Karem em 1977, quando criou um drone que era controlado por 3 pessoas, em vez de 30, como exigido pelos drones da época \cite{Buzzo2015}.
 
@@ -10,10 +10,16 @@ O Raspberry Pi é um computador do tamanho de um cartão de crédito que pode se
 
 A desvantagem vem do fato de que sistemas como o Arduino podem ser determinísticos, ou seja, sempre respondem dentro de um tempo máximo calculado, enquanto o sistema Linux padrão não tem garantias temporais para responder a um evento externo. No entanto a frequência de operação do processador do Raspberry é muito superior à do Arduino (1200MHz no modelo utilizado pelo LaSid contra 16 MHz do Arduino Uno, modelo mais comum), o Raspberry quase sempre pode responder mais rápido do que uma solução semelhante no Arduino.
 
-Para a maioria das aplicações, este comportamento pode ser satisfatório. Em aplicações críticas, no entanto, uma única resposta atrasada pode significar uma falha catastrófica. Para lidar com esses cenários em que o tempo máximo de resposta deve ser previsível, foram criados patches para o kernel Linux a fim de torná-lo um Sistema de Tempo Real. A definição de Sistema de Tempo Real é "um sistema de tempo real é aquele que deve satisfazer explicitamente restrições de tempo de resposta podendo ter consequências de risco ou falha não satisfazendo às suas restrições"  \cite{Laplante2004}.
+Para a maioria das aplicações, este comportamento pode ser satisfatório. Em aplicações críticas, no entanto, uma única resposta atrasada pode significar uma falha catastrófica. Para lidar com esses cenários em que o tempo máximo de resposta deve ser previsível, foram criados patches para o kernel Linux a fim de torná-lo um Sistema de Tempo Real. A definição de Sistema de Tempo Real segundo Laplante \cite{Laplante2004} é "um sistema de tempo real é aquele que deve satisfazer explicitamente restrições de tempo de resposta podendo ter consequências de risco ou falha não satisfazendo às suas restrições."
 
 \section{Motivação}
+
+Durante a realização deste trabalho não foi encontrado nenhum trabalho que compare o desempenho do Raspberry Pi levando em conta todos os tipos de implementação de interrupções. As análises costumam utilizar benchmarks que rodam em espaço de usuário e avaliam apenas o tempo de resposta entre a chegada do estímulo externo e a resposta externa ao sistema. Esse tipo de análise não separa o tempo de resposta do sistema do tempo de resposta da aplicação que está executando o teste. Ao fazer uma análise em mais baixo nível, é possível separar o tempo de resposta do sistema do tempo de resposta da aplicação.
+
 \section{Objetivos}
+
+O objetivo deste trabalho é analisar o desempenho do Raspberry Pi em diferentes cenários e fornecer dados para auxiliar o desenvolvimento de aplicações de tempo real para o mesmo. É esperado que esses dados ajudem a decidir o tipo de sistema a ser utilizado a depender da aplicação que se deseja implementar.
+
 \section{Organização}
 
-
+No capítulo 2 irei apresentar alguns trabalhos relacionados e quais as estratégias utilizadas pelos autores em cada um para realizar suas medições ou análises. A descrição dos modelos de SO utilizados nas medições além de características do Raspberry serão apresentadas no capítulo 3. A apresentação e análise de resultados experimentais está no capítulo 4, onde faço uma comparação entre os modelos de interrupção e os SO's. Na última parte, no capítulo 5, serão apresentados as dificuldades encontradas durante a realização deste trabalho e ideias para continuação do trabalho no futuro.
