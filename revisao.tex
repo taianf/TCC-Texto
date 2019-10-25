@@ -8,9 +8,19 @@ Entre os desenvolvedores existe um ditado que é "um sistema de tempo real é um
 
 Em sistema de controle ou segurança, por exemplo, um atraso em determinada ação, como disparar um alarme ou ativar um controle anti-incêndio, pode levar a vítimas fatais. Laplante \cite{Laplante2004} define um sistema de tempo real como "um sistema de tempo real é aquele que deve satisfazer explicitamente restrições de tempo de resposta podendo ter consequências de risco ou falha não satisfazendo às suas restrições."
 
+Em sistemas operacionais comuns, a latência pode não ter limites dentro de situações específicas. Em um escalonador de tarefas comum, pode ser que uma tarefa de escrita só possa ocorrer quando não existirem tarefas de leitura na fila. Como tarefas de leituras podem continuar chegando arbitrariamente, a tarefa de escrita pode nunca ser executada. Um escalonador que tenha implementado um limite máximo para as tarefas de escrita que podem ser executadas enquanto a gravação está na fila, pode evitar que essa tarefa de escrita fique na fila por tempo indeterminado.
+
 \subsection{Preempção}
+
+O que os sistemas operacionais de tempo real fazem é estabelecer limites para que essas tarefas fiquem aguardando. Uma estratégia comum é atribuir prazos de tempo para a execução da tarefa e escalonar as mesmas priorizando as que estão com o prazo mais próximo. Essa estratégia é conhecida como "Earliest Deadline First" (prazo mais próximo primeiro). Mas ainda assim é possível que uma tarefa extremamente importante chegue durante a execução de uma tarefa demorada. Para isso é preciso que ocorram preempções, ou seja, parar a tarefa que está sendo executada para executar a tarefa prioritária que acabou de chegar na fila.
+
 \section{Linux}
+
+O Linux é um sistema operacional de código aberto criado por Linus Torvalds \cite{Linux}. A sua licença e seu modelo de desenvolvimento tornaram o Linux o projeto de código aberto com uma das maiores comunidades de desenvolvedores. Em 2000 foi fundada a Linux Foundation, uma organização sem fins lucrativos para fomentar o crescimento do Linux. Várias empresas fazem parte da Linux Foundation e também colaboram com o projeto, incluindo, mas não restringindo a, empresas como Google, Cisco, Intel, IBM, Oracle e, mais recentemente, a Microsoft \cite{LinuxFoundation}. 
+
 \subsection{Interrupções}
+
+
 \subsubsection{Tipos de Interrupções}
 \subsection{Latências de interrupção}
 
