@@ -18,7 +18,7 @@ O terceiro caracter é a carga na cpu: 0 thread, 1 thread, (M)any threads (256).
 
 Na tabela \ref{table:rpi} temos uma visão sumarizada do tempo de latência em nanossegundos de todos os testes realizados com o kernel padrão enquanto na tabela \ref{table:prt} temos uma visão dos testes no Preempt-RT.
 
-\begin{table}[h!]
+\begin{table}[!htb]
 \centering
 \begin{center}
 \begin{tabular}{|c||r|r|r|r|r|r|r|r|r|}
@@ -41,7 +41,7 @@ Percentil &    RS0 &     RS1 &    RSM &    RT0 &    RT1 &    RTM &    RW0 &     
 \label{table:rpi}
 \end{table}
 
-\begin{table}[h!]
+\begin{table}[!htb]
 \centering
 \begin{center}
 \begin{tabular}{|c||r|r|r|r|r|r|r|r|r|}
@@ -64,17 +64,14 @@ Percentil &    PS0 &    PS1 &    PSM &    PT0 &    PT1 &    PTM &    PW0 &     P
 \label{table:prt}
 \end{table}
 
-% \section{Expectativas}
-
-% Preempt-RT mais lento na médio, melhor pior caso, menos variação.
-
 \section{Análise comparativa}
 
 Aqui será mostrado como cada kernel se desempenhou com diferentes cargas de trabalho em cada um dos mecanismos de interrupção. Os gráficos das sessões a seguir mostram os valores da latência nos percentis de de 90\% até 99,9\%. O valor máximo foi omitido da visualização pois costumam ser picos muito distantes do valor do percentil de 99,9\%, dificultando a análise visual do comportamento dos kernels.
 
+
 \subsection{Softirq}
 
-Na figura \ref{grafico:softirq} podemos ver como ambos os kernels se comportam para o tipo de interrupção Softirq. O Preempt-RT tem uma latência mais alta nos casos médios que se mantém até aproximadamente os percentis entre 94,6\% e 97,4\%. Nessa faixa a latência do kernel padrão começa a subir enquanto o Preempt-RT se mantém estável até aproximadamente o percentil de 98,5\%. Para o pior caso, temos a tabela \ref{table:max-softirq}.
+Na figura \ref{grafico:softirq} podemos ver como ambos os kernels se comportam para o tipo de interrupção Softirq. O Preempt-RT tem uma latência mais alta nos casos médios que se mantém até aproximadamente os percentis entre 94,6\% e 97,4\%. Nessa faixa a latência do kernel padrão começa a subir enquanto o Preempt-RT se mantém estável até aproximadamente o percentil de 98,5\%. Para o pior caso de cada bateria de testes temos a tabela \ref{table:max-softirq}, onde veremos os principais pontos.
 
 Nos casos com a CPU ociosa, o Preempt-RT apresentou um tempo pior que o kernel padrão para o pior caso, o que contraria as expectativas.
 
@@ -84,72 +81,86 @@ Com a CPU super carregada, o kernel padrão tem uma queda substancial na latênc
 
 O Preempt-RT se mostra bem estável, independente do tipo de carga na CPU, para as interrupções do tipo Softirq. O kernel padrão tem comportamento parecido com a CPU ociosa ou com a CPU sobrecarregada, mas quando possui uma carga leve, os tempos tendem a ser mais altos.
 
-\begin{figure}[H]
-  \centering
-        \includegraphics[width=\textwidth]{graficos/softirq.png}
-        \caption{Latência com Softirq em nanossegundos}
-        \label{grafico:softirq}
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=1.0\textwidth]{graficos/softirq.png}
+    \caption{Latência com Softirq em nanossegundos}
+    \label{grafico:softirq}
 \end{figure}
 
-\begin{table}[H]
-\centering
-\begin{center}
-\begin{tabular}{|r|r|r|r|r|r|}
-\toprule
-    PS0 &    PS1 &    PSM &    RS0 &     RS1 &    RSM \\
-\midrule
-    18698 &	17656 &	17657 & 15156 & 191821 &	19375 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\caption{Latência máxima para o Softirq}
-\label{table:max-softirq}
+\begin{table}[!htb]
+    \centering
+    \begin{center}
+        \begin{tabular}{|r|r|r|r|r|r|}
+            \toprule
+                PS0 &    PS1 &    PSM &    RS0 &     RS1 &    RSM \\
+            \midrule
+                18698 &	17656 &	17657 & 15156 & 191821 &	19375 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \caption{Latência máxima para o Softirq}
+    \label{table:max-softirq}
 \end{table}
+
 
 \subsection{Tasklet}
 
-\begin{figure}[H]
-  \centering
-        \includegraphics[width=\textwidth]{graficos/tasklet.png}
-        \caption{Latência com Tasklet em nanossegundos}
-        \label{grafico:tasklet}
+Para o tipo de interrupção Tasklet, ambos os kernels se comportam de maneira semelhante ao Softirq, porém com um tempo um pouco maior, como podemos ver na figura \ref{grafico:tasklet}. O kernel padrão tem tempos de resposta melhor até aproximadamente 95\% quando possui carga na CPU ou até próximo dos 98\% quando a CPU está ociosa. Também na faixa de 98\% é quando o Preempt-RT começa a apresentar uma subida na latência. Na tabela \ref{table:max-tasklet} temos os valores de pior caso para os testes com o Tasklet.
+
+Podemos ver que o Preempt-RT teve quase nenhuma influência pelo nível de carga imposto à CPU. No kernel padrão há uma pequena variação entre os valores a depender da carga imposta, mas ainda uma variação dentro de um faixa não muito larga.
+
+Ao contrário do que acontece no Softirq, no Tasklet a latência máxima do Preempt-RT é bem menor do que no kernel padrão. O Preempt-RT tem um tempo de resposta máximo que é praticamente metade do tempo do kernel padrão.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=1.0\textwidth]{graficos/tasklet.png}
+    \caption{Latência com Tasklet em nanossegundos}
+    \label{grafico:tasklet}
 \end{figure}
 
-\begin{table}[H]
-\centering
-\begin{center}
-\begin{tabular}{|r|r|r|r|r|r|}
-\toprule
-    PT0 &    PT1 &    PTM &    RT0 &     RT1 &    RTM \\
-\midrule
-    17343 &	16979 &	17865 & 34998 &	25834 &	45260 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\caption{Latência máxima para o Softirq}
-\label{table:max-softirq}
+\begin{table}[!htb]
+    \centering
+    \begin{center}
+        \begin{tabular}{|r|r|r|r|r|r|}
+            \toprule
+                PT0 &    PT1 &    PTM &    RT0 &     RT1 &    RTM \\
+            \midrule
+                17343 &	16979 &	17865 & 34998 &	25834 &	45260 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \caption{Latência máxima para o Tasklet}
+    \label{table:max-tasklet}
 \end{table}
+
 
 \subsection{Workqueue}
 
-\begin{figure}[H]
-  \centering
-        \includegraphics[width=\textwidth]{graficos/workqueue.png}
-        \caption{Latência com Workqueue em nanossegundos}
-        \label{grafico:workqueue}
+No tipo de interrupção Workqueue as diferenças são sutis se o tempo máximo não for levado em conta e a figura \ref{grafico:workqueue} mostra bem isso. Por outro lado, se formos análisar apenas o tempo máximo, a diferença entre os kernels é muito alta, como vemos na tabela \ref{table:max-workqueue}.
+
+Ambos os kernels tem um desempenho similar quando não há carga na CPU, mas com 1 thread de carga, o kernel padrão apresenta um tempo máximo mais de 10 vezes maior se comparado à situação com a CPU ociosa. No Preempt-RT esse aumento é de 3 vezes, mas ficando com um tempo de resposta de praticamente 1/4 do tempo do kernel padrão.
+
+Quando se considera uma CPU sobrecarregada, o tempo do Preempt-RT se assemelhou ao tempo da CPU ociosa. O kernel padrão teve um tempo de resposta quase 50 vezes maior se comparado ao cenário ocioso, mesma magnitude se comparado ao tempo do Preempt-RT.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=1.0\textwidth]{graficos/workqueue.png}
+    \caption{Latência com Workqueue em nanossegundos}
+    \label{grafico:workqueue}
 \end{figure}
 
-\begin{table}[H]
-\centering
-\begin{center}
-\begin{tabular}{|r|r|r|r|r|r|}
-\toprule
-    PW0 &    PSW &    PWM &    RW0 &     RW1 &    RWM \\
-\midrule
-    80526 &	259583 &	86198 & 84635 &	983798 	4153458 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\caption{Latência máxima para o Softirq}
-\label{table:max-softirq}
+\begin{table}[!htb]
+    \centering
+    \begin{center}
+        \begin{tabular}{|r|r|r|r|r|r|}
+            \toprule
+                PW0 &    PS1 &    PWM &    RW0 &     RW1 &    RWM \\
+            \midrule
+                80526 &	259583 &	86198 & 84635 &	983798 & 	4153458 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \caption{Latência máxima para o Workqueue}
+    \label{table:max-workqueue}
 \end{table}

@@ -3,7 +3,12 @@
 Nesta seção serão abordadas as especificações do ambiente utilizado para se realizar as medições. O modelo de sistema operacional de tempo real será apresentado e seus mecanismos para garantir que uma tarefa cumpra seu prazo. Será apresentado o sistema operacional Linux e os mecanismos de interrupção presentes do mesmo.
 
 \section{Soluções de SOTR Linux}
+
+Existem várias maneiras de se tornar o linux um Sistema Operacional de Tempo Real, mas são 3 maneiras as principais de conseguir esse objetivo. A primeira maneira é alterar a configuração do kernel durante a compilação permitindo preempção total. A segunda é organizar a ativação das tarefas a partir dos tipos de tratadores de interrupção. A terceira maneira é utilizar um nanokernel para intermediar o kernel com o hardware. Na seção 3.1.1 veremos o Preempt-RT, que torna o kernel totalmente preemptível, e na seção 3.1.2 veremos o Xenomai, que utiliza a estratégia de nanokernel.
+
 \subsection{Preempt-RT}
+
+
 \subsection{Xenomai}
 \section{Raspberry}
 \subsection{Componentes}
