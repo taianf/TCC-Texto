@@ -18,21 +18,65 @@ O que os sistemas operacionais de tempo real fazem é estabelecer limites para q
 
 O Linux é um sistema operacional de código aberto criado por Linus Torvalds \cite{Linux}. A sua licença e seu modelo de desenvolvimento tornaram o Linux o projeto de código aberto com uma das maiores comunidades de desenvolvedores. Em 2000 foi fundada a Linux Foundation, uma organização sem fins lucrativos para fomentar o crescimento do Linux. Várias empresas fazem parte da Linux Foundation e também colaboram com o projeto, incluindo, mas não restringindo a, empresas como Google, Cisco, Intel, IBM, Oracle e, mais recentemente, a Microsoft \cite{LinuxFoundation}. 
 
-\subsection{Interrupções}
+\section{Interrupções}
 
+Os computadores modernos precisam realizar várias atividades ao mesmo tempo e precisa verificar estímulos externos. Quando se digita no teclado é esperado que o caractere seja exibido na tela imediatamente. Para isso a CPU teria que verificar frequentemente se houve alguma tecla pressionada. Uma verificação com pouca frequência tornaria o tempo de espera muito alto, enquanto uma verificação muito frequente faria a CPU desperdiçar ciclo de trabalho verificando que nada externo ocorreu.
 
-\subsubsection{Tipos de Interrupções}
-\subsection{Latências de interrupção}
+Para evitar esse desperdício de recursos, a CPU delega algumas atividades para outros hardwares como controladores USB, que são capazes de enviar sinais assíncronos para a CPU avisando que existem novas tarefas. Esses sinais são chamados de interrupções. Quando a CPU recebe uma interrupção, ela para o trabalho que está sendo realizado e transfere o controle para uma função previamente instalada para tratar esse evento. Quando este evento é tratado, a CPU volta a executar o trabalho que foi interrompido. Assim, qualquer programa comum pode ser interrompido em praticamente qualquer ponto, já que o tratamento de interrupções tem prioridade.
 
-\section{Quem fez o quê}
+Enquanto o tratamento de uma interrupção está ocorrendo, podem surgir novas interrupções. Isso tem o potencial de fazer que uma interrupção nunca seja tratada ou que o programa nunca volte a ser executado. Para isso, o kernel é capaz de mascarar as interrupções. Ou seja, ele pode postergar o tratamento de uma interrupção enquanto outro tratamento já está sendo realizado e após terminar o primeiro tratamento, tratar as novas interrupções.
 
-Tanembaum \cite{Tanenbaum2016}
+Os sistemas operacionais tem três casos de usos para os tratadores de interrupção. Primeiro, quando uma aplicação realiza uma chamada de sistema é preciso mudar do espaço de usuário para o espaço de kernel de uma maneira segura. Segundo, quando ocorre um erro em tempo de execução, como um acesso ilegal a memória, que precisa de uma rotina para tratar esse erro e decidir como prosseguir ou se o programa deverá ser encerrado. E por último, quando um hardware externo envia um comando assíncrono para a CPU, como explicado no parágrafo anterior.
 
-Paul, testes \cite{Regnier2008}
+\section{O modelo de prólogo e epílogo}
 
-Interrupt response times on Arduino and Raspberry Pi \cite{Solc2016}
+Enquanto um tratador de interrupão está executando, as interrupções são mascaradas e o tratamento postergado após a conclusão deste tratador. Isso torna o código do tratador mais simples pois ele não precisa tratar casos em que ele foi interrompido. Além disso, permitir que um tratador seja interrompido, poderia causa um laço de recursões infinitas, que em máquinas com memória finita, pode causa um estouro da pilha. Assim, é preferível adiar o tratamento de novas interrupções, mesmo que isso cause possíveis perdas de interrupções quando várias chegarem ao mesmo tempo.
+
+Para evitar que ocorra essa perda de interrupções, os tratadores devem ser pequenos. Isso vai de encontro a essência de algumas interrupções, como a leitura e escrita em disco, que são tarefas demoradas. Contudo essas tarefas não precisam ser imediatamente realizadas nem precisam desabilitar outras interrupções. Assim, o modelo de prólogo e epílogo oferece uma maneira de contornar isso quebrando a o tratador em duas partes. No prólogo são tratados tarefas onde o tempo é crítico e as tarefas não críticas são tratados no epílogo. No Linux eles também são chamados de \textit{top half} e \textit{bottom half}.
+
+Durante a execução do prólogo, as interrupções são mascaradas. Quando o prólogo trata a parte crítica, ele enfileira a parte não crítica da interrupção para ser executada no epílogo. Durante o epílogo as interrupções estão habilitadas novamente, podendo sofrer novas interrupções. Caso ocorram, o prólogo da nova interrupção será tratado imediatamente e o epílogo será enfileirado, sendo tratado após o tratamento do epílogo da primeira interrupção.
+
+Essa divisão é comum em vários sistemas operacionais. O Windows possui a sua implementação que é o \textit{Deferred Procedure Call}, ou Chamada de Procedimentos Deferidos, para enfileirar as tarefas de baixa prioridade \cite{InsideMicrosoftWindows}. No Linux, existem 3 tipos de tratamento para o epílogo, que serão delhados na próxima sessão.
+
+\section{Tipos de epílogo no Linux}
+
+Após o tratamento do prólogo o Linux tem 3 maneiras de tratar o trabalho não crítico que foi adiado. Softirqs é a maneira mais eficiente, porém menos flexível pois é implementada direto no código do kernel. Tasklets são uma extensão do Softirq, sendo construídos em cima deste. É menos eficiente mas pode ser implementada como um módulo de kernel. E por último, temos os Workqueues, que são tratados no contexto de processos e não do kernel. Isso as tornam bem flexíveis porém menos performáticas. \cite{OReilly}
+
+\subsection{Softirq}
+
+Os Softirqs são mecanismos simples de transferir o trabalho de um contexto ininterruptível para um contexto que permite interrupções. São associados a tarefas de rede, temporizadores e outras tarefas mais críticas, além de ser a base dos Tasklets, abordados na próxima sessão. Os Softirqs são executados assim que o Sistema Operacional muda do espaço de usuário para o espaço de kernel ou retorna de uma interrupção. Os Softirqs são especificados em tempo de compilação e não podem ser alocados em tempo de execução. Existe um limite para a quantidade de Softirqs implementados, atualmente 32, pois ela ficam em um vetor específico para isso. A prioridade do Softirq é a posição dentro do vetor.
+
+Quando um Softirq inicia, ele é executado até completar a tarefa. Isso significa que ele só pode ser preemptado por outra interrupção. O código que gerencia a execução dos Softirq pode ser executado em múltiplos núcleos da CPU, então o desenvolvedor é o responsável por garantir a sincronização entre os dados. Como não há nenhuma garantia que este Softirq tem um contexto de processo associado, não é permitido que este tratador seja posto para dormir e como o tratador é executado até ser completado, o ideal é que não consuma muito tempo da CPU.
+
+Apesar de outras interrupções serem tratadas, nenhuma outra tarefa é tratada até a finalização do Softirq. Então mesmo que o tratamento da interrupção seja rápido, se houverem muito Softirqs pendentes, as tarefas poderiam ser atrasadas indefinidamente. Para evitar esse comportamento, toda vez que um tratador é finalizado o tempo de duração tratando a fila de Softirqs é verificado. Se ultrapassar um limite de 2 segundos, a iteração na fila é interrompida. Ao invés disso, uma thread dedicada é criada para tratar essas interrupções, sendo gerenciada pelo escalonador do sistema.
+
+\subsection{Tasklet}
+
+Enquanto os Softirqs são simplesmente um índice de tarefas a serem executadas, Os Tasklets são ponteiros para estruturas contendo informação similar, mas isso permite que as estruturas sejam alocadas em qualquer parte do kernel. Isso permite que sejam implementados como módulos do kernel. Também não há nenhuma restrição na quantidade de Tasklets que podem ser implementados.
+
+A estrutura do Tasklet consiste basicamente do tratador associado a ele e o argumento passado para ele. Ao invocar um Tasklet, essa estrutura é enfileirada numa lista encadeada e marcada com um Softirq específico. Ao ter esse Softirq executado, ele itera sobre a lista de Tasklets e invoca o tratador específico para cada um deles. Assim, os Tasklets estão no mesmo contexto dos Softirqs, sem processo associado e sem poder serem colocados para dormir. Assim como os Softirqs, eles são executados na CPU em que foram invocados, para aumentar a localidade dos dados e melhor a utilização de cache.
+
+Antes de chamar o tratador de um Tasklet, é preciso bloquear a estrutura do mesmo. Quando esta estrutura já está bloqueada, este tratador é novamente enfileirado e o Softirq que verifica os Tasklets é novamente marcado como pendente. Isso implica que somente um Tasklet pode ser executado na CPU em qualquer instante de tempo. Isto simplifica o código necessário e evita conflitos de concorrência.
+
+Tasklets são mais fáceis de se utilizar e são mais flexíveis, podendo ser utilizados em qualquer parte do kernel. Como são baseados no Softirq, eles possuem as mesmas limitações de não poderem dormir. Essa limitação não existe nos Workqueues, que será tratado a seguir.
+
+\subsection{Workqueue}
+
+Os Workqueues são utilizados quando precisamos tratar alguma tarefa fora do contexto de interrupção e essa tarefa dormir ou ser bloqueada. A tarefa a ser executada é encapsulada e enfileirada na fila de Workqueues. Threads dedicadas executam as tarefas presentes nessa fila. Quando essa tarefa precisa dormir ou ser bloqueada, o escalonador pode simplemente trocar a tarefa a ser executada. Isso aumenta a responsividade ao prevenir que threads de usuário fiquem paradas enquanto interrupções muito demoradas são tratadas.
+
+Como o tamanho da fila é variável, a quantidade de threads dedicadas a executar os itens da fila de workqueue precisam ser dinâmicos para não ter recurso desperdiçado. Primeiro essa fila é organizada em filas secundárias e cada uma com uma thread associada. Quando uma fila secundária fica vazia, a thread é posta pra dormir. Quando novos itens são adicionados, a thread é acordada para processar os estes novos itens. Para evitar desperdício de memória, quando uma thread passa muito tempo dormindo, ela é destruída. Contudo, sempre há pelo menos uma thread dormindo para processar as interrupções da fila. Por outro lado, quando a fila está crescendo e o uso de CPU não está maximizado, novas threads são criadas.
+
+A habilidade de dormir ou serem bloqueadas tornam os Workqueues muito mais flexíveis que os outros mecanismos. O custo é que essas tarefas são tratadas por threads gerenciadas pelo escalonador, tendo um custo para serem gerenciadas. Os Workqueues também podem ser executados em qualquer núcleo, sendo mais difícil de terem a informação que precisam em cache.
+
+\section{Trabalhos relacionados}
+
+Em 2008, no Workshop de Sistemas Operacionais, uma avaliação das interrupções do Linux foi apresentado por Paul Regnier et al \cite{Regnier2008}. Eles compararam a latência de ativação no kernel padrão, no Preempt-RT e no Xenomai. Estes 2 patches de tempo real para o Linux serão abordados no próximo capítulo. Eles avaliaram os tempos da latência de interrupção, tempo até o prólogo ser executado, e latência de ativação, tempo até o epílogo ser executado, utilizando 3 estações em rede para realizar as medições sendo uma estação de medição, uma estação para gerar eventos de interrupção na estação medida e outra para gerar uma carga na estação de medição. Eles chegaram a conclusão que o Xenomai era muito mais estável quando a estação de medição estava sob uma carga de trabalho.
+
+Em 2016, Tomaž Šolc comparou o tempo de resposta do Raspberry com o tempo de resposta do Arduino \cite{Solc2016}. Ele realizou teste utilizando um Arduino Uno e um Raspberry Pi Zero. O Arduino foi testado tanto para interrupções de hardware quanto para um laço de verificação. Os testes no Raspberry foram feitos com um módulo de kernel, com um programa nativo feito em C e outro programa feito em Python. O Arduino por ser um microcontrolador, conseguiu tempos de resposta praticamente constantes quando utilizado com interrupções e uma variação pequena quando em laço de verificação. O Raspberry teve uma performance comparável quando em modo de kernel, mas com valores que oscilavam, tornando menos predizível.
 
 INTSight \cite{Gerhorst2018}
+
+Tanembaum \cite{Tanenbaum2016}
 
 Mais...
 
