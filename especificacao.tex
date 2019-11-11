@@ -4,14 +4,31 @@ Nesta seção serão abordadas as especificações do ambiente utilizado para se
 
 \section{Soluções de SOTR Linux}
 
-Existem várias maneiras de se tornar o linux um Sistema Operacional de Tempo Real, mas são 3 maneiras as principais de conseguir esse objetivo. A primeira maneira é alterar a configuração do kernel durante a compilação permitindo preempção total. A segunda é organizar a ativação das tarefas a partir dos tipos de tratadores de interrupção. A terceira maneira é utilizar um nanokernel para intermediar o kernel com o hardware. Na seção 3.1.1 veremos o Preempt-RT, que torna o kernel totalmente preemptível, e na seção 3.1.2 veremos o Xenomai, que utiliza a estratégia de nanokernel.
+Existem várias maneiras de se tornar o linux um Sistema Operacional de Tempo Real, mas são 3 maneiras as principais de conseguir esse objetivo. A primeira maneira é alterar a configuração do kernel durante a compilação permitindo preempção total. A segunda é organizar a ativação das tarefas a partir dos tipos de tratadores de interrupção. A terceira maneira é utilizar um nanokernel para intermediar o kernel com o hardware. 
 
-\subsection{Preempt-RT}
+O patch Preempt-RT é o patch de tempo real padrão para o Raspberry e vários outros casos em que o Linux é utilizado. Ele torna o kernel completamente preemptível, afim de diminuir a latência de interrupção. O desenvolvimento é liderado por Ingo Molnar e conta com a contribuição de vários desenvolvedores pelo mundo  \cite{McKenney2005, Molnar2016}. No Preempt-RT seções críticas podem ser preemptadas, então uma tarefa crítica pode acabar sendo movida para outro núcleo durante a execução. Quase todos os tratadores de interrupção são executados em contexto de processo no ambiente do Preempt-RT, isso permite que os tratadores sejam interrompidos.
 
+O Xenomai é um patch que utiliza a estratégia de nanokernel. Os nanokernels funcionam como uma camade extra de abstração entre o hardware e o kernel. Ele trata as interrupções de hardware e as define em interrupções para aplicação de tempo real ou não. Se for de tempo real, interrompe o kernel para que a tarefa seja executada imediatamente. Caso contrário, enfileira a tarefa para ser executada em outro momento \cite{Xenomai2005}.
 
-\subsection{Xenomai}
 \section{Raspberry}
-\subsection{Componentes}
-\subsection{Modelo multicore}
-\section{INTSpect}
-% \subsubsection{Registradores especiais}
+
+O Raspberry é um computador completo do tamanho de um cartão de crédito com todo o hardware em uma única placa. Possui um preço acessível e é muito utilizado para projetos que requerem um computador que também portátil. Mantido pela Raspberry Foundation \cite{RPF2019} seu principal objetivo é promover o ensino de computação. O primeiro modelo foi lançado em 2012 e se tornou um enorme sucesso.
+
+O modelo utilizado neste trabalho é o Raspberry Pi 3 Model B. Este modelo possui uma CPU Broadcom BCM2837, com quatro núcleos, frequência de 1.2GHz e 64bit, 1 GB de memória RAM, acesso a WI-FI, Bluetooth, entrada ethernet, 40 pinos de propósito geral, 4 entradas USB, saídas de áudio e vídeo, saída HDMI e entrada para cartão microSD.
+
+O sistema operaional padrão é o Linux na distribuição Raspbian, uma distribuição baseada na Debian. É possível utilizar qualquer outra distribuição compatível com a arquitetura ARM e o fabricante disponibiliza um utilitário para auxiliar na escolha e gravação do sistema operacional em um cartão SD, que será a principal memória de dados do Raspberry.
+
+\section{Módulos INTSpect e INTSight}
+
+Em sistemas computacionais complexos, a quantidade de variáveis é tão grande que não existe um cálculo que possa ser feito para prever o tempo que uma interrupção leva para ser tratada, pois não basta levar em conta a especificação de hardware, que muitas vezes não é aberta, para evitar que segredos industriais sejam expostos a concorrentes, é preciso também levar em conta toda a estrutura de software do sistema operacional. Portanto, realizar medições empíricas é a melhor forma de avaliar o tempo de interrupção de sistema em sistema reais. Porém, realizar essas medições nem sempre é trivial.
+
+Tendo o exposto no parágrafo anterior em mente, Luis Gerhorst \cite{Gerhorst2018} desenvolveu uma ferramenta para auxiliar os desenvolvedores a realizar essas medições e fazer análises a respeito do tempo de interrupção. Esta ferramenta foi dividida em 2 módulos: INTSight, que é um módulo do kernel responsável por realizar as medições, e o INTSpect que é um módulo para disparar os benchmarks no INTSight.
+
+O INTSpect é capaz de medir a latência de interrupção e a latência de ativação, suporta vários métodos de medição, gera dados em formato simples para serem analisados depois, para não comprometer a medição, e realiza fotos do sistema antes das baterias de medições para tornar os resultados facilmente reproduzíveis. Os locais no código onde o INTSpect realiza as medições são definidos em tempo de compilação. Isso troca flexibilidade por uma acurácia maior na medição.
+
+O INTSight tem a função de realizar as medições da latência de ativação para os vários mecanismos disponíveis no Linux tendo o mínimo de interferência possível. Na inicialização, o INTSight aloca uma rotina de serviço de interrpção (ISR) e um softirq, tasklet ou workqueue usado para o teste. Para levar em conta as variações que ocorrem, a quantidade de medições pode ser configurada. No início de cada medição, uma thread coordena a ativação da interrupção utilizando um mecanismo que depende da plataforma. 
+
+O método de medição utilizado foi o k\_time\_mono\_fast por ser o segundo método com menor custo dentro os apresentados por Luis. O método com menor custo, para uma plataforma ARM, seria utilizar o PMCCNTR, que é um registrador específico que conta a quantidade de pulsos de clock que ocorreram na CPU, então a sua leitura tem o custo de ler um registrador. Na medição feita por ele foi utilizado uma placa single-core. Sabendo a frequência de operação da CPU, é possível ter saber o tempo decorrido realizando uma conta simples. No Raspberry, temos uma CPU com quatro núcleos, e não temos nenhuma garantia que o núcleo que vai tratar a interrupção é o mesmo que a disparou. Como cada núcleo tem seu prório contador, os valores não podem ser comparados. Para continuar com esse método de medição, seria necessário utilizar apenas um núcleo do Raspberry, desativando os demais, ou inserir algum outro mecanismo de sincronização dentro do código do INTSight. Isso mudaria o comportamento real da CPU do Raspberry e traria um resultado que não é comparável a uma situação de uso real.
+
+
+Para gerar as interrupções de hardware no Raspberry, foram utlizados os pinos 16 e 18, BCM23 e BCM24, respectivamente. Um dos pinos estava em modo escrita, enviando um sinal para o outro, configurado em modo leitura. O Raspberry utiliza 3,3 V em seus pinos digitais e pelo guia de uso não deve ter uma corrente maior que 16 mA, portanto foi utilizado um resistor de 300 ohms para fazer a ligação entre os pinos.

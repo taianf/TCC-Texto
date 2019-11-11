@@ -34,7 +34,7 @@ Enquanto um tratador de interrupão está executando, as interrupções são mas
 
 Para evitar que ocorra essa perda de interrupções, os tratadores devem ser pequenos. Isso vai de encontro a essência de algumas interrupções, como a leitura e escrita em disco, que são tarefas demoradas. Contudo essas tarefas não precisam ser imediatamente realizadas nem precisam desabilitar outras interrupções. Assim, o modelo de prólogo e epílogo oferece uma maneira de contornar isso quebrando a o tratador em duas partes. No prólogo são tratados tarefas onde o tempo é crítico e as tarefas não críticas são tratados no epílogo. No Linux eles também são chamados de \textit{top half} e \textit{bottom half}.
 
-Durante a execução do prólogo, as interrupções são mascaradas. Quando o prólogo trata a parte crítica, ele enfileira a parte não crítica da interrupção para ser executada no epílogo. Durante o epílogo as interrupções estão habilitadas novamente, podendo sofrer novas interrupções. Caso ocorram, o prólogo da nova interrupção será tratado imediatamente e o epílogo será enfileirado, sendo tratado após o tratamento do epílogo da primeira interrupção.
+Durante a execução do prólogo, as interrupções são mascaradas. Quando o prólogo trata a parte crítica, ele enfileira a parte não crítica da interrupção para ser executada no epílogo. Durante o epílogo as interrupções estão habilitadas novamente, podendo sofrer novas interrupções. Caso ocorram, o prólogo da nova interrupção será tratado imediatamente e o epílogo será enfileirado, sendo tratado após o tratamento do epílogo da primeira interrupção. O tempo decorrido entre o evento até o prólogo começar a tratar a interrupção, é chamado de latência de interrupção, enquanto o tempo decorrido entre o evento até o epílogo começar a tratar a interrupção é chamado de latência de ativação.
 
 Essa divisão é comum em vários sistemas operacionais. O Windows possui a sua implementação que é o \textit{Deferred Procedure Call}, ou Chamada de Procedimentos Deferidos, para enfileirar as tarefas de baixa prioridade \cite{InsideMicrosoftWindows}. No Linux, existem 3 tipos de tratamento para o epílogo, que serão delhados na próxima sessão.
 
@@ -70,15 +70,13 @@ A habilidade de dormir ou serem bloqueadas tornam os Workqueues muito mais flex�
 
 \section{Trabalhos relacionados}
 
+Em 2003 Matthew Wilcox \cite{Wilcox2003} apresentou as estruturas de interrupção e como elas fazem para enfileirar as tarefas de interrupção que precisam ser tratadas fora da zona de tempo crítico e como essas estruturas gerenciam os dados.
+
 Em 2008, no Workshop de Sistemas Operacionais, uma avaliação das interrupções do Linux foi apresentado por Paul Regnier et al \cite{Regnier2008}. Eles compararam a latência de ativação no kernel padrão, no Preempt-RT e no Xenomai. Estes 2 patches de tempo real para o Linux serão abordados no próximo capítulo. Eles avaliaram os tempos da latência de interrupção, tempo até o prólogo ser executado, e latência de ativação, tempo até o epílogo ser executado, utilizando 3 estações em rede para realizar as medições sendo uma estação de medição, uma estação para gerar eventos de interrupção na estação medida e outra para gerar uma carga na estação de medição. Eles chegaram a conclusão que o Xenomai era muito mais estável quando a estação de medição estava sob uma carga de trabalho.
 
 Em 2016, Tomaž Šolc comparou o tempo de resposta do Raspberry com o tempo de resposta do Arduino \cite{Solc2016}. Ele realizou teste utilizando um Arduino Uno e um Raspberry Pi Zero. O Arduino foi testado tanto para interrupções de hardware quanto para um laço de verificação. Os testes no Raspberry foram feitos com um módulo de kernel, com um programa nativo feito em C e outro programa feito em Python. O Arduino por ser um microcontrolador, conseguiu tempos de resposta praticamente constantes quando utilizado com interrupções e uma variação pequena quando em laço de verificação. O Raspberry teve uma performance comparável quando em modo de kernel, mas com valores que oscilavam, tornando menos predizível.
 
-INTSight \cite{Gerhorst2018}
+Em 2018 Gustav Johansson \cite{Johansson2018} fez uma avaliação do tempo de latência do Raspberry utilizando o Xenomai. Ele fez várias análises, porém ficou apenas no Xenomai, sem fazer comparação com outros sistemas. Ele utilizou um kernel pré-compilado para realizar as medições pois teve vários problemas para aplicar o patch e compilar o kernel. Inicialmente também foram encontrados vários problemas para compilar o kernel com o Xenomai durante a realização deste trabalho e o guia que Gustav disponibilizou no apêndice do trabalho dele foi essencial para conseguir sucesso na minha compilação.
 
-Tanembaum \cite{Tanenbaum2016}
+Também em 2018, Luis Gerhorst \cite{Gerhorst2018} construiu uma ferramenta para realizar análises das latências de interrupção no Linux que é dividida nos módulos INTSpect e INTSight. Esta ferramenta desenvolvida por ele foi utilizada para realizar as medições deste trabalho. No seu trabalho, ele mostrou a viabilidade da ferramenta testando em uma placa \textit{SAMA5D3 Xplained}. Esta placa possui um processador ARM de único núcleo, enquanto o Raspberry possui quatro núcleos em sua CPU.
 
-Mais...
-
-\section{Como fizeram}
-\section{Mais algo?}
