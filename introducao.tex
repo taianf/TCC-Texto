@@ -1,10 +1,10 @@
-\xchapter{Introdução}{Apresentação do trabalho}
+\xchapter{Introdução}{}
 
  % A história dos drones pode parecer recente diante dos avanços tecnológicos que baratearam as tecnologias envolvidas nos modelos mais conhecidos, mas, ao buscar sua origem, percebemos que estamos usando drones há mais de um século. No livro \textit{The Future of Drone Use: Opportunities and Threats from Ethical and Legal Perspectives} \cite{Custers2016}, considera-se que o primeiro uso de um drone registrado ocorreu em julho de 1849, quando as forças austríacas tentaram lançar balões incendiários com explosivos e uma bomba relógio para fazer os mesmo caírem sobre a cidade de Veneza. O drone como é conhecido hoje foi concebido por Abe Karem em 1977, quando criou um drone que era controlado por 3 pessoas, em vez de 30, como exigido pelos drones da época \cite{Buzzo2015}.
 
 Hoje, os drones são muito populares, tanto para uso recreativo quanto para diversos outros fins. O Departamento de Controle do Espaço Aéreo através da Instrução de Comando da Força Aérea (ICA) 100-40 \cite{CEA2018} define os modelos usados apenas para fins recreativos como \textit{aeromodelos} e os outros modelos como \textit{Aeronaves Remotamente Pilotada - ARP}. Normalmente, os \textit{aeromodelos} são operados por humanos através de um controle remoto, enquanto as \textit{ARP} também podem ser automáticos ou autônomos. As \textit{ARPs} automáticas são modelos capazes de operar por conta própria e também podem ser controlados manualmente a qualquer momento, enquanto os autônomos têm seu caminho definido anteriormente e não podem ter intervenção humana durante a realização da missão.
 
-Para que o drone possa executar uma missão automática ou autonomamente, é necessário um sistema de controle capaz de interpretar os dados dos sensores, fazer cálculos e tomar decisões. Alguns modelos de drones possuem sistemas operacionais e sensores embarcados que são suficientes para que se projete uma missão automática. Em outros casos, como o modelo \textit{Parrot AR.Drone 2.0} \cite{Parrot2019a}, utilizado pelo LaSid, o sistema é muito simples para ser capaz de realizar tarefas mais complexas. Uma solução é adotar um sistema auxiliar acoplado ao drone, capaz de interagir com as APIs do sistema do drone. Um sistema que se adequa bem a essa tarefa é o Raspberry Pi.
+Para que o drone possa executar uma missão automática ou autonomamente, é necessário um sistema de controle capaz de interpretar os dados dos sensores, fazer cálculos e tomar decisões. Alguns modelos de drones possuem sistemas operacionais e sensores embarcados que são suficientes para que se projete uma missão automática. Em outros casos, como o modelo \textit{Parrot AR.Drone 2.0} \cite{Parrot2019a}, utilizado pelo LaSid, o sistema é muito simples para ser capaz de realizar tarefas mais complexas. Uma solução é adotar um sistema auxiliar acoplado ao drone, capaz de interagir com as APIs do sistema do drone. Um sistema que se adapta bem a essa tarefa é o Raspberry Pi.
 
 O Raspberry Pi é um computador do tamanho de um cartão de crédito que pode se conectar a uma TV ou monitor e usar periféricos como mouse e teclado \cite{RPF2019}. O sistema operacional padrão é o Linux, cuja distribuição principal é a Raspbian, com base na distribuição Debian. A possibilidade de usar o Linux torna o Raspberry uma solução muito mais flexível em comparação com outras soluções de microcontroladores, como o Arduino, por exemplo.
 
@@ -12,14 +12,14 @@ A desvantagem vem do fato de que sistemas como o Arduino podem ser determinísti
 
 Na maioria das aplicações, este comportamento pode ser satisfatório. Em aplicações críticas, no entanto, uma única resposta atrasada pode significar uma falha catastrófica. Para lidar com esses cenários em que o tempo máximo de resposta deve ser previsível, foram criados patches para o kernel Linux a fim de torná-lo um Sistema de Tempo Real. 
 
-\section{Motivação}
+% \section{Motivação}
 
-Durante a realização deste trabalho não foi encontrado nenhum trabalho que compare o desempenho do Raspberry Pi levando em conta todos os tipos de implementação de interrupções. As análises costumam utilizar benchmarks que rodam em espaço de usuário e avaliam apenas o tempo de resposta entre a chegada do estímulo externo e a resposta externa ao sistema. Esse tipo de análise não separa o tempo de resposta do sistema do tempo de resposta da aplicação que está executando o teste. Ao fazer uma análise em mais baixo nível, é possível separar o tempo de resposta do sistema do tempo de resposta da aplicação.
+Durante a realização deste trabalho não foi encontrado nenhum trabalho que compare o determinismo do Raspberry Pi levando em conta os diferentes tipos de implementação de interrupções. As análises costumam utilizar benchmarks que rodam em espaço de usuário e avaliam apenas o tempo de resposta entre a chegada do estímulo externo e a resposta externa ao sistema. Esse tipo de análise não separa o tempo de resposta do sistema do tempo de resposta da aplicação que está executando o teste. Ao fazer uma análise em mais baixo nível, é possível separar o tempo de resposta do sistema do tempo de resposta da aplicação.
 
-\section{Objetivos}
+% \section{Objetivos}
 
-O objetivo deste trabalho é analisar o desempenho do Raspberry Pi em diferentes cenários e fornecer dados para auxiliar o desenvolvimento de aplicações de tempo real para o mesmo. É esperado que esses dados ajudem a decidir o tipo de sistema a ser utilizado a depender da aplicação que se deseja implementar.
+O objetivo deste trabalho é analisar o determinismo do Raspberry Pi em diferentes cenários e fornecer dados para auxiliar o desenvolvimento de aplicações de tempo real para o mesmo. É esperado que esses dados ajudem a decidir o tipo de sistema a ser utilizado a depender da aplicação que se deseja implementar.
 
-\section{Organização}
+% \section{Organização}
 
 No capítulo 2 irei apresentar alguns trabalhos relacionados e quais as estratégias utilizadas pelos autores em cada um para realizar suas medições ou análises. A descrição dos modelos de SO utilizados nas medições além de características do Raspberry serão apresentadas no capítulo 3. A apresentação e análise de resultados experimentais está no capítulo 4, onde faço uma comparação entre os modelos de interrupção e os SO's. Na última parte, no capítulo 5, serão apresentados as dificuldades encontradas durante a realização deste trabalho e ideias para continuação do trabalho no futuro.

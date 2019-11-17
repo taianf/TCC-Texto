@@ -1,9 +1,15 @@
-\xchapter{Conclusão}{O que tirei disso}
+\xchapter{Conclusão}{}
 
-Fechamento.
+Este trabalho apresentou os tipos de mecanismos de interrupção presentes no Linux e também algumas estratégias de adaptação do kernel do Linux para se tornar um sistema operacional de tempo real. As diferenças de tempo em um kernel em tempo real e em um kernel Linux comum para Raspberry foram analisadas. Também analisamos como a a carga da CPU influencia esses tempos de latência.
 
-Outro parágrafo.
+A plataforma analisada, o Raspberry Pi 3 Modelo B, é um sistema compacto e com um ótimo custo-benefício. Sua flexibilidade a torna a plataforma de computação preferida em muitos projetos de sistemas embarcados personalizados. Nos sistemas em que o determinismo temporal dos cálculos é necessário, é possível utilizá-lo como plataforma, desde que seja bem escolhida a maneira pela qual as interrupções serão tratadas e que tipo de kernel deverá ser utilizado.
 
-\section{Aprendizados}
 \section{Dificuldades}
-\section{Pro futuro (?)}
+
+Durante a concepção deste trabalho, o escopo inicial foi comparar o determinismo entre o patch Preempt-RT e o Xenomai, ambos patches em tempo real para linux, mas com abordagens diferentes. Por ser o patch oficial e disponível no repositório Raspbian, o Preempt-RT foi facilmente compilado e teve pouca dificuldade em adaptar o INTSight.
+
+O Xenomai, no entanto, exigiu um esforço adicional para compilar. Somente encontrando o trabalho de Johansson \cite{Johansson2018}, que passou pelas mesmas dificuldades, eu pude compilar Xenomai para Raspberry. No entanto, ainda era necessário adaptar o INTSight à estrutura do microkernel, pois o acesso aos pinos GPIO é diferente nessa arquitetura. Como não foi possível adaptar a tempo para este trabalho, as medições de Xenomai tiveram que ser removidas do escopo deste trabalho.
+
+\section{Trabalhos futuros}
+
+O escopo inicial da inclusão do Xenomai não pôde ser alcançado neste trabalho, mas espera-se que, em um futuro próximo, seja possível retornar ao trabalho e concluir a adaptação do INTSight a ele. Embora não seja a versão oficial, existem kernels pré-compilados para o Raspberry com o Xenomai. O trabalho anterior com versões mais antigas do Linux e com um sistema x86, como feito por \cite{Regnier2008}, mostra que o Xenomai tinha um determinismo melhor que o Preempt-RT, por isso é interessante que essa análise seja feita em um kernel mais recente e em uma plataforma diferente.

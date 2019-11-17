@@ -27,7 +27,13 @@
 \usepackage[utf8]{inputenc}
 \usepackage{indentfirst}
 \usepackage{booktabs}
+\usepackage{minted}
+\usepackage{dirtytalk}
 \usepackage{float}
+\usepackage[caption = false]{subfig}
+\usepackage{appendix}
+\usepackage{listings}
+\renewcommand\listingscaption{Código}
 
 \makeatletter  
 \def\NAT@parse{\typeout{This is a fake Natbib command to fool Hyperref.}}  
@@ -67,11 +73,12 @@
 
 % Titulo da dissertacao/tese
 % e.g. \title{Sobre a conjectura $P=NP$}
-\title{Análise do tempo da latência de interrupção no Raspberry Pi em diferentes patches de tempo real para o kernel Linux}
+% \title{Análise do tempo de latência de interrupção no Raspberry Pi em diferentes patches de tempo real para o kernel Linux}
+\title{Análise do tempo de latência de interrupção no Raspberry Pi com o kernel Linux}
 
 % Data da defesa
 % e.g. \date{19 de fevereiro de 2003}
-\date{DIA de MÊS de ANO}
+\date{05 de Dezembro de 2019}
 
 % Autor
 % e.g. \author{Jose da Silva}
@@ -105,7 +112,7 @@
 
 % Ficha catalogrofica
 \authorcitationname{Feitosa, Taian Fonseca} % e.g. Terceiro, Antonio Soares de Azevedo
-\advisercitationname{Regnier, Paul} % e.g. Chavez, Christina von Flach Garcia
+\advisercitationname{Regnier, Paul Denis Etienne} % e.g. Chavez, Christina von Flach Garcia
 %\coadvisercitationname{NOME DO SEU CO-ORIENTADOR EM CITACOES} % e.g. Mendonca, Manoel Gomes de
 \catalogtype{Trabalho de Conclusão de Curso} % e.g. ``Tese (doutorado)''
 \catalogtopics{1. Raspberry Pi. 2. Sistemas de tempo real. 3. PREEMPT-RT. 4. Drones. 5. Sistemas embarcados} % e.g. ``1. Complexidade Estrutural. 2. Engenharia de Software''
@@ -114,10 +121,10 @@
 
 % Termo de aprovacaoo
 % Se seu trabalho for Tese de Doutorado, inclua comitteemember 4 e 5
-\approvalsheet{Salvador, DIA de MES de ANO}{
-  \comittemember{Profa. Dra. Professora 1}{Universidade XYZ}
-  \comittemember{Prof. Dr. Professor 2}{Universidade 123}
-  \comittemember{Profa. Dra. Professora 3}{Universidade ABC}
+\approvalsheet{Salvador, 05 de Dezembro de 2019}{
+  \comittemember{Prof. Dr. Paul Denis Etienne Regnier}{Departamento de Ciência da Computação}{Universidade Federal da Bahia}
+  \comittemember{Prof. Dr. Jés de Jesus Fiais Cerqueira}{Escola Politécnica}{Universidade Federal da Bahia}
+  \comittemember{Prof. Dr. George Marconi de Araújo Lima}{Departamento de Ciência da Computação}{Universidade Federal da Bahia}
 %  \comittemember{Prof. Dr. Professor 4}{Universidade HJKL}
 %  \comittemember{Profa. Dra. Professora 5}{Universidade QWERTY}
 }
@@ -160,10 +167,15 @@ Epígrafe
 % Comente para ocultar
 \listoftables
 
+% Lista de códigos
+% Comente para ocultar
+% \lstlistoflistings
+
 %%
 %% Parte textual
 %%
 \mainmatter
+
 
 % Eh aconselhavel criar cada capitulo em um arquivo separado, digamos
 % "capitulo1.tex", "capitulo2.tex", ... "capituloN.tex" e depois
@@ -183,12 +195,10 @@ Epígrafe
 % Apendices
 % Comente se n??o houver ap??ndices
 \appendix
-
 % Eh aconselhavel criar cada apendice em um arquivo separado, digamos
 % "apendice1.tex", "apendice.tex", ... "apendiceM.tex" e depois
 % inclui--los com:
-% \include{apendice1}
-% \include{apendice2}
+\input{codigos.tex}
 % ...
 % \include{apendiceM}
 
