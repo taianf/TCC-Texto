@@ -1,10 +1,24 @@
 \chapter{Códigos utilizados}
 
+Exemplo de arquivo de configuração utilizado para ativar o INTSpect. Nele definimos:
+
+\begin{itemize}
+    \item o mecanismo a ser testado;
+    \item a quantidade de informações que podem ser registradas por medição;
+    \item o tempo entre as medições;
+    \item o tipo de mecanismo para contar o tempo entre as medições;
+    \item o intervalo de medições para ter um retorno no console;
+    \item a quantidade de medições a serem realizadas por teste;
+\end{itemize}
+
 \begin{listing}[!htb]
 \inputminted[linenos,tabsize=2,breaklines]{ini}{codigos/softirq}
 \caption{Exemplo de arquivo de configuração do INTSight}
 \label{codigo:config}
 \end{listing}
+
+\newpage
+Código Python unir os 2 arquivos CSV gerados pelo teste em um único. O código percorre as duas matrizes e gera uma nova matriz onde cada medição está em uma linha.
 
 \begin{listing}[!htb]
 \inputminted[linenos,tabsize=2,breaklines]{python}{codigos/tidy-chunk-result.py}
@@ -12,11 +26,17 @@
 \label{codigo:consolidate}
 \end{listing}
 
+\newpage
+Código Python com Spark para consolidar os dados dos testes e extrair algumas estatísticas.
+
 \begin{listing}[!htb]
 \inputminted[linenos,tabsize=2,breaklines]{python}{codigos/summary-pyspark.py}
 \caption{Código para consolidar os dados}
 \label{codigo:summary}
 \end{listing}
+
+\newpage
+Código do programa em C para gerar sobrecarga no processador.
 
 \begin{listing}[!htb]
 \inputminted[linenos,tabsize=2,breaklines]{c}{codigos/cpuload.c}

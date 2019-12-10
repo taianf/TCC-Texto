@@ -33,6 +33,8 @@
 \usepackage[caption = false]{subfig}
 \usepackage{appendix}
 \usepackage{listings}
+\usepackage{siunitx}
+
 \renewcommand\listingscaption{Código}
 
 \makeatletter  
@@ -41,6 +43,10 @@
 
 \usepackage{hyperref}
 \usepackage{graphicx}
+
+% revision note, with old and new text
+\definecolor{dgreen}{rgb}{0,.8,0}
+\newcommand{\rev}[2]{{\color{red}{#1} / }{\color{dgreen}{#2}}}
 
 %% Preambulo:
 %% coloque aqui o seu preambulo LaTeX, i.e., declara????o de pacotes,
@@ -58,7 +64,7 @@
 % Instituto ou Centro Academico
 % e.g. \institute{Centro de Ciencias Exatas e da Natureza}
 % Comente se nao se aplicar
-\institute{Departamento de Engenharia Elétrica e Computação}
+\institute{Departamento de Engenharia Elétrica e de Computação}
 
 % Nome da biblioteca - usado na ficha catalografica
 % default: nome da biblioteca do Instituto de Matematica
@@ -74,7 +80,7 @@
 % Titulo da dissertacao/tese
 % e.g. \title{Sobre a conjectura $P=NP$}
 % \title{Análise do tempo de latência de interrupção no Raspberry Pi em diferentes patches de tempo real para o kernel Linux}
-\title{Análise do tempo de latência de interrupção no Raspberry Pi com o kernel Linux}
+\title{Análise da latência de interrupção no Raspberry Pi com o kernel Linux e patches de tempo real}
 
 % Data da defesa
 % e.g. \date{19 de fevereiro de 2003}
@@ -132,19 +138,27 @@
 % Dedicatoria
 % Comente para ocultar
 \begin{dedicatory}
-Dedicatória
+Dedico este trabalho a minha família, que sempre apoiou as minhas escolhas.
 \end{dedicatory}
 
 % Agradecimentos
 % Se preferir, crie um arquivo ?? parte e o inclua via \include{}
 \acknowledgements
-Agradecimentos
+
+Quero agradecer primeiramente a minha família que me apoiou nessa jornada, me apoiou na mudança de curso, pois sabia que às vezes a gente dá um passo atrás para poder ir mais longe. Mesmo nos momentos mais difíceis, sempre estivemos juntos.
+
+A todos que me acompanharam nesses 11 anos de UFBA e sabem que foram várias lutas até chegar aqui, que me deram ajuda, nem que seja uma palavra ou um abraço, muito obrigado. Essas lutas não seriam vencidas se eu não tivesse muitas pessoas me apoiando, entre família, amigos e colegas.
+
+Quero agradecer também a Heilaine, a minha psicóloga, que me ajudou a me tornar uma pessoa melhor para enfrentar esse mundo. Ainda tenho muito a aprender mas muito do que cresci nesses últimos anos foi com sua ajuda.
+
+
+
 
 % Epigrafe
 % Comente para ocultar
 % e.g.
-\begin{epigraph}[Um dia]{Eu mesmo}
-Epígrafe
+\begin{epigraph}[Gendo Ikari - Neon Genenis Evangelion]{}
+\say{Não podemos voltar o tempo, mas podemos empurrá-lo para frente com nossas próprias mãos.}
 \end{epigraph}
 
 % Resumo em Portugues
